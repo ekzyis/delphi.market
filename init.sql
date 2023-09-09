@@ -34,3 +34,4 @@ CREATE TABLE orders(
     price BIGINT NOT NULL,
     order_id UUID REFERENCES orders(id)
 );
+ALTER TABLE orders ADD CONSTRAINT order_price CHECK(price > 0 AND price < 100);

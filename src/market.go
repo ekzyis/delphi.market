@@ -2,10 +2,10 @@ package main
 
 import (
 	"database/sql"
-	"log"
 	"math"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 )
@@ -25,10 +25,10 @@ type Share struct {
 type Order struct {
 	Session
 	Id       string
-	ShareId  string
-	Side     string
-	Price    int
-	Quantity int
+	ShareId  string `form:"share_id"`
+	Side     string `form:"side"`
+	Price    int    `form:"price"`
+	Quantity int    `form:"quantity"`
 	OrderId  string
 }
 
@@ -48,8 +48,27 @@ func BinaryLMSR(invariant int, funding int, q1 int, q2 int, dq1 int) float64 {
 }
 
 func order(c echo.Context) error {
-	// TODO: implement POST /market/:id/order
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, "Method Not Allowed")
+	// (TBD) Step 0: If SELL order, check share balance of users
+	// (TBD) Step 1: respond with HODL invoice
+	// ...
+	// Step 2: After payment, create order if no matching order was found
+	o := new(Order)
+	if err := c.Bind(o); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "bad request")
+	}
+	session := c.Get("session").(Session)
+	o.Pubkey = session.Pubkey
+	if err := db.CreateOrder(o); err != nil {
+		if strings.Contains(err.Error(), "violates check constraint") {
+			return echo.NewHTTPError(http.StatusBadRequest, "Bad Request")
+		}
+		return err
+	}
+	// (TBD) Step 3:
+	//    Settle hodl invoice when matching order was found
+	//    else cancel hodl invoice if expired
+	// ...
+	return market(c)
 }
 
 func market(c echo.Context) error {

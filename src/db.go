@@ -84,3 +84,12 @@ func (db *DB) FetchOrders(marketId int, orders *[]Order) error {
 	}
 	return nil
 }
+
+func (db *DB) CreateOrder(order *Order) error {
+	if _, err := db.Exec(""+
+		"INSERT INTO orders(share_id, pubkey, side, quantity, price) "+
+		"VALUES ($1, $2, $3, $4, $5)", order.ShareId, order.Pubkey, order.Side, order.Quantity, order.Price); err != nil {
+		return err
+	}
+	return nil
+}
