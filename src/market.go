@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/lightningnetwork/lnd/lntypes"
 	"gopkg.in/guregu/null.v4"
 )
 
@@ -90,7 +91,11 @@ func order(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	go lnd.CheckInvoice(invoice.PaymentHash)
+	hash, err := lntypes.MakeHashFromStr(invoice.PaymentHash)
+	if err != nil {
+		return err
+	}
+	go lnd.CheckInvoice(hash)
 	data := map[string]any{
 		"session":     c.Get("session"),
 		"ENV":         ENV,

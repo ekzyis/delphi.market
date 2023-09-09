@@ -2,17 +2,19 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
-	"encoding/hex"
+	"io"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/lightninglabs/lndclient"
-	"github.com/lightningnetwork/lnd/lnrpc"
+	"github.com/lightningnetwork/lnd/lnrpc/invoicesrpc"
+	"github.com/lightningnetwork/lnd/lntypes"
+	"github.com/lightningnetwork/lnd/lnwire"
 	"github.com/namsral/flag"
 )
 
@@ -25,7 +27,7 @@ var (
 )
 
 type LndClient struct {
-	lnrpc.LightningClient
+	lndclient.GrpcLndServices
 }
 
 func init() {
@@ -38,20 +40,21 @@ func init() {
 	flag.StringVar(&LndHost, "LND_HOST", "localhost:10001", "LND gRPC server address")
 	flag.Parse()
 	lndEnabled = false
-	rpcClient, err := lndclient.NewBasicClient(LndHost, LndCert, LndMacaroonDir, "regtest")
+	rpcLndServices, err := lndclient.NewLndServices(&lndclient.LndServicesConfig{
+		LndAddress:  LndHost,
+		MacaroonDir: LndMacaroonDir,
+		TLSPath:     LndCert,
+		Network:     lndclient.NetworkRegtest,
+	})
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	lnd = &LndClient{LightningClient: rpcClient}
-	if info, err := lnd.GetInfo(context.TODO(), &lnrpc.GetInfoRequest{}); err != nil {
-		log.Printf("LND connection error: %v\n", err)
-		return
-	} else {
-		version := strings.Split(info.Version, " ")[0]
-		log.Printf("Connected to %s running LND v%s", LndHost, version)
-		lndEnabled = true
-	}
+	lnd = &LndClient{GrpcLndServices: *rpcLndServices}
+	ver := lnd.Version
+	log.Printf("Connected to %s running LND v%s", LndHost, ver.Version)
+	lndEnabled = true
+
 }
 
 func lndGuard(next echo.HandlerFunc) echo.HandlerFunc {
@@ -63,26 +66,46 @@ func lndGuard(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
+func (lnd *LndClient) GenerateNewPreimage() (lntypes.Preimage, error) {
+	randomBytes := make([]byte, 32)
+	_, err := io.ReadFull(rand.Reader, randomBytes)
+	if err != nil {
+		return lntypes.Preimage{}, err
+	}
+	preimage, err := lntypes.MakePreimage(randomBytes)
+	if err != nil {
+		return lntypes.Preimage{}, err
+	}
+	return preimage, nil
+}
+
 func (lnd *LndClient) CreateInvoice(pubkey string, msats int) (*Invoice, error) {
-	addInvoiceResponse, err := lnd.AddInvoice(context.TODO(), &lnrpc.Invoice{
-		ValueMsat: int64(msats),
-		Expiry:    3600,
+	expiry := time.Hour
+	preimage, err := lnd.GenerateNewPreimage()
+	if err != nil {
+		return nil, err
+	}
+	hash := preimage.Hash()
+	paymentRequest, err := lnd.Invoices.AddHoldInvoice(context.TODO(), &invoicesrpc.AddInvoiceData{
+		Hash:   &hash,
+		Value:  lnwire.MilliSatoshi(msats),
+		Expiry: int64(expiry),
 	})
 	if err != nil {
 		return nil, err
 	}
-	lnInvoice, err := lnd.LookupInvoice(context.TODO(), &lnrpc.PaymentHash{RHash: addInvoiceResponse.RHash})
+	lnInvoice, err := lnd.Client.LookupInvoice(context.TODO(), hash)
 	if err != nil {
 		return nil, err
 	}
 	dbInvoice := Invoice{
 		Session:        Session{pubkey},
 		Msats:          msats,
-		Preimage:       hex.EncodeToString(lnInvoice.RPreimage),
-		PaymentRequest: lnInvoice.PaymentRequest,
-		PaymentHash:    hex.EncodeToString(lnInvoice.RHash),
-		CreatedAt:      time.Unix(lnInvoice.CreationDate, 0),
-		ExpiresAt:      time.Unix(lnInvoice.CreationDate+lnInvoice.Expiry, 0),
+		Preimage:       preimage.String(),
+		PaymentRequest: paymentRequest,
+		PaymentHash:    hash.String(),
+		CreatedAt:      lnInvoice.CreationDate,
+		ExpiresAt:      lnInvoice.CreationDate.Add(expiry),
 	}
 	if err := db.CreateInvoice(&dbInvoice); err != nil {
 		return nil, err
@@ -90,40 +113,65 @@ func (lnd *LndClient) CreateInvoice(pubkey string, msats int) (*Invoice, error) 
 	return &dbInvoice, nil
 }
 
-func (lnd *LndClient) CheckInvoice(hash string) {
+func (lnd *LndClient) CheckInvoice(hash lntypes.Hash) {
 	if !lndEnabled {
 		log.Printf("LND disabled, skipping checking invoice: hash=%s", hash)
 		return
 	}
+
+	var invoice Invoice
+	if err := db.FetchInvoice(&FetchInvoiceWhere{Hash: hash.String()}, &invoice); err != nil {
+		log.Println(err)
+		return
+	}
+
+	loopPause := 5 * time.Second
+	handleLoopError := func(err error) {
+		log.Println(err)
+		time.Sleep(loopPause)
+	}
+
 	for {
 		log.Printf("lookup invoice: hash=%s", hash)
-		invoice, err := lnd.LookupInvoice(context.TODO(), &lnrpc.PaymentHash{RHashStr: hash})
+		lnInvoice, err := lnd.Client.LookupInvoice(context.TODO(), hash)
 		if err != nil {
-			log.Println(err)
-			time.Sleep(5 * time.Second)
+			handleLoopError(err)
 			continue
 		}
-		if time.Now().After(time.Unix(invoice.CreationDate+invoice.Expiry, 0)) {
+		if time.Now().After(invoice.ExpiresAt) {
+			if err := lnd.Invoices.CancelInvoice(context.TODO(), hash); err != nil {
+				handleLoopError(err)
+				continue
+			}
 			log.Printf("invoice expired: hash=%s", hash)
 			break
 		}
-		if invoice.SettleDate != 0 && invoice.AmtPaidMsat > 0 {
-			if err := db.ConfirmInvoice(hash, time.Unix(invoice.SettleDate, 0), int(invoice.AmtPaidMsat)); err != nil {
-				log.Println(err)
-				time.Sleep(5 * time.Second)
+		if lnInvoice.AmountPaid > 0 {
+			preimage, err := lntypes.MakePreimageFromStr(invoice.Preimage)
+			if err != nil {
+				handleLoopError(err)
+				continue
+			}
+			// TODO settle invoice after matching order was found
+			if err := lnd.Invoices.SettleInvoice(context.TODO(), preimage); err != nil {
+				handleLoopError(err)
+				continue
+			}
+			if err := db.ConfirmInvoice(hash.String(), time.Now(), int(lnInvoice.AmountPaid)); err != nil {
+				handleLoopError(err)
 				continue
 			}
 			log.Printf("invoice confirmed: hash=%s", hash)
 			break
 		}
-		time.Sleep(5 * time.Second)
+		time.Sleep(loopPause)
 	}
 }
 
 func invoice(c echo.Context) error {
 	invoiceId := c.Param("id")
 	var invoice Invoice
-	if err := db.FetchInvoice(invoiceId, &invoice); err == sql.ErrNoRows {
+	if err := db.FetchInvoice(&FetchInvoiceWhere{Id: invoiceId}, &invoice); err == sql.ErrNoRows {
 		return echo.NewHTTPError(http.StatusNotFound, "Not Found")
 	} else if err != nil {
 		return err
@@ -132,7 +180,11 @@ func invoice(c echo.Context) error {
 	if invoice.Pubkey != session.Pubkey {
 		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
 	}
-	go lnd.CheckInvoice(invoice.PaymentHash)
+	hash, err := lntypes.MakeHashFromStr(invoice.PaymentHash)
+	if err != nil {
+		return err
+	}
+	go lnd.CheckInvoice(hash)
 	qr, err := ToQR(invoice.PaymentRequest)
 	if err != nil {
 		return err
@@ -156,7 +208,7 @@ func invoice(c echo.Context) error {
 func invoiceStatus(c echo.Context) error {
 	invoiceId := c.Param("id")
 	var invoice Invoice
-	if err := db.FetchInvoice(invoiceId, &invoice); err == sql.ErrNoRows {
+	if err := db.FetchInvoice(&FetchInvoiceWhere{Id: invoiceId}, &invoice); err == sql.ErrNoRows {
 		return echo.NewHTTPError(http.StatusNotFound, "Not Found")
 	} else if err != nil {
 		return err
