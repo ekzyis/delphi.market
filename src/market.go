@@ -2,7 +2,7 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
+	"log"
 	"math"
 	"net/http"
 	"strconv"
@@ -23,23 +23,13 @@ type Share struct {
 }
 
 type Order struct {
+	Session
+	Id       string
 	ShareId  string
 	Side     string
 	Price    int
 	Quantity int
-}
-
-type OrderBookEntry struct {
-	BuyQuantity  int
-	BuyPrice     int
-	SellPrice    int
-	SellQuantity int
-}
-
-type MarketDataRequest struct {
-	ShareId   string `json:"share_id"`
-	OrderSide string `json:"side"`
-	Quantity  int    `json:"quantity"`
+	OrderId  string
 }
 
 func costFunction(b float64, q1 float64, q2 float64) float64 {
@@ -57,37 +47,16 @@ func BinaryLMSR(invariant int, funding int, q1 int, q2 int, dq1 int) float64 {
 	return costFunction(b, fq1+fdq1, fq2) - costFunction(b, fq1, fq2)
 }
 
-func trades(c echo.Context) error {
-	marketId, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Bad Request")
-	}
-	var market Market
-	if err = db.FetchMarket(int(marketId), &market); err == sql.ErrNoRows {
-		return echo.NewHTTPError(http.StatusNotFound, "Not Found")
-	} else if err != nil {
-		return err
-	}
-	var shares []Share
-	if err = db.FetchShares(market.Id, &shares); err != nil {
-		return err
-	}
-	data := map[string]any{
-		"session":     c.Get("session"),
-		"ENV":         ENV,
-		"Id":          market.Id,
-		"Description": market.Description,
-		"Shares":      shares,
-	}
-	return c.Render(http.StatusOK, "bmarket_trade.html", data)
+func order(c echo.Context) error {
+	// TODO: implement POST /market/:id/order
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, "Method Not Allowed")
 }
 
-func orders(c echo.Context) error {
+func market(c echo.Context) error {
 	marketId, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Bad Request")
 	}
-	shareId := c.Param("sid")
 
 	var market Market
 	if err = db.FetchMarket(int(marketId), &market); err == sql.ErrNoRows {
@@ -100,11 +69,8 @@ func orders(c echo.Context) error {
 	if err = db.FetchShares(market.Id, &shares); err != nil {
 		return err
 	}
-	if shareId == "" {
-		c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("/market/%d/%s", market.Id, shares[0].Id))
-	}
-	var orderBook []OrderBookEntry
-	if err = db.FetchOrderBook(shareId, &orderBook); err != nil {
+	var orders []Order
+	if err = db.FetchOrders(market.Id, &orders); err != nil {
 		return err
 	}
 	data := map[string]any{
@@ -112,9 +78,11 @@ func orders(c echo.Context) error {
 		"ENV":         ENV,
 		"Id":          market.Id,
 		"Description": market.Description,
-		"ShareId":     shareId,
-		"Shares":      shares,
-		"OrderBook":   orderBook,
+		// shares are sorted by description in descending order
+		// that's how we know that YES must be the first share
+		"YesShare": shares[0],
+		"NoShare":  shares[1],
+		"Orders":   orders,
 	}
-	return c.Render(http.StatusOK, "bmarket_order.html", data)
+	return c.Render(http.StatusOK, "market.html", data)
 }

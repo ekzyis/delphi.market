@@ -68,50 +68,19 @@ func (db *DB) FetchShares(marketId int, shares *[]Share) error {
 	return nil
 }
 
-func (db *DB) FetchOrderBook(shareId string, orderBook *[]OrderBookEntry) error {
+func (db *DB) FetchOrders(marketId int, orders *[]Order) error {
 	rows, err := db.Query(""+
-		"SELECT share_id, side, price, SUM(quantity)"+
-		"FROM orders WHERE share_id = $1"+
-		"GROUP BY (share_id, side, price)"+
-		"ORDER BY share_id DESC, side DESC, price DESC", shareId)
+		"SELECT id, share_id, pubkey, side, quantity, price, order_id FROM orders "+
+		"WHERE share_id = ANY(SELECT id FROM shares WHERE market_id = $1) "+
+		"ORDER BY price DESC", marketId)
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
-	buyOrders := []Order{}
-	sellOrders := []Order{}
 	for rows.Next() {
 		var order Order
-		rows.Scan(&order.ShareId, &order.Side, &order.Price, &order.Quantity)
-		if order.Side == "BUY" {
-			buyOrders = append(buyOrders, Order{Price: order.Price, Quantity: order.Quantity})
-		} else {
-			sellOrders = append(sellOrders, Order{Price: order.Price, Quantity: order.Quantity})
-		}
-	}
-	buySum := 0
-	sellSum := 0
-	for i := 0; i < Max(len(buyOrders), len(sellOrders)); i++ {
-		buyPrice, buyQuantity, sellQuantity, sellPrice := 0, 0, 0, 0
-		if i < len(buyOrders) {
-			buyPrice = buyOrders[i].Price
-			buyQuantity = buySum + buyOrders[i].Quantity
-		}
-		if i < len(sellOrders) {
-			sellPrice = sellOrders[i].Price
-			sellQuantity = sellSum + sellOrders[i].Quantity
-		}
-		buySum += buyQuantity
-		sellSum += sellQuantity
-		*orderBook = append(
-			*orderBook,
-			OrderBookEntry{
-				BuyQuantity:  buyQuantity,
-				BuyPrice:     buyPrice,
-				SellPrice:    sellPrice,
-				SellQuantity: sellQuantity,
-			},
-		)
+		rows.Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.OrderId)
+		*orders = append(*orders, order)
 	}
 	return nil
 }

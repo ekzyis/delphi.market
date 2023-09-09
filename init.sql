@@ -31,10 +31,6 @@ CREATE TABLE orders(
     pubkey TEXT NOT NULL REFERENCES users(pubkey),
     side ORDER_SIDE NOT NULL,
     quantity BIGINT NOT NULL,
-    price BIGINT NOT NULL
-);
-CREATE TABLE trades(
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    order_id_1 UUID NOT NULL REFERENCES orders(id),
-    order_id_2 UUID NOT NULL REFERENCES orders(id)
+    price BIGINT NOT NULL,
+    order_id UUID REFERENCES orders(id)
 );

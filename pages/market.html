@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>delphi.market</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="/index.css" />
+    <link rel="stylesheet" href="/market.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#091833" />
+    {{ if eq .ENV "development" }}
+    <script defer src="/hotreload.js"></script>
+    {{ end }}
+</head>
+
+<body>
+    <header class="flex flex-row text-center justify-center pt-1">
+        <nav>
+            <a href="/">home</a>
+            {{ if .session }}
+            <form action='/logout' method='post'>
+                <button type='submit'>logout</button>
+            </form>
+            {{ else }} <a href="/login">login</a> {{ end }}
+        </nav>
+    </header>
+    <div class="container flex flex-column text-center">
+        <code>
+        <strong>
+          <pre>
+                      _        _   
+ _ __ ___   __ _ _ __| | _____| |_ 
+| '_ ` _ \ / _` | '__| |/ / _ \ __|
+| | | | | | (_| | |  |   <  __/ |_ 
+|_| |_| |_|\__,_|_|  |_|\_\___|\__|</pre>
+        </strong>
+      </code>
+        <div class="font-mono mb-1">{{.Description}}</div>
+        <div class="font-mono mb-1"><strong>Order Book</strong></div>
+        <table class="mb-1">
+            <tr>
+                <th class="align-left">BUY YES</th>
+                <th class="align-center">SELL</th>
+                <th class="align-right">BUY NO</th>
+            </tr>
+            {{ range .Orders }}
+            <tr>
+                {{ if and (eq .ShareId $.YesShare.Id) (eq .Side "BUY") }}
+                <td>
+                    <div class="flex yes">
+                        <span class="align-left">YES</span>
+                        <span style="width: 100%" class="align-right">{{.Quantity}} @ {{.Price}}</span>
+                    </div>
+                </td>
+                {{ else }}
+                <td></td>
+                {{ end }}
+                {{ if and (eq .ShareId $.YesShare.Id) (eq .Side "SELL") }}
+                <td>
+                    <div class="flex no" style="width: 100%">
+                        <span class="align-left">YES</span>
+                        <span style="width: 100%" class="align-right">{{.Quantity}} @ {{.Price}}</span>
+                    </div>
+                </td>
+                {{ else }}
+                <td></td>
+                {{ end }}
+                {{ if and (eq .ShareId $.NoShare.Id) (eq .Side "SELL") }}
+                <td>
+                    <div class="flex no">
+                        <span class="align-left">NO</span>
+                        <span style="width: 100%" class="align-right">{{.Quantity}} @ {{.Price}}</span>
+                    </div>
+                </td>
+                {{ else }}
+                <td></td>
+                {{ end }}
+                {{ if and (eq .ShareId $.NoShare.Id) (eq .Side "BUY") }}
+                <td>
+                    <div class="flex yes">
+                        <span class="align-left">NO</span>
+                        <span style="width: 100%" class="align-right">{{.Quantity}} @ {{.Price}}</span>
+                    </div>
+                </td>
+                {{ else }}
+                <td></td>
+                {{ end }}
+            </tr>
+            {{ end }}
+        </table>
+        <hr />
+        <div class="font-mono mb-1"><strong>Order Form</strong></div>
+        <form id="form" class="order-form" hidden action="/api/market/{{$.Id}}/order" method="post">
+            <button id="buy" type="button" class="order-button yes w-100p selected">BUY</button>
+            <button id="sell" type="button" class="order-button no w-100p">SELL</button>
+            <input id="market-id" hidden name="market_id" value="{{$.Id}}" />
+            <input id="side" hidden name="side" value="BUY" />
+            <label>share</label>
+            <select name="share_id">
+                <option value="{{.YesShare.Id}}">YES</option>
+                <option value="{{.NoShare.Id}}">NO</option>
+            </select>
+            <label>quantity</label>
+            <input id="quantity" type="number" name="quantity" placeholder="quantity" />
+            <label>price [sats]</label>
+            <input id="price" type="number" name="price" placeholder="price"/>
+            <label id="submit-label"></label>
+            <button type="submit">SUBMIT</button>
+        </form>
+    </div>
+</body>
+<script src="/order.js"></script>
+
+</html>

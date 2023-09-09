@@ -28,7 +28,7 @@ type LnAuthResponse struct {
 }
 
 type Session struct {
-	pubkey string
+	Pubkey string
 }
 
 func lnAuth() (*LnAuth, error) {

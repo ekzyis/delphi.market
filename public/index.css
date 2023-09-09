@@ -131,6 +131,12 @@ ul {
 .mb-1 {
   margin-bottom: 1em;
 }
+.mb-s {
+  margin-bottom: 0.2em;
+}
+.mr-s {
+  margin-right: 0.2em;
+}
 .pt-1 {
   padding-top: 1em;
 }
