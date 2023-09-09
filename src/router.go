@@ -69,7 +69,7 @@ func verifyLogin(c echo.Context) error {
 		c.Logger().Error("bad signature")
 		return c.JSON(http.StatusUnauthorized, map[string]string{"status": "ERROR", "reason": "bad signature"})
 	}
-	_, err = db.Exec("INSERT INTO users(pubkey) VALUES ($1)", query.Key)
+	_, err = db.Exec("INSERT INTO users(pubkey) VALUES ($1) ON CONFLICT(pubkey) DO UPDATE SET last_seen = CURRENT_TIMESTAMP", query.Key)
 	if err != nil {
 		c.Logger().Error(err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"status": "ERROR", "reason": "internal server error"})
