@@ -15,24 +15,55 @@
     <header class="flex flex-row text-center justify-center pt-1">
       <nav>
         <a href="/">home</a>
-        <a href="/login">login</a>
+        {{ if .session }} <a href="/login">login</a> {{ else }} <a href="/logout">logout</a> {{ end }}
       </nav>
     </header>
-    <div class="container flex flex-column text-center">
+    <div class="container flex flex-column text-center justify-center">
       <code>
         <strong>
           <pre>
-__        _____ ____  
-\ \      / /_ _|  _ \ 
- \ \ /\ / / | || |_) |
-  \ V  V /  | ||  __/ 
-   \_/\_/  |___|_|    </pre>
+ _             _       
+| | ___   __ _(_)_ __  
+| |/ _ \ / _` | | '_ \ 
+| | (_) | (_| | | | | |
+|_|\___/ \__, |_|_| |_|
+         |___/         </pre>
         </strong>
       </code>
-      <div class="font-mono mb-1">Work In Progress</div>
-      <div>
-        {{if .user}} You are logged in as {{.user}} {{end}}
+      <div id="lnauth-qr">
+        <div class="mb-1">Login with Lightning</div>
+        <img class="m-auto mb-1" src="data:image/png;base64,{{.qr}}" width="33%"/>
+        <div class="font-mono word-wrap">{{.lnurl}}</div>
+      </div>
+      <div id="lnauth-success" hidden>
+        <div>Login successful</div>
+        <div>You are <span id="lnauth-pubkey" class="font-mono"></span></div>
+        <div id="lnauth-countdown">Redirecting in 3 ...</div>
       </div>
     </div>
   </body>
+  <script>
+    const qr = document.querySelector("#lnauth-qr")
+    const success = document.querySelector("#lnauth-success")
+    const pubkey = document.querySelector("#lnauth-pubkey")
+    const countdown = document.querySelector("#lnauth-countdown")
+    const interval = setInterval(async () => {
+      const body = await fetch(`/api/session`)
+        .then((r) => r.json())
+        .catch(console.error)
+      if (body.pubkey) {
+        qr.setAttribute("hidden", true)
+        pubkey.textContent = body.pubkey.slice(0, 10)
+        success.removeAttribute("hidden")
+        clearInterval(interval)
+        let timer = 2
+        const redirect = setInterval(() => {
+          countdown.textContent = `Redirecting in ${timer--} ...`
+          if (timer === -1) {
+            window.location.href = "https://delphi.market/";
+          }
+        }, 1000)
+      }
+    }, 1000)
+  </script>
 </html>

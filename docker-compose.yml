@@ -1,0 +1,18 @@
+services:
+  db:
+    image: postgres:15.3
+    container_name: delphi-db
+    environment:
+      POSTGRES_PASSWORD: delphi
+      POSTGRES_USER: delphi
+      POSTGRES_DB: delphi
+      PORT: 5432
+      # POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - 127.0.0.1:5432:5432
+    volumes:
+      - delphi:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  delphi:

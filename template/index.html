@@ -15,7 +15,11 @@
     <header class="flex flex-row text-center justify-center pt-1">
       <nav>
         <a href="/">home</a>
-        <a href="/login">login</a>
+        {{ if .session }}
+        <form action='/logout' method='post'>
+          <button type='submit'>logout</button>
+        </form>
+       {{ else }} <a href="/login">login</a> {{ end }}
       </nav>
     </header>
     <div class="container flex flex-column text-center">

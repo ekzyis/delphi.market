@@ -9,6 +9,9 @@ body {
   justify-content: center;
 }
 
+nav {
+  display: flex;
+}
 a {
   color: #8787a4;
   text-decoration: underline;
@@ -19,6 +22,23 @@ a:hover {
 }
 nav > a {
   margin: 0 3px;
+}
+nav > form > button {
+  color: #8787a4;
+  text-decoration: underline;
+  border: none;
+  outline: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  font-family: inherit;
+  font-size: inherit;
+  margin: 0 3px;
+}
+nav > form > button:hover {
+  background: #8787A4;
+  color: #ffffff;
 }
 
 hr {
@@ -83,4 +103,8 @@ ul {
 }
 .pt-1 {
   padding-top: 1em;
+}
+
+.word-wrap {
+  word-wrap: break-word;
 }

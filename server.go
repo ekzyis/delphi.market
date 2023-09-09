@@ -45,10 +45,14 @@ func main() {
 	e.Renderer = t
 	e.GET("/", index)
 	e.GET("/login", login)
+	e.GET("/api/login", verifyLogin)
+	e.GET("/api/session", checkSession)
+	e.POST("/logout", logout)
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format:           "${time_custom} ${method} ${uri} ${status}\n",
 		CustomTimeFormat: "2006-01-02 15:04:05.00000-0700",
 	}))
+	e.Use(sessionHandler)
 	e.HTTPErrorHandler = httpErrorHandler
 	err := e.Start(":8080")
 	if err != http.ErrServerClosed {
