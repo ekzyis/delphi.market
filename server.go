@@ -8,8 +8,10 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/namsral/flag"
 )
 
 var (
@@ -18,6 +20,7 @@ var (
 	COMMIT_LONG_SHA  string
 	COMMIT_SHORT_SHA string
 	VERSION          string
+	PORT             int
 )
 
 func execCmd(name string, args ...string) string {
@@ -30,6 +33,12 @@ func execCmd(name string, args ...string) string {
 }
 
 func init() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	flag.IntVar(&PORT, "PORT", 4321, "Server port")
+	flag.Parse()
 	e = echo.New()
 	t = &Template{
 		templates: template.Must(template.ParseGlob("template/*.html")),
@@ -54,7 +63,7 @@ func main() {
 	}))
 	e.Use(sessionHandler)
 	e.HTTPErrorHandler = httpErrorHandler
-	err := e.Start(":8080")
+	err := e.Start(fmt.Sprintf("%s:%d", "127.0.0.1", PORT))
 	if err != http.ErrServerClosed {
 		log.Fatal(err)
 	}
