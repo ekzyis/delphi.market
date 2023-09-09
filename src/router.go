@@ -116,7 +116,6 @@ func sessionHandler(next echo.HandlerFunc) echo.HandlerFunc {
 		} else if err != sql.ErrNoRows {
 			c.Logger().Error(err)
 		}
-		// session not found
 		return next(c)
 	}
 }
