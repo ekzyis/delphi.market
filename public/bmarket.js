@@ -29,23 +29,34 @@ function resetInputs() {
     noCostDisplay.value = undefined
 }
 
-function showYesForm() {
+function toggleYesForm() {
     resetInputs()
-    yesOrderBtn.classList.add("selected")
-    yesForm.style.display = "grid"
+    if (yesOrderBtn.classList.contains("selected")) {
+        yesOrderBtn.classList.remove("selected")
+        yesForm.style.display = "none"
+    }
+    else {
+        yesOrderBtn.classList.add("selected")
+        yesForm.style.display = "grid"
+    }
     noOrderBtn.classList.remove("selected")
     noForm.style.display = "none"
 }
-yesOrderBtn.onclick = showYesForm
+yesOrderBtn.onclick = toggleYesForm
 
-function showNoForm() {
+function toggleNoForm() {
     resetInputs()
-    noOrderBtn.classList.add("selected")
-    noForm.style.display = "grid"
+    if (noOrderBtn.classList.contains("selected")) {
+        noOrderBtn.classList.remove("selected")
+        noForm.style.display = "none"
+    } else {
+        noOrderBtn.classList.add("selected")
+        noForm.style.display = "grid"
+    }
     yesOrderBtn.classList.remove("selected")
     yesForm.style.display = "none"
 }
-noOrderBtn.onclick = showNoForm
+noOrderBtn.onclick = toggleNoForm
 
 function showBuyForm() {
     resetInputs()
