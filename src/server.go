@@ -21,6 +21,7 @@ var (
 	COMMIT_SHORT_SHA string
 	VERSION          string
 	PORT             int
+	PUBLIC_URL       string
 )
 
 func execCmd(name string, args ...string) string {
@@ -37,6 +38,7 @@ func init() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+	flag.StringVar(&PUBLIC_URL, "PUBLIC_URL", "delphi.market", "Public URL of website")
 	flag.IntVar(&PORT, "PORT", 4321, "Server port")
 	flag.Parse()
 	e = echo.New()
@@ -47,6 +49,7 @@ func init() {
 	COMMIT_SHORT_SHA = execCmd("git", "rev-parse", "--short", "HEAD")
 	VERSION = fmt.Sprintf("v0.0.0+%s", COMMIT_SHORT_SHA)
 	log.Printf("Running commit %s", COMMIT_SHORT_SHA)
+	log.Printf("Public URL: %s", PUBLIC_URL)
 }
 
 func main() {

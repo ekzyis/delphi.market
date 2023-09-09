@@ -32,7 +32,7 @@ func lnAuth() (*LnAuth, error) {
 		return nil, fmt.Errorf("rand.Read error: %w", err)
 	}
 	k1hex := hex.EncodeToString(k1)
-	url := []byte(fmt.Sprintf("https://delphi.market/api/login?tag=login&k1=%s&action=login", k1hex))
+	url := []byte(fmt.Sprintf("https://%s/api/login?tag=login&k1=%s&action=login", PUBLIC_URL, k1hex))
 	conv, err := bech32.ConvertBits(url, 8, 5, true)
 	if err != nil {
 		return nil, fmt.Errorf("bech32.ConvertBits error: %w", err)

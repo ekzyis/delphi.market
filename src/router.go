@@ -43,7 +43,7 @@ func login(c echo.Context) error {
 		return err
 	}
 	qr := base64.StdEncoding.EncodeToString([]byte(png))
-	return c.Render(http.StatusOK, "login.html", map[string]any{"session": c.Get("session"), "lnurl": lnauth.lnurl, "qr": qr})
+	return c.Render(http.StatusOK, "login.html", map[string]any{"session": c.Get("session"), "PUBLIC_URL": PUBLIC_URL, "lnurl": lnauth.lnurl, "qr": qr})
 }
 
 func verifyLogin(c echo.Context) error {

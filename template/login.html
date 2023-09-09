@@ -64,7 +64,7 @@
         const redirect = setInterval(() => {
           countdown.textContent = `Redirecting in ${timer--} ...`
           if (timer === -1) {
-            window.location.href = "https://delphi.market/";
+            window.location.href = "https://{{.PUBLIC_URL}}/";
           }
         }, 1000)
       }
