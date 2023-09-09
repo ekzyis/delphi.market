@@ -11,6 +11,9 @@
     <link rel="stylesheet" href="/market.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#091833" />
+    {{ if eq .ENV "development" }}
+    <script defer src="/hotreload.js"></script>
+    {{ end }}
   </head>
   <body>
     <header class="flex flex-row text-center justify-center pt-1">

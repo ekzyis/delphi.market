@@ -57,6 +57,7 @@ func index(c echo.Context) error {
 	}
 	data := map[string]any{
 		"session":         c.Get("session"),
+		"ENV":             ENV,
 		"markets":         markets,
 		"VERSION":         VERSION,
 		"COMMIT_LONG_SHA": COMMIT_LONG_SHA}

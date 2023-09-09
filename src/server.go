@@ -22,6 +22,7 @@ var (
 	VERSION          string
 	PORT             int
 	PUBLIC_URL       string
+	ENV              string
 )
 
 func execCmd(name string, args ...string) string {
@@ -40,6 +41,7 @@ func init() {
 	}
 	flag.StringVar(&PUBLIC_URL, "PUBLIC_URL", "delphi.market", "Public URL of website")
 	flag.IntVar(&PORT, "PORT", 4321, "Server port")
+	flag.StringVar(&ENV, "ENV", "development", "Specify for which environment files should be built")
 	flag.Parse()
 	e = echo.New()
 	t = &Template{
@@ -50,6 +52,7 @@ func init() {
 	VERSION = fmt.Sprintf("v0.0.0+%s", COMMIT_SHORT_SHA)
 	log.Printf("Running commit %s", COMMIT_SHORT_SHA)
 	log.Printf("Public URL: %s", PUBLIC_URL)
+	log.Printf("Environment: %s", ENV)
 }
 
 func main() {

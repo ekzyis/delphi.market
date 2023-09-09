@@ -1,4 +1,9 @@
 # go executable
 delphi.market
 
+# environment
 .env
+
+# required for hot reload
+public/hotreload
+*.log
