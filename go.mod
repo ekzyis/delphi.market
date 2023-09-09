@@ -92,6 +92,7 @@ require (
 	google.golang.org/genproto v0.0.0-20190927181202-20e1ac93f88c // indirect
 	google.golang.org/grpc v1.24.0 // indirect
 	gopkg.in/errgo.v1 v1.0.1 // indirect
+	gopkg.in/guregu/null.v4 v4.0.0 // indirect
 	gopkg.in/macaroon-bakery.v2 v2.0.1 // indirect
 	gopkg.in/macaroon.v2 v2.1.0 // indirect
 	gopkg.in/yaml.v2 v2.2.3 // indirect

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"gopkg.in/guregu/null.v4"
 )
 
 type Market struct {
@@ -43,8 +44,8 @@ type Invoice struct {
 	PaymentHash    string
 	CreatedAt      time.Time
 	ExpiresAt      time.Time
-	ConfirmedAt    time.Time
-	HeldSince      time.Time
+	ConfirmedAt    null.Time
+	HeldSince      null.Time
 }
 
 func costFunction(b float64, q1 float64, q2 float64) float64 {
@@ -63,6 +64,7 @@ func BinaryLMSR(invariant int, funding int, q1 int, q2 int, dq1 int) float64 {
 }
 
 func order(c echo.Context) error {
+	marketId := c.Param("id")
 	// (TBD) Step 0: If SELL order, check share balance of user
 	// (TBD) Step 1: respond with HODL invoice
 	o := new(Order)
@@ -86,11 +88,14 @@ func order(c echo.Context) error {
 	}
 	go lnd.CheckInvoice(invoice.PaymentHash)
 	data := map[string]any{
-		"session": c.Get("session"),
-		"ENV":     ENV,
-		"lnurl":   invoice.PaymentRequest,
-		"qr":      qr,
-		"Invoice": invoice,
+		"session":              c.Get("session"),
+		"ENV":                  ENV,
+		"lnurl":                invoice.PaymentRequest,
+		"qr":                   qr,
+		"Invoice":              invoice,
+		"RedirectAfterPayment": true,
+		"PUBLIC_URL":           PUBLIC_URL,
+		"MarketId":             marketId,
 	}
 	return c.Render(http.StatusPaymentRequired, "invoice.html", data)
 	// Step 2: After payment, confirm order if no matching order was found

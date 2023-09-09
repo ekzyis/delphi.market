@@ -9,6 +9,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="stylesheet" href="/index.css" />
+    <link rel="stylesheet" href="/market.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#091833" />
     {{ if eq .ENV "development" }}
@@ -38,7 +39,13 @@
    |_|  \___/_____|</pre>
         </strong>
         </code>
-        <div class="font-mono mb-1">Payment Required</div>
+        <div class="font-mono mb-1">
+            <div class="mb-1">Payment Required</div>
+            <div id="paid" class="yes" hidden>
+                <div>Paid</div>
+                <div id="countdown">Redirecting in 3 ...</div>
+            </div>
+        </div>
         <div id="qr">
             <a href="lightning:{{.lnurl}}">
                 <img class="m-auto mb-1" src="data:image/png;base64,{{.qr}}" width="100%" />
@@ -55,7 +62,28 @@
         </div>
     </div>
 </body>
+{{ if .RedirectAfterPayment }}
 <script>
+    const invoiceId = "{{.Invoice.Id}}"
+    const paid = document.querySelector("#paid")
+    const countdown = document.querySelector("#countdown")
+    const interval = setInterval(async () => {
+        const body = await fetch(`/api/invoice/${invoiceId}`)
+            .then((r) => r.json())
+            .catch(console.error)
+        if (body.ConfirmedAt) {
+            paid.removeAttribute("hidden")
+            clearInterval(interval)
+            let timer = 2
+            const redirect = setInterval(() => {
+                countdown.textContent = `Redirecting in ${timer--} ...`
+                if (timer === -1) {
+                    window.location.href = "https://{{.PUBLIC_URL}}/market/{{.MarketId}}";
+                }
+            }, 1000)
+        }
+    }, 1000)
 </script>
+{{ end }}
 
 </html>

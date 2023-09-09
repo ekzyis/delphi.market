@@ -122,3 +122,19 @@ func invoice(c echo.Context) error {
 	}
 	return c.Render(http.StatusOK, "invoice.html", data)
 }
+
+func invoiceStatus(c echo.Context) error {
+	invoiceId := c.Param("id")
+	var invoice Invoice
+	if err := db.FetchInvoice(invoiceId, &invoice); err == sql.ErrNoRows {
+		return echo.NewHTTPError(http.StatusNotFound, "Not Found")
+	} else if err != nil {
+		return err
+	}
+	session := c.Get("session").(Session)
+	if invoice.Pubkey != session.Pubkey {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+	}
+	invoice.Preimage = ""
+	return c.JSON(http.StatusOK, invoice)
+}

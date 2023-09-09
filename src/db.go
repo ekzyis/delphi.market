@@ -112,7 +112,7 @@ func (db *DB) CreateInvoice(invoice *Invoice) error {
 
 func (db *DB) FetchInvoice(invoiceId string, invoice *Invoice) error {
 	if err := db.QueryRow(""+
-		"SELECT id, pubkey, msats, preimage, hash, bolt11, created_at, expires_at FROM invoices WHERE id = $1", invoiceId).Scan(&invoice.Id, &invoice.Pubkey, &invoice.Msats, &invoice.Preimage, &invoice.PaymentHash, &invoice.PaymentRequest, &invoice.CreatedAt, &invoice.ExpiresAt); err != nil {
+		"SELECT id, pubkey, msats, preimage, hash, bolt11, created_at, expires_at, confirmed_at, held_since FROM invoices WHERE id = $1", invoiceId).Scan(&invoice.Id, &invoice.Pubkey, &invoice.Msats, &invoice.Preimage, &invoice.PaymentHash, &invoice.PaymentRequest, &invoice.CreatedAt, &invoice.ExpiresAt, &invoice.ConfirmedAt, &invoice.HeldSince); err != nil {
 		return err
 	}
 	return nil

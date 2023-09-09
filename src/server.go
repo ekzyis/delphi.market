@@ -66,6 +66,7 @@ func main() {
 	e.GET("/market/:id", sessionGuard(market))
 	e.POST("/market/:id/order", sessionGuard(order))
 	e.GET("/invoice/:id", sessionGuard(invoice))
+	e.GET("/api/invoice/:id", sessionGuard(invoiceStatus))
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format:           "${time_custom} ${method} ${uri} ${status}\n",
 		CustomTimeFormat: "2006-01-02 15:04:05.00000-0700",
