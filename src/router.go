@@ -26,18 +26,17 @@ type Market struct {
 	Active      bool
 }
 
-type Contract struct {
+type Share struct {
 	Id          string
 	MarketId    int
 	Description string
-	Quantity    float64
+	Quantity    int
 }
 
 type MarketDataRequest struct {
-	ContractId string  `json:"contract_id"`
-	OrderSide  string  `json:"side"`
-	Sats       int     `json:"sats,omitempty"`
-	Quantity   float64 `json:"quantity,omitempty"`
+	ShareId   string `json:"share_id"`
+	OrderSide string `json:"side"`
+	Quantity  int    `json:"quantity"`
 }
 
 func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
@@ -205,27 +204,27 @@ func market(c echo.Context) error {
 	} else if err != nil {
 		return err
 	}
-	rows, err := db.Query("SELECT id, market_id, description, quantity FROM contracts WHERE market_id = $1 ORDER BY description DESC", marketId)
+	rows, err := db.Query("SELECT id, market_id, description, quantity FROM shares WHERE market_id = $1 ORDER BY description DESC", marketId)
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
-	var contracts []Contract
+	var shares []Share
 	for rows.Next() {
-		var contract Contract
-		rows.Scan(&contract.Id, &contract.MarketId, &contract.Description, &contract.Quantity)
-		contracts = append(contracts, contract)
+		var share Share
+		rows.Scan(&share.Id, &share.MarketId, &share.Description, &share.Quantity)
+		shares = append(shares, share)
 	}
 	data := map[string]any{
 		"session":     c.Get("session"),
 		"Id":          market.Id,
 		"Description": market.Description,
-		"Contracts":   contracts,
+		"Shares":      shares,
 	}
 	return c.Render(http.StatusOK, "binary_market.html", data)
 }
 
-func marketData(c echo.Context) error {
+func marketCost(c echo.Context) error {
 	var req MarketDataRequest
 	err := c.Bind(&req)
 	if err != nil {
@@ -241,38 +240,31 @@ func marketData(c echo.Context) error {
 		c.Logger().Error(err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"status": "ERROR", "reason": "internal server error"})
 	}
-	rows, err := db.Query("SELECT id, market_id, description, quantity FROM contracts WHERE market_id = $1", marketId)
+	rows, err := db.Query("SELECT id, market_id, description, quantity FROM shares WHERE market_id = $1", marketId)
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
-	var contracts []Contract
+	var shares []Share
 	for rows.Next() {
-		var contract Contract
-		rows.Scan(&contract.Id, &contract.MarketId, &contract.Description, &contract.Quantity)
-		contracts = append(contracts, contract)
+		var share Share
+		rows.Scan(&share.Id, &share.MarketId, &share.Description, &share.Quantity)
+		shares = append(shares, share)
 	}
-	sats := req.Sats
-	quantity := req.Quantity
-	// contract A is always the contract which is bought or sold
-	contractAIdx := slices.IndexFunc(contracts, func(c Contract) bool { return c.Id == req.ContractId })
-	contractBIdx := 0
-	if contractAIdx == 0 {
-		contractBIdx = 1
+	dq1 := req.Quantity
+	// share 1 is always the share which is bought or sold
+	share1idx := slices.IndexFunc(shares, func(s Share) bool { return s.Id == req.ShareId })
+	share2idx := 0
+	if share1idx == 0 {
+		share2idx = 1
 	}
-	contractAQ := contracts[contractAIdx].Quantity
-	contractBQ := contracts[contractBIdx].Quantity
-	if req.OrderSide == "BUY" && sats > 0 {
-		quantity, err := BinaryLMSRBuy(1, market.Funding, contractAQ, contractBQ, sats)
-		if err != nil {
-			return err
-		}
-		return c.JSON(http.StatusOK, map[string]string{"status": "OK", "quantity": fmt.Sprint(quantity)})
+	q1 := shares[share1idx].Quantity
+	q2 := shares[share2idx].Quantity
+	if req.OrderSide == "SELL" {
+		dq1 = -dq1
 	}
-	if req.OrderSide == "SELL" && quantity > 0 {
-		// TODO implement BinaryLMSRSell
-	}
-	return c.JSON(http.StatusBadRequest, map[string]string{"status": "ERROR", "reason": "bad request"})
+	cost := BinaryLMSR(1, market.Funding, q1, q2, dq1)
+	return c.JSON(http.StatusOK, map[string]string{"status": "OK", "cost": fmt.Sprint(cost)})
 }
 
 func serve500(c echo.Context) {

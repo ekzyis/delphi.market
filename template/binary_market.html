@@ -36,33 +36,37 @@
       </code>
       <div class="font-mono mb-1">{{.Description}}</div>
       <div class="flex flex-row justify-center mb-1">
-        {{ range .Contracts }} {{ if eq .Description "YES" }}
+        {{ range .Shares }} {{ if eq .Description "YES" }}
         <button id="yes-order" class="order-button sx-1 yes">YES</button>
         {{ else }}
         <button id="no-order" class="order-button sx-1 no">NO</button>
         {{ end }}
         {{ end }}
       </div>
-      {{ range .Contracts }} {{ if eq .Description "YES" }}
+      {{ range .Shares }} {{ if eq .Description "YES" }}
       <form id="yes-form" class="order-form" hidden action="/api/market/{{$.Id}}/order" method="post">
         <button id="yes-buy" type="button" class="order-button yes w-100p selected">BUY</button>
         <button id="yes-sell" type="button" class="order-button no w-100p">SELL</button>
-        <input hidden name="contract_id" value="{{.Id}}" />
+        <input hidden name="share_id" value="{{.Id}}" />
         <input id="yes-side" hidden name="side" value="BUY" />
-        <input id="yes-quantity" type="number" name="quantity" placeholder="quantity" disabled />
-        <input id="yes-sats" type="number" name="sats" placeholder="sats"/>
-        <label id="yes-submit-label">BUY YES contracts</label>
+        <label>shares</label>
+        <input id="yes-quantity" type="number" name="quantity" placeholder="quantity" />
+        <label id="yes-cost-label">cost [sats]</label>
+        <input id="yes-cost" type="number" name="cost" disabled />
+        <label id="yes-submit-label">BUY YES shares</label>
         <button type="submit">SUBMIT</button>
       </form>
       {{ else }}
       <form id="no-form" class="order-form" hidden action="/api/market/{{$.Id}}/order" method="post">
         <button id="no-buy" type="button" class="order-button yes w-100p selected">BUY</button>
         <button id="no-sell" type="button" class="order-button no w-100p">SELL</button>
-        <input hidden name="contract_id" value="{{.Id}}" />
+        <input hidden name="share_id" value="{{.Id}}" />
         <input id="no-side" hidden name="side" value="BUY" />
-        <input id="no-quantity" type="number" name="quantity" placeholder="quantity" disabled />
-        <input id="no-sats" type="number" name="sats" placeholder="sats" />
-        <label id="no-submit-label">BUY NO contracts</label>
+        <label>shares</label>
+        <input id="no-quantity" type="number" name="quantity" placeholder="quantity" />
+        <label id="no-cost-label">cost [sats]</label>
+        <input id="no-cost" type="number" name="cost" disabled />
+        <label id="no-submit-label">BUY NO shares</label>
         <button type="submit">SUBMIT</button>
       </form>
       {{ end }}
@@ -76,7 +80,8 @@
     const yesSellBtn = document.querySelector("#yes-sell")
     const yesSideInput = document.querySelector("#yes-side")
     const yesQuantityInput = document.querySelector("#yes-quantity")
-    const yesSatsInput = document.querySelector("#yes-sats")
+    const yesCostDisplay = document.querySelector("#yes-cost")
+    const yesCostLabel = document.querySelector("#yes-cost-label")
     const yesSubmitLabel = document.querySelector("#yes-submit-label")
 
     const noOrderBtn = document.querySelector("#no-order")
@@ -85,7 +90,8 @@
     const noSellBtn = document.querySelector("#no-sell")
     const noSideInput = document.querySelector("#no-side")
     const noQuantityInput = document.querySelector("#no-quantity")
-    const noSatsInput = document.querySelector("#no-sats")
+    const noCostDisplay = document.querySelector("#no-cost")
+    const noCostLabel = document.querySelector("#no-cost-label")
     const noSubmitLabel = document.querySelector("#no-submit-label")
 
     yesOrderBtn.onclick = function () {
@@ -98,22 +104,28 @@
       yesSideInput.value = "BUY"
       yesBuyBtn.classList.add("selected")
       yesSellBtn.classList.remove("selected")
-      yesSubmitLabel.textContent = 'BUY YES contracts'
+      yesCostLabel.textContent = 'cost [sats]'
+      yesSubmitLabel.textContent = 'BUY YES shares'
+      yesQuantityInput.value = undefined
+      yesCostDisplay.value = undefined
     }
     yesSellBtn.onclick = function () {
       yesSideInput.value = "SELL"
       yesBuyBtn.classList.remove("selected")
       yesSellBtn.classList.add("selected")
-      yesSubmitLabel.textContent = 'SELL NO contracts'
+      yesCostLabel.textContent = 'payout [sats]'
+      yesSubmitLabel.textContent = 'SELL NO shares'
+      yesQuantityInput.value = undefined
+      yesCostDisplay.value = undefined
     }
-    yesSatsInput.onchange = async function(e) {
-      const sats = parseInt(e.target.value, 10)
+    yesQuantityInput.onchange = async function(e) {
+      const quantity = parseInt(e.target.value, 10)
       const body = {
-        contract_id: "{{(index .Contracts 0).Id}}",
-        sats,
+        share_id: "{{(index .Shares 0).Id}}",
+        quantity,
         side: yesSideInput.value
       }
-      const rBody = await fetch("/api/market/{{.Id}}/data", {
+      const rBody = await fetch("/api/market/{{.Id}}/cost", {
         method: "POST",
         headers: {
           "Content-type": "application/json"
@@ -126,8 +138,7 @@
         return null
       })
       if (!rBody) return null;
-      const quantity = rBody.quantity
-      yesQuantityInput.value = quantity
+      yesCostDisplay.value = parseFloat(Math.abs(rBody.cost)).toFixed(3)
     }
     noOrderBtn.onclick = function () {
       noOrderBtn.classList.add("selected")
@@ -139,22 +150,28 @@
       noSideInput.value = "BUY"
       noBuyBtn.classList.add("selected")
       noSellBtn.classList.remove("selected")
-      noSubmitLabel.textContent = 'BUY NO contracts'
+      noCostLabel.textContent = 'cost [sats]'
+      noSubmitLabel.textContent = 'BUY NO shares'
+      noQuantityInput.value = undefined
+      noCostDisplay.value = undefined
     }
     noSellBtn.onclick = function () {
       noSideInput.value = "SELL"
       noBuyBtn.classList.remove("selected")
       noSellBtn.classList.add("selected")
-      noSubmitLabel.textContent = 'SELL YES contracts'
+      noCostLabel.textContent = 'payout [sats]'
+      noSubmitLabel.textContent = 'SELL YES shares'
+      noQuantityInput.value = undefined
+      noCostDisplay.value = undefined
     }
-    noSatsInput.onchange = async function(e) {
-      const sats = parseInt(e.target.value, 10)
+    noQuantityInput.onchange = async function(e) {
+      const quantity = parseInt(e.target.value, 10)
       const body = {
-        contract_id: "{{(index .Contracts 1).Id}}",
-        sats,
+        share_id: "{{(index .Shares 1).Id}}",
+        quantity,
         side: noSideInput.value
       }
-      const rBody = await fetch("/api/market/{{.Id}}/data", {
+      const rBody = await fetch("/api/market/{{.Id}}/cost", {
         method: "POST",
         headers: {
           "Content-type": "application/json"
@@ -167,8 +184,7 @@
         return null
       })
       if (!rBody) return null;
-      const quantity = rBody.quantity
-      noQuantityInput.value = quantity
+      noCostDisplay.value = parseFloat(Math.abs(rBody.cost)).toFixed(3)
     }
   </script>
 </html>

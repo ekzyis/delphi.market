@@ -20,18 +20,18 @@ CREATE TABLE markets(
     active BOOLEAN DEFAULT true
 );
 CREATE EXTENSION "uuid-ossp";
-CREATE TABLE contracts(
+CREATE TABLE shares(
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     market_id INTEGER REFERENCES markets(id),
     description TEXT NOT NULL,
-    quantity DOUBLE PRECISION NOT NULL
+    quantity BIGINT NOT NULL DEFAULT 0
 );
 CREATE TYPE order_side AS ENUM ('BUY', 'SELL');
 CREATE TABLE trades(
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    contract_id UUID NOT NULL REFERENCES contracts(id),
+    share_id UUID NOT NULL REFERENCES shares(id),
     pubkey TEXT NOT NULL REFERENCES users(pubkey),
     side ORDER_SIDE NOT NULL,
-    quantity DOUBLE PRECISION NOT NULL,
+    quantity BIGINT NOT NULL,
     msats BIGINT NOT NULL
 );
