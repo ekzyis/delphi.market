@@ -25,6 +25,7 @@ type Share struct {
 
 type Order struct {
 	Session
+	Share
 	Id        string
 	ShareId   string `form:"share_id"`
 	Side      string `form:"side"`

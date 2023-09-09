@@ -71,9 +71,10 @@ func (db *DB) FetchShares(marketId int, shares *[]Share) error {
 
 func (db *DB) FetchOrders(marketId int, orders *[]Order) error {
 	rows, err := db.Query(""+
-		"SELECT o.id, share_id, o.pubkey, side, quantity, price, order_id "+
+		"SELECT o.id, share_id, o.pubkey, o.side, o.quantity, o.price, s.description, o.order_id "+
 		"FROM orders o "+
 		"JOIN invoices i ON o.invoice_id = i.id "+
+		"JOIN shares s ON o.share_id = s.id "+
 		"WHERE share_id = ANY(SELECT id FROM shares WHERE market_id = $1) "+
 		"AND i.confirmed_at IS NOT NULL "+
 		"ORDER BY price DESC", marketId)
@@ -83,7 +84,7 @@ func (db *DB) FetchOrders(marketId int, orders *[]Order) error {
 	defer rows.Close()
 	for rows.Next() {
 		var order Order
-		rows.Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.OrderId)
+		rows.Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.Share.Description, &order.OrderId)
 		*orders = append(*orders, order)
 	}
 	return nil

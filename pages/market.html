@@ -50,7 +50,7 @@
                 </tr>
                 {{ range .Orders }}
                 <tr>
-                    {{ if and (eq .ShareId $.YesShare.Id) (eq .Side "BUY") }}
+                    {{ if and (eq .Share.Description "YES") (eq .Side "BUY") }}
                     <td>
                         <div class="flex yes">
                             <span class="align-left">YES</span>
@@ -60,27 +60,17 @@
                     {{ else }}
                     <td></td>
                     {{ end }}
-                    {{ if and (eq .ShareId $.YesShare.Id) (eq .Side "SELL") }}
+                    {{ if (eq .Side "SELL") }}
                     <td>
                         <div class="flex no" style="width: 100%">
-                            <span class="align-left">YES</span>
+                            <span class="align-left">{{.Share.Description}}</span>
                             <span style="width: 100%" class="align-right">{{.Quantity}} @ {{.Price}}</span>
                         </div>
                     </td>
                     {{ else }}
                     <td></td>
                     {{ end }}
-                    {{ if and (eq .ShareId $.NoShare.Id) (eq .Side "SELL") }}
-                    <td>
-                        <div class="flex no">
-                            <span class="align-left">NO</span>
-                            <span style="width: 100%" class="align-right">{{.Quantity}} @ {{.Price}}</span>
-                        </div>
-                    </td>
-                    {{ else }}
-                    <td></td>
-                    {{ end }}
-                    {{ if and (eq .ShareId $.NoShare.Id) (eq .Side "BUY") }}
+                    {{ if and (eq .Share.Description "NO") (eq .Side "BUY") }}
                     <td>
                         <div class="flex yes">
                             <span class="align-left">NO</span>
