@@ -124,6 +124,7 @@ func sessionHandler(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 			c.Set("session", Session{pubkey})
 		} else if err != sql.ErrNoRows {
+			c.Logger().Error(err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"status": "ERROR", "reason": "internal server error"})
 		}
 		return next(c)
