@@ -40,12 +40,17 @@ CREATE TABLE invoices(
 CREATE TYPE order_side AS ENUM ('BUY', 'SELL');
 CREATE TABLE orders(
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     share_id UUID NOT NULL REFERENCES shares(id),
     pubkey TEXT NOT NULL REFERENCES users(pubkey),
     side ORDER_SIDE NOT NULL,
     quantity BIGINT NOT NULL,
     price BIGINT NOT NULL,
-    invoice_id UUID NOT NULL REFERENCES invoices(id),
-    order_id UUID REFERENCES orders(id)
+    invoice_id UUID NOT NULL REFERENCES invoices(id)
 );
 ALTER TABLE orders ADD CONSTRAINT order_price CHECK(price > 0 AND price < 100);
+CREATE TABLE matches(
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    oid1 UUID NOT NULL REFERENCES orders(id),
+    oid2 UUID NOT NULL REFERENCES orders(id)
+);

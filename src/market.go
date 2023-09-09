@@ -34,8 +34,8 @@ type Order struct {
 	Side      string `form:"side"`
 	Price     int    `form:"price"`
 	Quantity  int    `form:"quantity"`
-	OrderId   string
 	InvoiceId string
+	CreatedAt time.Time
 }
 
 type Invoice struct {

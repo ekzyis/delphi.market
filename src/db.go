@@ -77,7 +77,7 @@ type FetchOrdersWhere struct {
 
 func (db *DB) FetchOrders(where *FetchOrdersWhere, orders *[]Order) error {
 	query := "" +
-		"SELECT o.id, share_id, o.pubkey, o.side, o.quantity, o.price, o.invoice_id, s.description, s.market_id, i.confirmed_at, o.order_id " +
+		"SELECT o.id, share_id, o.pubkey, o.side, o.quantity, o.price, o.invoice_id, o.created_at, s.description, s.market_id, i.confirmed_at " +
 		"FROM orders o " +
 		"JOIN invoices i ON o.invoice_id = i.id " +
 		"JOIN shares s ON o.share_id = s.id " +
@@ -102,7 +102,7 @@ func (db *DB) FetchOrders(where *FetchOrdersWhere, orders *[]Order) error {
 	defer rows.Close()
 	for rows.Next() {
 		var order Order
-		rows.Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.InvoiceId, &order.Share.Description, &order.Share.MarketId, &order.Invoice.ConfirmedAt, &order.OrderId)
+		rows.Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.InvoiceId, &order.CreatedAt, &order.Share.Description, &order.Share.MarketId, &order.Invoice.ConfirmedAt)
 		*orders = append(*orders, order)
 	}
 	return nil
