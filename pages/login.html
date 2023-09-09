@@ -1,32 +1,34 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>delphi.market</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-    <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="/index.css" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#091833" />
-    {{ if eq .ENV "development" }}
-    <script defer src="/hotreload.js"></script>
-    {{ end }}
-  </head>
-  <body>
-    <header class="flex flex-row text-center justify-center pt-1">
-      <nav>
-        <a href="/">home</a>
-        {{ if .session }}
-        <form action='/logout' method='post'>
-          <button type='submit'>logout</button>
-        </form>
-       {{ else }} <a href="/login">login</a> {{ end }}
-      </nav>
-    </header>
-    <div class="container flex flex-column text-center justify-center">
-      <code>
+
+<head>
+  <title>delphi.market</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <link rel="stylesheet" href="/index.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#091833" />
+  {{ if eq .ENV "development" }}
+  <script defer src="/hotreload.js"></script>
+  {{ end }}
+</head>
+
+<body>
+  <header class="flex flex-row text-center justify-center pt-1">
+    <nav>
+      <a href="/">home</a>
+      {{ if .session }}
+      <form action='/logout' method='post'>
+        <button type='submit'>logout</button>
+      </form>
+      {{ else }} <a href="/login">login</a> {{ end }}
+    </nav>
+  </header>
+  <div class="container flex flex-column text-center justify-center">
+    <code>
         <strong>
           <pre>
  _             _       
@@ -37,40 +39,41 @@
          |___/         </pre>
         </strong>
       </code>
-      <div id="lnauth-qr">
-        <div class="mb-1">Login with Lightning</div>
-        <a href="lightning:{{.lnurl}}"><img class="m-auto mb-1" src="data:image/png;base64,{{.qr}}" width="100%"/></a>
-        <div class="font-mono word-wrap">{{.lnurl}}</div>
-      </div>
-      <div id="lnauth-success" hidden>
-        <div>Login successful</div>
-        <div>You are <span id="lnauth-pubkey" class="font-mono"></span></div>
-        <div id="lnauth-countdown">Redirecting in 3 ...</div>
-      </div>
+    <div id="lnauth-qr">
+      <div class="mb-1">Login with Lightning</div>
+      <a href="lightning:{{.lnurl}}"><img class="m-auto mb-1" src="data:image/png;base64,{{.qr}}" width="100%" /></a>
+      <div class="font-mono word-wrap">{{.lnurl}}</div>
     </div>
-  </body>
-  <script>
-    const qr = document.querySelector("#lnauth-qr")
-    const success = document.querySelector("#lnauth-success")
-    const pubkey = document.querySelector("#lnauth-pubkey")
-    const countdown = document.querySelector("#lnauth-countdown")
-    const interval = setInterval(async () => {
-      const body = await fetch(`/api/session`)
-        .then((r) => r.json())
-        .catch(console.error)
-      if (body.pubkey) {
-        qr.setAttribute("hidden", true)
-        pubkey.textContent = body.pubkey.slice(0, 10)
-        success.removeAttribute("hidden")
-        clearInterval(interval)
-        let timer = 2
-        const redirect = setInterval(() => {
-          countdown.textContent = `Redirecting in ${timer--} ...`
-          if (timer === -1) {
-            window.location.href = "https://{{.PUBLIC_URL}}/";
-          }
-        }, 1000)
-      }
-    }, 1000)
-  </script>
+    <div id="lnauth-success" hidden>
+      <div>Login successful</div>
+      <div>You are <span id="lnauth-pubkey" class="font-mono"></span></div>
+      <div id="lnauth-countdown">Redirecting in 3 ...</div>
+    </div>
+  </div>
+</body>
+<script>
+  const qr = document.querySelector("#lnauth-qr")
+  const success = document.querySelector("#lnauth-success")
+  const pubkey = document.querySelector("#lnauth-pubkey")
+  const countdown = document.querySelector("#lnauth-countdown")
+  const interval = setInterval(async () => {
+    const body = await fetch(`/api/session`)
+      .then((r) => r.json())
+      .catch(console.error)
+    if (body.pubkey) {
+      qr.setAttribute("hidden", true)
+      pubkey.textContent = body.pubkey.slice(0, 10)
+      success.removeAttribute("hidden")
+      clearInterval(interval)
+      let timer = 2
+      const redirect = setInterval(() => {
+        countdown.textContent = `Redirecting in ${timer--} ...`
+        if (timer === -1) {
+          window.location.href = "https://{{.PUBLIC_URL}}/";
+        }
+      }, 1000)
+    }
+  }, 1000)
+</script>
+
 </html>
