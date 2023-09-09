@@ -89,7 +89,7 @@ func (lnd *LndClient) CreateInvoice(pubkey string, msats int) (*Invoice, error) 
 	paymentRequest, err := lnd.Invoices.AddHoldInvoice(context.TODO(), &invoicesrpc.AddInvoiceData{
 		Hash:   &hash,
 		Value:  lnwire.MilliSatoshi(msats),
-		Expiry: int64(expiry),
+		Expiry: int64(expiry / time.Millisecond),
 	})
 	if err != nil {
 		return nil, err
