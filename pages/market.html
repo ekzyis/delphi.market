@@ -40,77 +40,81 @@
         </strong>
       </code>
         <div class="font-mono mb-1">{{.Description}}</div>
-        <div class="font-mono mb-1"><strong>Order Book</strong></div>
-        <table class="mb-1">
-            <tr>
-                <th class="align-left">BUY YES</th>
-                <th class="align-center">SELL</th>
-                <th class="align-right">BUY NO</th>
-            </tr>
-            {{ range .Orders }}
-            <tr>
-                {{ if and (eq .ShareId $.YesShare.Id) (eq .Side "BUY") }}
-                <td>
-                    <div class="flex yes">
-                        <span class="align-left">YES</span>
-                        <span style="width: 100%" class="align-right">{{.Quantity}} @ {{.Price}}</span>
-                    </div>
-                </td>
-                {{ else }}
-                <td></td>
+        <details open class="align-left">
+            <summary><span class="font-mono mb-1"><strong>Order Book</strong></span></summary>
+            <table class="w-100p mb-1">
+                <tr>
+                    <th class="align-left">BUY YES</th>
+                    <th class="align-center">SELL</th>
+                    <th class="align-right">BUY NO</th>
+                </tr>
+                {{ range .Orders }}
+                <tr>
+                    {{ if and (eq .ShareId $.YesShare.Id) (eq .Side "BUY") }}
+                    <td>
+                        <div class="flex yes">
+                            <span class="align-left">YES</span>
+                            <span style="width: 100%" class="align-right">{{.Quantity}} @ {{.Price}}</span>
+                        </div>
+                    </td>
+                    {{ else }}
+                    <td></td>
+                    {{ end }}
+                    {{ if and (eq .ShareId $.YesShare.Id) (eq .Side "SELL") }}
+                    <td>
+                        <div class="flex no" style="width: 100%">
+                            <span class="align-left">YES</span>
+                            <span style="width: 100%" class="align-right">{{.Quantity}} @ {{.Price}}</span>
+                        </div>
+                    </td>
+                    {{ else }}
+                    <td></td>
+                    {{ end }}
+                    {{ if and (eq .ShareId $.NoShare.Id) (eq .Side "SELL") }}
+                    <td>
+                        <div class="flex no">
+                            <span class="align-left">NO</span>
+                            <span style="width: 100%" class="align-right">{{.Quantity}} @ {{.Price}}</span>
+                        </div>
+                    </td>
+                    {{ else }}
+                    <td></td>
+                    {{ end }}
+                    {{ if and (eq .ShareId $.YesShare.Id) (eq .Side "BUY") }}
+                    <td>
+                        <div class="flex yes">
+                            <span class="align-left">YES</span>
+                            <span style="width: 100%" class="align-right">{{.Quantity}} @ {{.Price}}</span>
+                        </div>
+                    </td>
+                    {{ else }}
+                    <td></td>
+                    {{ end }}
+                </tr>
                 {{ end }}
-                {{ if and (eq .ShareId $.YesShare.Id) (eq .Side "SELL") }}
-                <td>
-                    <div class="flex no" style="width: 100%">
-                        <span class="align-left">YES</span>
-                        <span style="width: 100%" class="align-right">{{.Quantity}} @ {{.Price}}</span>
-                    </div>
-                </td>
-                {{ else }}
-                <td></td>
-                {{ end }}
-                {{ if and (eq .ShareId $.NoShare.Id) (eq .Side "SELL") }}
-                <td>
-                    <div class="flex no">
-                        <span class="align-left">NO</span>
-                        <span style="width: 100%" class="align-right">{{.Quantity}} @ {{.Price}}</span>
-                    </div>
-                </td>
-                {{ else }}
-                <td></td>
-                {{ end }}
-                {{ if and (eq .ShareId $.NoShare.Id) (eq .Side "BUY") }}
-                <td>
-                    <div class="flex yes">
-                        <span class="align-left">NO</span>
-                        <span style="width: 100%" class="align-right">{{.Quantity}} @ {{.Price}}</span>
-                    </div>
-                </td>
-                {{ else }}
-                <td></td>
-                {{ end }}
-            </tr>
-            {{ end }}
-        </table>
+            </table>
+        </details>
         <hr />
-        <div class="font-mono mb-1"><strong>Order Form</strong></div>
-        <form id="form" class="order-form" hidden action="/api/market/{{$.Id}}/order" method="post">
-            <button id="buy" type="button" class="order-button yes w-100p selected">BUY</button>
-            <button id="sell" type="button" class="order-button no w-100p">SELL</button>
-            <input id="market-id" hidden name="market_id" value="{{$.Id}}" />
-            <input id="side" hidden name="side" value="BUY" />
-            <label>share</label>
-            <select name="share_id">
-                <option value="{{.YesShare.Id}}">YES</option>
-                <option value="{{.NoShare.Id}}">NO</option>
-            </select>
-            <label>quantity</label>
-            <input id="quantity" type="number" name="quantity" placeholder="quantity" />
-            <label>price [sats]</label>
-            <input id="price" type="number" name="price" placeholder="price"/>
-            <label id="submit-label"></label>
-            <button type="submit">SUBMIT</button>
-        </form>
+        <details open class="align-left">
+            <summary><span class="font-mono mb-1"><strong>Order Form</strong></span></summary>
+            <form id="form" class="order-form" hidden action="/api/market/{{$.Id}}/order" method="post">
+                <button id="buy" type="button" class="order-button yes w-100p selected">BUY</button>
+                <button id="sell" type="button" class="order-button no w-100p">SELL</button>
+                <input id="market-id" hidden name="market_id" value="{{$.Id}}" />
+                <input id="side" hidden name="side" value="BUY" />
+                <label>share</label>
+                <select name="share_id">
+                    <option value="{{.YesShare.Id}}">YES</option>
+                    <option value="{{.NoShare.Id}}">NO</option>
+                </select>
+                <label>quantity</label>
+                <input id="quantity" type="number" name="quantity" placeholder="quantity" />
+                <label>price [sats]</label>
+                <input id="price" type="number" name="price" placeholder="price" />
+                <label id="submit-label"></label>
+                <button type="submit">SUBMIT</button>
+            </form>
+        </details>
     </div>
 </body>
 <script src="/order.js"></script>
