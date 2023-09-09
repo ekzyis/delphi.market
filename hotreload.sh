@@ -26,6 +26,8 @@ function cleanup() {
 trap cleanup EXIT
 
 sync
+tail -f server.log &
+
 while inotifywait -r -e modify src/ pages/; do
   sync
 done
