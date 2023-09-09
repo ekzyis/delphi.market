@@ -80,6 +80,21 @@ yesSellBtn.onclick = showSellForm
 noBuyBtn.onclick = showBuyForm
 noSellBtn.onclick = showSellForm
 
+function debounce(ms) {
+    let debounceTimeout = null
+    return function (fn, ...args) {
+        return function (e) {
+            if (debounceTimeout) {
+                clearTimeout(debounceTimeout)
+            }
+            debounceTimeout = setTimeout(() => {
+                fn(...args)(e)
+                debounceTimeout = null
+            }, ms)
+        }
+    }
+}
+
 function updatePrice(marketId, shareId) {
     return async function (e) {
         const quantity = parseInt(e.target.value, 10)
@@ -104,5 +119,5 @@ function updatePrice(marketId, shareId) {
         yesCostDisplay.value = parseFloat(Math.abs(rBody.cost)).toFixed(3)
     }
 }
-yesQuantityInput.onchange = updatePrice(marketId, yesShareId)
-noQuantityInput.onchange = updatePrice(marketId, noShareId)
+yesQuantityInput.oninput = debounce(250)(updatePrice, marketId, yesShareId)
+noQuantityInput.onchange = debounce(250)(updatePrice, marketId, noShareId)
