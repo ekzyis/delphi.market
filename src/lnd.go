@@ -114,6 +114,7 @@ func invoice(c echo.Context) error {
 	if invoice.Pubkey != session.Pubkey {
 		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
 	}
+	go lnd.CheckInvoice(invoice.PaymentHash)
 	qr, err := ToQR(invoice.PaymentRequest)
 	if err != nil {
 		return err
