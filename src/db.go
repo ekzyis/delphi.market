@@ -23,6 +23,10 @@ func init() {
 	flag.Parse()
 	validateFlags()
 	db = initDb()
+	_, err = db.Exec("SELECT 1")
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func initDb() *sql.DB {
