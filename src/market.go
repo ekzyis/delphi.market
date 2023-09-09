@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"math"
 	"net/http"
 	"strconv"
@@ -91,14 +92,12 @@ func order(c echo.Context) error {
 	}
 	go lnd.CheckInvoice(invoice.PaymentHash)
 	data := map[string]any{
-		"session":              c.Get("session"),
-		"ENV":                  ENV,
-		"lnurl":                invoice.PaymentRequest,
-		"qr":                   qr,
-		"Invoice":              invoice,
-		"RedirectAfterPayment": true,
-		"PUBLIC_URL":           PUBLIC_URL,
-		"MarketId":             marketId,
+		"session":     c.Get("session"),
+		"ENV":         ENV,
+		"lnurl":       invoice.PaymentRequest,
+		"qr":          qr,
+		"Invoice":     invoice,
+		"RedirectURL": fmt.Sprintf("https://%s/market/%s", PUBLIC_URL, marketId),
 	}
 	return c.Render(http.StatusPaymentRequired, "invoice.html", data)
 	// Step 2: After payment, confirm order if no matching order was found

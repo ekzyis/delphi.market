@@ -39,9 +39,9 @@
         </code>
         <div class="font-mono mb-1">
             <div class="mb-1">Payment Required</div>
-            <div id="paid" class="yes" hidden>
-                <div>Paid</div>
-                <div id="countdown">Redirecting in 3 ...</div>
+            <div id="status" hidden>
+                <div id="status-label"></div>
+                <div id="countdown" hidden>Redirecting in 3 ...</div>
             </div>
         </div>
         <div id="qr">
@@ -60,28 +60,54 @@
         </div>
     </div>
 </body>
-{{ if .RedirectAfterPayment }}
 <script>
-    const invoiceId = "{{.Invoice.Id}}"
-    const paid = document.querySelector("#paid")
-    const countdown = document.querySelector("#countdown")
-    const interval = setInterval(async () => {
-        const body = await fetch(`/api/invoice/${invoiceId}`)
-            .then((r) => r.json())
-            .catch(console.error)
-        if (body.ConfirmedAt) {
-            paid.removeAttribute("hidden")
+    const statusElement = document.querySelector("#status")
+    const label = document.querySelector("#status-label")
+    const status = "{{.Status}}"
+    const redirectUrl = "{{.RedirectURL}}"
+    function poll() {
+        const invoiceId = "{{.Invoice.Id}}"
+        const countdown = document.querySelector("#countdown")
+        const redirect = () => {
             clearInterval(interval)
+            countdown.removeAttribute("hidden")
             let timer = 2
             const redirect = setInterval(() => {
                 countdown.textContent = `Redirecting in ${timer--} ...`
                 if (timer === -1) {
-                    window.location.href = "https://{{.PUBLIC_URL}}/market/{{.MarketId}}";
+                    window.location.href = redirectURL;
                 }
             }, 1000)
         }
-    }, 1000)
+        const interval = setInterval(async () => {
+            const body = await fetch(`/api/invoice/${invoiceId}`)
+                .then((r) => r.json())
+                .catch(console.error)
+            if (body.ConfirmedAt) {
+                statusElement.removeAttribute("hidden")
+                statusElement.classList.add("yes")
+                label.textContent = "Paid"
+                if (redirectURL) redirect()
+            } else if (new Date(body.ExpiresAt) <= new Date()) {
+                statusElement.removeAttribute("hidden")
+                statusElement.classList.add("no")
+                label.textContent = "Expired"
+                if (redirectURL) redirect()
+            }
+        }, 1000)
+    }
+    if (status) {
+        console.log(status)
+        statusElement.removeAttribute("hidden")
+        label.textContent = status
+        if (status === "Paid") {
+            statusElement.classList.add("yes")
+        }
+        else if (status === "Expired") {
+            statusElement.classList.add("no")
+        }
+    }
+    else poll()
 </script>
-{{ end }}
 
 </html>

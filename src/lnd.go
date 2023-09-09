@@ -118,9 +118,16 @@ func invoice(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	status := ""
+	if invoice.ConfirmedAt.Valid {
+		status = "Paid"
+	} else if time.Now().After(invoice.ExpiresAt) {
+		status = "Expired"
+	}
 	data := map[string]any{
 		"session": c.Get("session"),
 		"Invoice": invoice,
+		"Status":  status,
 		"lnurl":   invoice.PaymentRequest,
 		"qr":      qr,
 	}
