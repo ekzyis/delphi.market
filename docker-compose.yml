@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:15.3
+    image: postgres:14
     container_name: delphi-db
     environment:
       POSTGRES_PASSWORD: delphi
@@ -13,6 +13,7 @@ services:
     volumes:
       - delphi:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./postgresql.conf:/var/lib/postgresql/data/postgresql.conf # for some reason this can't be mounted on first run
 
 volumes:
   delphi:
