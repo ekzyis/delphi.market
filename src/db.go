@@ -137,6 +137,32 @@ func (db *DB) FetchInvoice(invoiceId string, invoice *Invoice) error {
 	return nil
 }
 
+type FetchInvoicesWhere struct {
+	Expired bool
+}
+
+func (db *DB) FetchInvoices(where *FetchInvoicesWhere, invoices *[]Invoice) error {
+	query := "" +
+		"SELECT id, msats, msats_received, preimage, hash, bolt11, created_at, expires_at, confirmed_at, held_since " +
+		"FROM invoices i "
+	if where.Expired {
+		query += "WHERE i.expires_at <= CURRENT_TIMESTAMP"
+	} else {
+		query += "WHERE i.expires_at > CURRENT_TIMESTAMP"
+	}
+	rows, err := db.Query(query)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var inv Invoice
+		rows.Scan(&inv.Id, &inv.Msats, &inv.ReceivedMsats, &inv.Preimage, &inv.PaymentHash, &inv.PaymentRequest, &inv.CreatedAt, &inv.ExpiresAt, &inv.ConfirmedAt, &inv.HeldSince)
+		*invoices = append(*invoices, inv)
+	}
+	return nil
+}
+
 func (db *DB) ConfirmInvoice(hash string, confirmedAt time.Time, msatsReceived int) error {
 	if _, err := db.Exec("UPDATE invoices SET confirmed_at = $2, msats_received = $3 WHERE hash = $1", hash, confirmedAt, msatsReceived); err != nil {
 		return err

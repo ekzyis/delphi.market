@@ -81,7 +81,9 @@ func (lnd *LndClient) CheckInvoice(hash string) {
 		log.Printf("lookup invoice: hash=%s", hash)
 		invoice, err := lnd.LookupInvoice(context.TODO(), &lnrpc.PaymentHash{RHashStr: hash})
 		if err != nil {
-			panic(err)
+			log.Println(err)
+			time.Sleep(5 * time.Second)
+			continue
 		}
 		if time.Now().After(time.Unix(invoice.CreationDate+invoice.Expiry, 0)) {
 			log.Printf("invoice expired: hash=%s", hash)
@@ -89,7 +91,9 @@ func (lnd *LndClient) CheckInvoice(hash string) {
 		}
 		if invoice.SettleDate != 0 && invoice.AmtPaidMsat > 0 {
 			if err := db.ConfirmInvoice(hash, time.Unix(invoice.SettleDate, 0), int(invoice.AmtPaidMsat)); err != nil {
-				panic(err)
+				log.Println(err)
+				time.Sleep(5 * time.Second)
+				continue
 			}
 			log.Printf("invoice confirmed: hash=%s", hash)
 			break

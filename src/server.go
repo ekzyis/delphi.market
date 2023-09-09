@@ -74,6 +74,9 @@ func main() {
 	}))
 	e.Use(sessionHandler)
 	e.HTTPErrorHandler = httpErrorHandler
+	if err := RunJobs(); err != nil {
+		log.Fatal(err)
+	}
 	err := e.Start(fmt.Sprintf("%s:%d", "127.0.0.1", PORT))
 	if err != http.ErrServerClosed {
 		log.Fatal(err)
