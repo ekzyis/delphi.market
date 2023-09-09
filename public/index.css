@@ -41,6 +41,10 @@ nav > form > button:hover {
   color: #ffffff;
 }
 
+#lnauth-qr > a:hover {
+  background: none;
+}
+
 hr {
   border: none;
   height: 1px;
