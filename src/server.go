@@ -63,6 +63,7 @@ func main() {
 	e.GET("/api/login", verifyLogin)
 	e.GET("/api/session", checkSession)
 	e.POST("/logout", logout)
+	e.GET("/user", sessionGuard(user))
 	e.GET("/market/:id", sessionGuard(market))
 	e.POST("/market/:id/order", sessionGuard(order))
 	e.GET("/invoice/:id", sessionGuard(invoice))

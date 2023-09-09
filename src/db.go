@@ -69,22 +69,40 @@ func (db *DB) FetchShares(marketId int, shares *[]Share) error {
 	return nil
 }
 
-func (db *DB) FetchOrders(marketId int, orders *[]Order) error {
-	rows, err := db.Query(""+
-		"SELECT o.id, share_id, o.pubkey, o.side, o.quantity, o.price, s.description, o.order_id "+
-		"FROM orders o "+
-		"JOIN invoices i ON o.invoice_id = i.id "+
-		"JOIN shares s ON o.share_id = s.id "+
-		"WHERE share_id = ANY(SELECT id FROM shares WHERE market_id = $1) "+
-		"AND i.confirmed_at IS NOT NULL "+
-		"ORDER BY price DESC", marketId)
+type FetchOrdersWhere struct {
+	MarketId  int
+	Pubkey    string
+	Confirmed bool
+}
+
+func (db *DB) FetchOrders(where *FetchOrdersWhere, orders *[]Order) error {
+	query := "" +
+		"SELECT o.id, share_id, o.pubkey, o.side, o.quantity, o.price, o.invoice_id, s.description, s.market_id, i.confirmed_at, o.order_id " +
+		"FROM orders o " +
+		"JOIN invoices i ON o.invoice_id = i.id " +
+		"JOIN shares s ON o.share_id = s.id " +
+		"WHERE "
+	var args []any
+	if where.MarketId > 0 {
+		query += "share_id = ANY(SELECT id FROM shares WHERE market_id = $1) "
+		args = append(args, where.MarketId)
+	} else if where.Pubkey != "" {
+		query += "o.pubkey = $1 "
+		args = append(args, where.Pubkey)
+	}
+	if where.Confirmed {
+		query += "AND i.confirmed_at IS NOT NULL "
+	}
+	query += "AND (i.confirmed_at IS NOT NULL OR i.expires_at > CURRENT_TIMESTAMP) "
+	query += "ORDER BY price DESC"
+	rows, err := db.Query(query, args...)
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var order Order
-		rows.Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.Share.Description, &order.OrderId)
+		rows.Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.InvoiceId, &order.Share.Description, &order.Share.MarketId, &order.Invoice.ConfirmedAt, &order.OrderId)
 		*orders = append(*orders, order)
 	}
 	return nil
@@ -124,4 +142,8 @@ func (db *DB) ConfirmInvoice(hash string, confirmedAt time.Time, msatsReceived i
 		return err
 	}
 	return nil
+}
+
+func (db *DB) FetchUser(pubkey string, user *User) error {
+	return db.QueryRow("SELECT pubkey FROM users WHERE pubkey = $1", pubkey).Scan(&user.Pubkey)
 }

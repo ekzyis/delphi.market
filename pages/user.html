@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>delphi.market</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="/index.css" />
+    <link rel="stylesheet" href="/market.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#091833" />
+    {{ if eq .ENV "development" }}
+    <script defer src="/hotreload.js"></script>
+    {{ end }}
+</head>
+
+<body>
+    <header class="flex flex-row text-center justify-center pt-1">
+        <nav>
+            <a href="/">home</a>
+            {{ if .session }}
+            <a href='/user'>user</a>
+            {{ else }} <a href="/login">login</a> {{ end }}
+        </nav>
+    </header>
+    <div class="container flex flex-column text-center">
+        <code>
+        <strong>
+          <pre>
+ _   _ ___  ___ _ __ 
+| | | / __|/ _ \ '__|
+| |_| \__ \  __/ |   
+ \__,_|___/\___|_|   </pre>
+        </strong>
+      </code>
+        <div class="font-mono mb-1 align-left word-wrap">
+            You are: {{substr .session.Pubkey 0 8}}
+        </div>
+        <details open class="align-left mb-1">
+            <summary><span class="font-mono mb-1"><strong>Open Orders</strong></span></summary>
+            <table class="w-100p mb-1">
+                <tr>
+                    <th class="align-left">Market</th>
+                    <th class="align-center">Side</th>
+                    <th class="align-center">Share</th>
+                    <th class="align-right">Quantity @ Price</th>
+                </tr>
+                {{ range .Orders }}
+                {{ if .Invoice.ConfirmedAt.Valid }}
+                <tr class='{{ if eq .Side "BUY" }}yes{{ else }}no{{ end }}'>
+                    <td class="align-left">
+                        <a href="/market/{{.Share.MarketId}}">{{.Share.MarketId}}</a>
+                    </td>
+                    <td class="align-center">{{.Side}}</td>
+                    <td class="align-center">{{.Share.Description}}</td>
+                    <td class="align-right">{{.Quantity}} @ {{.Price}}</td>
+                </tr>
+                {{ end }}
+                {{ end }}
+            </table>
+        </details>
+        <details open class="align-left mb-1">
+            <summary><span class="font-mono mb-1"><strong>Unpaid Orders</strong></span></summary>
+            <table class="w-100p mb-1">
+                <tr>
+                    <th class="align-left">Market</th>
+                    <th class="align-center">Side</th>
+                    <th class="align-center">Share</th>
+                    <th class="align-right">Quantity @ Price</th>
+                    <th class="align-right">Invoice</th>
+                </tr>
+                {{ range .Orders }}
+                {{ if not .Invoice.ConfirmedAt.Valid }}
+                <tr class='{{ if eq .Side "BUY" }}yes{{ else }}no{{ end }}'>
+                    <td class="align-left">
+                        <a href="/market/{{.Share.MarketId}}">{{.Share.MarketId}}</a>
+                    </td>
+                    <td class="align-center">{{.Side}}</td>
+                    <td class="align-center">{{.Share.Description}}</td>
+                    <td class="align-right">{{.Quantity}} @ {{.Price}}</td>
+                    <td class="align-right"><a href="/invoice/{{.InvoiceId}}">invoice</a></td>
+                </tr>
+                {{ end }}
+                {{ end }}
+            </table>
+        </details>
+        <form class="align-left" action="/logout" method="post">
+            <button type="submit">logout</button>
+        </form>
+    </div>
+    <footer class="flex justify-center">
+        <div>
+            <hr />
+            <code><a href="https://github.com/ekzyis/delphi.market/commit/{{.COMMIT_LONG_SHA}}">{{.VERSION}}</a></code>
+        </div>
+    </footer>
+</body>
+
+</html>

@@ -26,6 +26,8 @@ type Share struct {
 type Order struct {
 	Session
 	Share
+	Market
+	Invoice
 	Id        string
 	ShareId   string `form:"share_id"`
 	Side      string `form:"side"`
@@ -131,7 +133,7 @@ func market(c echo.Context) error {
 		return err
 	}
 	var orders []Order
-	if err = db.FetchOrders(market.Id, &orders); err != nil {
+	if err = db.FetchOrders(&FetchOrdersWhere{MarketId: market.Id, Confirmed: true}, &orders); err != nil {
 		return err
 	}
 	data := map[string]any{

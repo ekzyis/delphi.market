@@ -26,11 +26,23 @@ func div(arg1 int, arg2 int) int {
 	return arg1 / arg2
 }
 
+func substr(s string, start, length int) string {
+	if start < 0 || start >= len(s) {
+		return ""
+	}
+	end := start + length
+	if end > len(s) {
+		end = len(s)
+	}
+	return s[start:end]
+}
+
 var (
 	FuncMap template.FuncMap = template.FuncMap{
-		"add": add,
-		"sub": sub,
-		"div": div,
+		"add":    add,
+		"sub":    sub,
+		"div":    div,
+		"substr": substr,
 	}
 )
 
