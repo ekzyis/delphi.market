@@ -85,7 +85,7 @@
         <hr />
         <details open class="align-left">
             <summary><span class="font-mono mb-1"><strong>Order Form</strong></span></summary>
-            <form id="form" class="order-form" hidden action="/market/{{$.Id}}/order" method="post">
+            <form id="form" class="order-form" action="/market/{{$.Id}}/order" method="post">
                 <button id="buy" type="button" class="order-button yes w-100p selected">BUY</button>
                 <button id="sell" type="button" class="order-button no w-100p">SELL</button>
                 <input id="market-id" hidden name="market_id" value="{{$.Id}}" />
