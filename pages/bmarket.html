@@ -49,10 +49,11 @@
       {{ end }}
     </div>
     {{ range .Shares }} {{ if eq .Description "YES" }}
-    <form id="yes-form" class="order-form" hidden action="/api/market/{{$.Id}}/order" method="post">
+    <form id="yes-form" class="order-form" hidden action="/api/market/order" method="post">
       <button id="yes-buy" type="button" class="order-button yes w-100p selected">BUY</button>
       <button id="yes-sell" type="button" class="order-button no w-100p">SELL</button>
-      <input hidden name="share_id" value="{{.Id}}" />
+      <input id="market-id" hidden name="market_id" value="{{$.Id}}" />
+      <input id="yes-share" hidden name="share_id" value="{{.Id}}" />
       <input id="yes-side" hidden name="side" value="BUY" />
       <label>shares</label>
       <input id="yes-quantity" type="number" name="quantity" placeholder="quantity" />
@@ -62,10 +63,11 @@
       <button type="submit">SUBMIT</button>
     </form>
     {{ else }}
-    <form id="no-form" class="order-form" hidden action="/api/market/{{$.Id}}/order" method="post">
+    <form id="no-form" class="order-form" hidden action="/api/market/order" method="post">
       <button id="no-buy" type="button" class="order-button yes w-100p selected">BUY</button>
       <button id="no-sell" type="button" class="order-button no w-100p">SELL</button>
-      <input hidden name="share_id" value="{{.Id}}" />
+      <input id="market-id" hidden name="market_id" value="{{$.Id}}" />
+      <input id="no-share" hidden name="share_id" value="{{.Id}}" />
       <input id="no-side" hidden name="side" value="BUY" />
       <label>shares</label>
       <input id="no-quantity" type="number" name="quantity" placeholder="quantity" />
