@@ -16,7 +16,6 @@ CREATE TABLE sessions(
 CREATE TABLE markets(
     id SERIAL PRIMARY KEY,
     description TEXT NOT NULL,
-    funding BIGINT NOT NULL,
     active BOOLEAN DEFAULT true
 );
 CREATE EXTENSION "uuid-ossp";

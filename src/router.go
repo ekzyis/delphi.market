@@ -34,7 +34,7 @@ func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Con
 }
 
 func index(c echo.Context) error {
-	rows, err := db.Query("SELECT id, description, funding, active FROM markets WHERE active = true")
+	rows, err := db.Query("SELECT id, description, active FROM markets WHERE active = true")
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func index(c echo.Context) error {
 	var markets []Market
 	for rows.Next() {
 		var market Market
-		rows.Scan(&market.Id, &market.Description, &market.Funding, &market.Active)
+		rows.Scan(&market.Id, &market.Description, &market.Active)
 		markets = append(markets, market)
 	}
 	data := map[string]any{

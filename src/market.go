@@ -13,7 +13,6 @@ import (
 type Market struct {
 	Id          int
 	Description string
-	Funding     int
 	Active      bool
 }
 
