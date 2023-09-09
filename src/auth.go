@@ -4,7 +4,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/rand"
 	"database/sql"
-	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"net/http"
@@ -13,7 +12,6 @@ import (
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcutil/bech32"
 	"github.com/labstack/echo/v4"
-	"github.com/skip2/go-qrcode"
 )
 
 type LnAuth struct {
@@ -84,11 +82,10 @@ func login(c echo.Context) error {
 	}
 	expires := time.Now().Add(60 * 60 * 24 * 365 * time.Second)
 	c.SetCookie(&http.Cookie{Name: "session", HttpOnly: true, Path: "/", Value: sessionId, Secure: true, Expires: expires})
-	png, err := qrcode.Encode(lnauth.lnurl, qrcode.Medium, 256)
+	qr, err := ToQR(lnauth.lnurl)
 	if err != nil {
 		return err
 	}
-	qr := base64.StdEncoding.EncodeToString([]byte(png))
 	return c.Render(http.StatusOK, "login.html", map[string]any{"session": c.Get("session"), "PUBLIC_URL": PUBLIC_URL, "lnurl": lnauth.lnurl, "qr": qr})
 }
 
