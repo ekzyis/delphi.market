@@ -59,7 +59,25 @@ ul {
   box-sizing:         border-box;
   margin: 1em auto;
   padding: 0 1em;
-  max-width: 60rem;
+  max-width: 100vw;
+}
+
+@media (min-width: 640px) {
+  .container {
+    max-width: 100vw;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 80vw;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 30vw;
+  }
 }
 
 .flex {
