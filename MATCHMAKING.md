@@ -42,12 +42,12 @@ This makes sure that when one sides win, the other side has deposited enough sat
 
 Order book will look like this:
 
-| YES BUY-IN     | SELLs           | NO BUY-IN     |
-| -------------- |---------------- |---------------|
+| YES BUY-IN     | SELLs           | NO BUY-IN     |                |
+| -------------- |---------------- |---------------|----------------|
 | YES BUY 5 @ 80 | YES SELL 5 @ 80 |               | (filled order)
 | YES BUY 5 @ 10 |                 | NO BUY 5 @ 90 | (filled order)
 | YES BUY 1 @ 60 |                 |               | (open order)
-|                | NO SELL 1 @     |               |
+|                | NO SELL 1 @ 20  |               |
 
 Market stats:
 
