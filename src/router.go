@@ -71,17 +71,18 @@ func index(c echo.Context) error {
 	return c.Render(http.StatusOK, "index.html", data)
 }
 
-func serve500(c echo.Context) {
-	f, err := os.Open("public/500.html")
+func serveError(c echo.Context, code int) error {
+	f, err := os.Open(fmt.Sprintf("public/%d.html", code))
 	if err != nil {
 		c.Logger().Error(err)
-		return
+		return err
 	}
-	err = c.Stream(500, "text/html", f)
+	err = c.Stream(code, "text/html", f)
 	if err != nil {
 		c.Logger().Error(err)
-		return
+		return err
 	}
+	return nil
 }
 
 func httpErrorHandler(err error, c echo.Context) {
@@ -95,13 +96,13 @@ func httpErrorHandler(err error, c echo.Context) {
 	f, err := os.Open(filePath)
 	if err != nil {
 		c.Logger().Error(err)
-		serve500(c)
+		serveError(c, 500)
 		return
 	}
 	err = c.Stream(code, "text/html", f)
 	if err != nil {
 		c.Logger().Error(err)
-		serve500(c)
+		serveError(c, 500)
 		return
 	}
 }

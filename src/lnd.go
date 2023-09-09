@@ -21,6 +21,7 @@ var (
 	LndMacaroonDir string
 	LndHost        string
 	lnd            *LndClient
+	lndEnabled     bool
 )
 
 type LndClient struct {
@@ -36,16 +37,29 @@ func init() {
 	flag.StringVar(&LndMacaroonDir, "LND_MACAROON_DIR", "", "LND macaroon directory")
 	flag.StringVar(&LndHost, "LND_HOST", "localhost:10001", "LND gRPC server address")
 	flag.Parse()
+	lndEnabled = false
 	rpcClient, err := lndclient.NewBasicClient(LndHost, LndCert, LndMacaroonDir, "regtest")
 	if err != nil {
-		panic(err)
+		log.Println(err)
+		return
 	}
 	lnd = &LndClient{LightningClient: rpcClient}
 	if info, err := lnd.GetInfo(context.TODO(), &lnrpc.GetInfoRequest{}); err != nil {
-		panic(err)
+		log.Printf("LND connection error: %v\n", err)
+		return
 	} else {
 		version := strings.Split(info.Version, " ")[0]
 		log.Printf("Connected to %s running LND v%s", LndHost, version)
+		lndEnabled = true
+	}
+}
+
+func lndGuard(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if lndEnabled {
+			return next(c)
+		}
+		return serveError(c, 405)
 	}
 }
 
@@ -77,6 +91,10 @@ func (lnd *LndClient) CreateInvoice(pubkey string, msats int) (*Invoice, error) 
 }
 
 func (lnd *LndClient) CheckInvoice(hash string) {
+	if !lndEnabled {
+		log.Printf("LND disabled, skipping checking invoice: hash=%s", hash)
+		return
+	}
 	for {
 		log.Printf("lookup invoice: hash=%s", hash)
 		invoice, err := lnd.LookupInvoice(context.TODO(), &lnrpc.PaymentHash{RHashStr: hash})
