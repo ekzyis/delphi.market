@@ -45,7 +45,7 @@ func init() {
 	flag.Parse()
 	e = echo.New()
 	t = &Template{
-		templates: template.Must(template.ParseGlob("template/**.html")),
+		templates: template.Must(template.ParseGlob("pages/**.html")),
 	}
 	COMMIT_LONG_SHA = execCmd("git", "rev-parse", "HEAD")
 	COMMIT_SHORT_SHA = execCmd("git", "rev-parse", "--short", "HEAD")

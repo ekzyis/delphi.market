@@ -24,6 +24,6 @@ function cleanup() {
 trap cleanup EXIT
 
 sync
-while inotifywait -r -e modify src/ template/; do
+while inotifywait -r -e modify src/ pages/; do
   sync
 done
