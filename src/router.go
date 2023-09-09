@@ -69,6 +69,11 @@ func verifyLogin(c echo.Context) error {
 		c.Logger().Error("bad signature")
 		return c.JSON(http.StatusUnauthorized, map[string]string{"status": "ERROR", "reason": "bad signature"})
 	}
+	_, err = db.Exec("INSERT INTO users(pubkey) VALUES ($1)", query.Key)
+	if err != nil {
+		c.Logger().Error(err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"status": "ERROR", "reason": "internal server error"})
+	}
 	_, err = db.Exec("INSERT INTO sessions(pubkey, session_id) VALUES($1, $2)", query.Key, sessionId)
 	if err != nil {
 		c.Logger().Error(err)
@@ -112,6 +117,11 @@ func sessionHandler(next echo.HandlerFunc) echo.HandlerFunc {
 		err = db.QueryRow("SELECT pubkey FROM sessions WHERE session_id = $1", sessionId).Scan(&pubkey)
 		if err == nil {
 			// session found
+			_, err = db.Exec("UPDATE users SET last_seen = CURRENT_TIMESTAMP WHERE pubkey = $1", pubkey)
+			if err != nil {
+				c.Logger().Error(err)
+				return c.JSON(http.StatusInternalServerError, map[string]string{"status": "ERROR", "reason": "internal server error"})
+			}
 			c.Set("session", Session{pubkey})
 		} else if err != sql.ErrNoRows {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"status": "ERROR", "reason": "internal server error"})
