@@ -117,6 +117,10 @@ ul {
   height: 100vh;
 }
 
+.w-100p {
+  width: 100%;
+}
+
 .m-auto {
   margin: auto;
 }

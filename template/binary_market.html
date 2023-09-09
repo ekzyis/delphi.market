@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>delphi.market</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="/index.css" />
+    <link rel="stylesheet" href="/market.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#091833" />
+  </head>
+  <body>
+    <header class="flex flex-row text-center justify-center pt-1">
+      <nav>
+        <a href="/">home</a>
+        {{ if .session }}
+        <form action='/logout' method='post'>
+          <button type='submit'>logout</button>
+        </form>
+       {{ else }} <a href="/login">login</a> {{ end }}
+      </nav>
+    </header>
+    <div class="container flex flex-column text-center">
+      <code>
+        <strong>
+          <pre>
+                      _        _   
+ _ __ ___   __ _ _ __| | _____| |_ 
+| '_ ` _ \ / _` | '__| |/ / _ \ __|
+| | | | | | (_| | |  |   <  __/ |_ 
+|_| |_| |_|\__,_|_|  |_|\_\___|\__|</pre>
+        </strong>
+      </code>
+      <div class="font-mono mb-1">{{.Description}}</div>
+      <div class="flex flex-row justify-center mb-1">
+        {{ range .Contracts }} {{ if eq .Description "YES" }}
+        <button id="yes-order" class="order-button sx-1 yes">YES</button>
+        {{ else }}
+        <button id="no-order" class="order-button sx-1 no">NO</button>
+        {{ end }}
+        {{ end }}
+      </div>
+      {{ range .Contracts }} {{ if eq .Description "YES" }}
+      <form id="yes-form" class="order-form" hidden action="/api/market/{{$.Id}}/order" method="post">
+        <button id="yes-buy" type="button" class="order-button yes w-100p selected">BUY</button>
+        <button id="yes-sell" type="button" class="order-button no w-100p">SELL</button>
+        <input hidden name="contract_id" value="{{.Id}}" />
+        <input id="yes-side" hidden name="side" value="BUY" />
+        <input id="yes-quantity" type="number" name="quantity" placeholder="quantity" disabled />
+        <input id="yes-sats" type="number" name="sats" placeholder="sats"/>
+        <label id="yes-submit-label">BUY YES contracts</label>
+        <button type="submit">SUBMIT</button>
+      </form>
+      {{ else }}
+      <form id="no-form" class="order-form" hidden action="/api/market/{{$.Id}}/order" method="post">
+        <button id="no-buy" type="button" class="order-button yes w-100p selected">BUY</button>
+        <button id="no-sell" type="button" class="order-button no w-100p">SELL</button>
+        <input hidden name="contract_id" value="{{.Id}}" />
+        <input id="no-side" hidden name="side" value="BUY" />
+        <input id="no-quantity" type="number" name="quantity" placeholder="quantity" disabled />
+        <input id="no-sats" type="number" name="sats" placeholder="sats" />
+        <label id="no-submit-label">BUY NO contracts</label>
+        <button type="submit">SUBMIT</button>
+      </form>
+      {{ end }}
+      {{ end }}
+    </div>
+  </body>
+  <script>
+    const yesOrderBtn = document.querySelector("#yes-order")
+    const yesForm = document.querySelector("#yes-form")
+    const yesBuyBtn = document.querySelector("#yes-buy")
+    const yesSellBtn = document.querySelector("#yes-sell")
+    const yesSideInput = document.querySelector("#yes-side")
+    const yesQuantityInput = document.querySelector("#yes-quantity")
+    const yesSatsInput = document.querySelector("#yes-sats")
+    const yesSubmitLabel = document.querySelector("#yes-submit-label")
+
+    const noOrderBtn = document.querySelector("#no-order")
+    const noForm  = document.querySelector("#no-form")
+    const noBuyBtn = document.querySelector("#no-buy")
+    const noSellBtn = document.querySelector("#no-sell")
+    const noSideInput = document.querySelector("#no-side")
+    const noQuantityInput = document.querySelector("#no-quantity")
+    const noSatsInput = document.querySelector("#no-sats")
+    const noSubmitLabel = document.querySelector("#no-submit-label")
+
+    yesOrderBtn.onclick = function () {
+      yesOrderBtn.classList.add("selected")
+      yesForm.style.display = "grid"
+      noOrderBtn.classList.remove("selected")
+      noForm.style.display = "none"
+    }
+    yesBuyBtn.onclick = function () {
+      yesSideInput.value = "BUY"
+      yesBuyBtn.classList.add("selected")
+      yesSellBtn.classList.remove("selected")
+      yesSubmitLabel.textContent = 'BUY YES contracts'
+    }
+    yesSellBtn.onclick = function () {
+      yesSideInput.value = "SELL"
+      yesBuyBtn.classList.remove("selected")
+      yesSellBtn.classList.add("selected")
+      yesSubmitLabel.textContent = 'SELL NO contracts'
+    }
+    yesSatsInput.onchange = async function(e) {
+      const sats = parseInt(e.target.value, 10)
+      const body = {
+        contract_id: "{{(index .Contracts 0).Id}}",
+        sats,
+        side: yesSideInput.value
+      }
+      const rBody = await fetch("/api/market/{{.Id}}/data", {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json"
+        },
+        body: JSON.stringify(body)
+      })
+      .then(r => r.json())
+      .catch((err) => {
+        console.error(err);
+        return null
+      })
+      if (!rBody) return null;
+      const quantity = rBody.quantity
+      yesQuantityInput.value = quantity
+    }
+    noOrderBtn.onclick = function () {
+      noOrderBtn.classList.add("selected")
+      noForm.style.display = "grid"
+      yesOrderBtn.classList.remove("selected")
+      yesForm.style.display = "none"
+    }
+    noBuyBtn.onclick = function () {
+      noSideInput.value = "BUY"
+      noBuyBtn.classList.add("selected")
+      noSellBtn.classList.remove("selected")
+      noSubmitLabel.textContent = 'BUY NO contracts'
+    }
+    noSellBtn.onclick = function () {
+      noSideInput.value = "SELL"
+      noBuyBtn.classList.remove("selected")
+      noSellBtn.classList.add("selected")
+      noSubmitLabel.textContent = 'SELL YES contracts'
+    }
+    noSatsInput.onchange = async function(e) {
+      const sats = parseInt(e.target.value, 10)
+      const body = {
+        contract_id: "{{(index .Contracts 1).Id}}",
+        sats,
+        side: noSideInput.value
+      }
+      const rBody = await fetch("/api/market/{{.Id}}/data", {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json"
+        },
+        body: JSON.stringify(body)
+      })
+      .then(r => r.json())
+      .catch((err) => {
+        console.error(err);
+        return null
+      })
+      if (!rBody) return null;
+      const quantity = rBody.quantity
+      noQuantityInput.value = quantity
+    }
+  </script>
+</html>

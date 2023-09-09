@@ -1,0 +1,43 @@
+.order-button {
+    border: none;
+    margin: auto;
+    border-radius: 4px;
+    font-size: 20px;
+}
+
+.order-form {
+    display: none;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+}
+
+.sx-1 {
+    margin: 0 1rem;
+    padding: 0 1rem;
+}
+
+.yes {
+    background-color: rgba(20,158,97,.24);
+    color: #35df8d;
+}
+.yes:hover {
+    background-color: #35df8d;
+    color: white;
+}
+.yes.selected {
+    background-color: #35df8d;
+    color: white;
+}
+
+.no {
+    background-color: rgba(245,57,94,.24);
+    color: #ff7386;
+}
+.no:hover {
+    background-color: #ff7386;
+    color: white;
+}
+.no.selected {
+    background-color: #ff7386;
+    color: white;
+}

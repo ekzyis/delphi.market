@@ -12,10 +12,32 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/skip2/go-qrcode"
+	"golang.org/x/exp/slices"
 )
 
 type Template struct {
 	templates *template.Template
+}
+
+type Market struct {
+	Id          int
+	Description string
+	Funding     int
+	Active      bool
+}
+
+type Contract struct {
+	Id          string
+	MarketId    int
+	Description string
+	Quantity    float64
+}
+
+type MarketDataRequest struct {
+	ContractId string  `json:"contract_id"`
+	OrderSide  string  `json:"side"`
+	Sats       int     `json:"sats,omitempty"`
+	Quantity   float64 `json:"quantity,omitempty"`
 }
 
 func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
@@ -23,7 +45,23 @@ func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Con
 }
 
 func index(c echo.Context) error {
-	return c.Render(http.StatusOK, "index.html", map[string]any{"session": c.Get("session"), "VERSION": VERSION, "COMMIT_LONG_SHA": COMMIT_LONG_SHA})
+	rows, err := db.Query("SELECT id, description, funding, active FROM markets WHERE active = true")
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	var markets []Market
+	for rows.Next() {
+		var market Market
+		rows.Scan(&market.Id, &market.Description, &market.Funding, &market.Active)
+		markets = append(markets, market)
+	}
+	data := map[string]any{
+		"session":         c.Get("session"),
+		"markets":         markets,
+		"VERSION":         VERSION,
+		"COMMIT_LONG_SHA": COMMIT_LONG_SHA}
+	return c.Render(http.StatusOK, "index.html", data)
 }
 
 func login(c echo.Context) error {
@@ -131,6 +169,16 @@ func sessionHandler(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
+func sessionGuard(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		session := c.Get("session")
+		if session == nil {
+			return c.Redirect(http.StatusTemporaryRedirect, "/login")
+		}
+		return next(c)
+	}
+}
+
 func logout(c echo.Context) error {
 	cookie, err := c.Cookie("session")
 	if err != nil {
@@ -146,6 +194,85 @@ func logout(c echo.Context) error {
 	// tell browser that cookie is expired and thus can be deleted
 	c.SetCookie(&http.Cookie{Name: "session", HttpOnly: true, Path: "/", Value: sessionId, Secure: true, Expires: time.Now()})
 	return c.Redirect(http.StatusSeeOther, "/")
+}
+
+func market(c echo.Context) error {
+	marketId := c.Param("id")
+	var market Market
+	err := db.QueryRow("SELECT id, description FROM markets WHERE id = $1 AND active = true", marketId).Scan(&market.Id, &market.Description)
+	if err == sql.ErrNoRows {
+		return echo.NewHTTPError(http.StatusNotFound, "Not Found")
+	} else if err != nil {
+		return err
+	}
+	rows, err := db.Query("SELECT id, market_id, description, quantity FROM contracts WHERE market_id = $1 ORDER BY description DESC", marketId)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	var contracts []Contract
+	for rows.Next() {
+		var contract Contract
+		rows.Scan(&contract.Id, &contract.MarketId, &contract.Description, &contract.Quantity)
+		contracts = append(contracts, contract)
+	}
+	data := map[string]any{
+		"session":     c.Get("session"),
+		"Id":          market.Id,
+		"Description": market.Description,
+		"Contracts":   contracts,
+	}
+	return c.Render(http.StatusOK, "binary_market.html", data)
+}
+
+func marketData(c echo.Context) error {
+	var req MarketDataRequest
+	err := c.Bind(&req)
+	if err != nil {
+		c.Logger().Error(err)
+		return c.JSON(http.StatusBadRequest, map[string]string{"status": "ERROR", "reason": "bad request"})
+	}
+	marketId := c.Param("id")
+	var market Market
+	err = db.QueryRow("SELECT id, description, funding FROM markets WHERE id = $1 AND active = true", marketId).Scan(&market.Id, &market.Description, &market.Funding)
+	if err == sql.ErrNoRows {
+		return c.JSON(http.StatusBadRequest, map[string]string{"status": "ERROR", "reason": "market not found"})
+	} else if err != nil {
+		c.Logger().Error(err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"status": "ERROR", "reason": "internal server error"})
+	}
+	rows, err := db.Query("SELECT id, market_id, description, quantity FROM contracts WHERE market_id = $1", marketId)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	var contracts []Contract
+	for rows.Next() {
+		var contract Contract
+		rows.Scan(&contract.Id, &contract.MarketId, &contract.Description, &contract.Quantity)
+		contracts = append(contracts, contract)
+	}
+	sats := req.Sats
+	quantity := req.Quantity
+	// contract A is always the contract which is bought or sold
+	contractAIdx := slices.IndexFunc(contracts, func(c Contract) bool { return c.Id == req.ContractId })
+	contractBIdx := 0
+	if contractAIdx == 0 {
+		contractBIdx = 1
+	}
+	contractAQ := contracts[contractAIdx].Quantity
+	contractBQ := contracts[contractBIdx].Quantity
+	if req.OrderSide == "BUY" && sats > 0 {
+		quantity, err := BinaryLMSRBuy(1, market.Funding, contractAQ, contractBQ, sats)
+		if err != nil {
+			return err
+		}
+		return c.JSON(http.StatusOK, map[string]string{"status": "OK", "quantity": fmt.Sprint(quantity)})
+	}
+	if req.OrderSide == "SELL" && quantity > 0 {
+		// TODO implement BinaryLMSRSell
+	}
+	return c.JSON(http.StatusBadRequest, map[string]string{"status": "ERROR", "reason": "bad request"})
 }
 
 func serve500(c echo.Context) {
