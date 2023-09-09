@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>delphi.market</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="/index.css" />
+    <link rel="stylesheet" href="/market.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#091833" />
+    {{ if eq .ENV "development" }}
+    <script defer src="/hotreload.js"></script>
+    {{ end }}
+</head>
+
+<body>
+    <header class="flex flex-row text-center justify-center pt-1">
+        <nav>
+            <a href="/">home</a>
+            {{ if .session }}
+            <form action='/logout' method='post'>
+                <button type='submit'>logout</button>
+            </form>
+            {{ else }} <a href="/login">login</a> {{ end }}
+        </nav>
+    </header>
+    <div class="container flex flex-column text-center">
+        <code>
+        <strong>
+          <pre>
+                      _        _   
+ _ __ ___   __ _ _ __| | _____| |_ 
+| '_ ` _ \ / _` | '__| |/ / _ \ __|
+| | | | | | (_| | |  |   <  __/ |_ 
+|_| |_| |_|\__,_|_|  |_|\_\___|\__|</pre>
+        </strong>
+      </code>
+        <div class="font-mono mb-1">{{.Description}}</div>
+        <div class="flex justify-start mb-1">
+            <a class="mx-1 selected" href="/market/{{.Id}}">Orders</a>
+            <a class="mx-1" href="/market/{{.Id}}/trade">Trade</a>
+        </div>
+        <div class="flex flex-row justify-center mb-1">
+            {{ range .Shares }}
+            <a class="mx-1 {{ if eq $.ShareId .Id }}selected{{end}}"
+                href="/market/{{$.Id}}/{{.Id}}">{{.Description}}</a>
+            {{ end }}
+        </div>
+        <table>
+            <tr>
+                <th class="align-left">Quantity</th>
+                <th class="align-right">Price</th>
+                <th class="align-left">Price</th>
+                <th class="align-right">Quantity</th>
+            </tr>
+            {{ range .OrderBook }}
+            <tr>
+                <td style="width: auto" class="align-left">{{.BuyQuantity}}</td>
+                <td style="width: 50%">
+                    <div class="flex">
+                        <span style="width: {{ sub 100 .BuyQuantity}}%"></span>
+                        <span style="width: {{.BuyQuantity}}%" class="align-right yes">{{.BuyPrice}}</span>
+                    </div>
+                </td>
+                <td style="width: 50%">
+                    <div class="flex">
+                        <span style="width: {{.SellQuantity}}%" class="align-left no">{{.SellPrice}}</span>
+                        <span style="width: {{ sub 100 .SellQuantity}}%"></span>
+                    </div>
+                </td>
+                <td style="width: auto" class="align-right">{{.SellQuantity}}</td>
+            </tr>
+            {{ end }}
+        </table>
+    </div>
+</body>
+<script src="/order.js"></script>
+
+</html>

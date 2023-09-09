@@ -12,7 +12,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/skip2/go-qrcode"
-	"golang.org/x/exp/slices"
 )
 
 type Template struct {
@@ -30,7 +29,20 @@ type Share struct {
 	Id          string
 	MarketId    int
 	Description string
-	Quantity    int
+}
+
+type Order struct {
+	ShareId  string
+	Side     string
+	Price    int
+	Quantity int
+}
+
+type OrderBookEntry struct {
+	BuyQuantity  int
+	BuyPrice     int
+	SellPrice    int
+	SellQuantity int
 }
 
 type MarketDataRequest struct {
@@ -196,7 +208,7 @@ func logout(c echo.Context) error {
 	return c.Redirect(http.StatusSeeOther, "/")
 }
 
-func bmarket(c echo.Context) error {
+func trades(c echo.Context) error {
 	marketId := c.Param("id")
 	var market Market
 	err := db.QueryRow("SELECT id, description FROM markets WHERE id = $1 AND active = true", marketId).Scan(&market.Id, &market.Description)
@@ -205,7 +217,7 @@ func bmarket(c echo.Context) error {
 	} else if err != nil {
 		return err
 	}
-	rows, err := db.Query("SELECT id, market_id, description, quantity FROM shares WHERE market_id = $1 ORDER BY description DESC", marketId)
+	rows, err := db.Query("SELECT id, market_id, description FROM shares WHERE market_id = $1 ORDER BY description DESC", marketId)
 	if err != nil {
 		return err
 	}
@@ -213,35 +225,30 @@ func bmarket(c echo.Context) error {
 	var shares []Share
 	for rows.Next() {
 		var share Share
-		rows.Scan(&share.Id, &share.MarketId, &share.Description, &share.Quantity)
+		rows.Scan(&share.Id, &share.MarketId, &share.Description)
 		shares = append(shares, share)
 	}
 	data := map[string]any{
 		"session":     c.Get("session"),
+		"ENV":         ENV,
 		"Id":          market.Id,
 		"Description": market.Description,
 		"Shares":      shares,
 	}
-	return c.Render(http.StatusOK, "bmarket.html", data)
+	return c.Render(http.StatusOK, "bmarket_trade.html", data)
 }
 
-func marketCost(c echo.Context) error {
-	var req MarketDataRequest
-	err := c.Bind(&req)
-	if err != nil {
-		c.Logger().Error(err)
-		return c.JSON(http.StatusBadRequest, map[string]string{"status": "ERROR", "reason": "bad request"})
-	}
+func orders(c echo.Context) error {
 	marketId := c.Param("id")
+	shareId := c.Param("sid")
 	var market Market
-	err = db.QueryRow("SELECT id, description, funding FROM markets WHERE id = $1 AND active = true", marketId).Scan(&market.Id, &market.Description, &market.Funding)
+	err := db.QueryRow("SELECT id, description FROM markets WHERE id = $1 AND active = true", marketId).Scan(&market.Id, &market.Description)
 	if err == sql.ErrNoRows {
-		return c.JSON(http.StatusBadRequest, map[string]string{"status": "ERROR", "reason": "market not found"})
+		return echo.NewHTTPError(http.StatusNotFound, "Not Found")
 	} else if err != nil {
-		c.Logger().Error(err)
-		return c.JSON(http.StatusInternalServerError, map[string]string{"status": "ERROR", "reason": "internal server error"})
+		return err
 	}
-	rows, err := db.Query("SELECT id, market_id, description, quantity FROM shares WHERE market_id = $1", marketId)
+	rows, err := db.Query("SELECT id, market_id, description FROM shares WHERE market_id = $1 ORDER BY description DESC", marketId)
 	if err != nil {
 		return err
 	}
@@ -249,23 +256,67 @@ func marketCost(c echo.Context) error {
 	var shares []Share
 	for rows.Next() {
 		var share Share
-		rows.Scan(&share.Id, &share.MarketId, &share.Description, &share.Quantity)
+		rows.Scan(&share.Id, &share.MarketId, &share.Description)
 		shares = append(shares, share)
 	}
-	dq1 := req.Quantity
-	// share 1 is always the share which is bought or sold
-	share1idx := slices.IndexFunc(shares, func(s Share) bool { return s.Id == req.ShareId })
-	share2idx := 0
-	if share1idx == 0 {
-		share2idx = 1
+	if shareId == "" {
+		c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("/market/%s/%s", marketId, shares[0].Id))
 	}
-	q1 := shares[share1idx].Quantity
-	q2 := shares[share2idx].Quantity
-	if req.OrderSide == "SELL" {
-		dq1 = -dq1
+	rows, err = db.Query(""+
+		"SELECT share_id, side, price, SUM(quantity)"+
+		"FROM orders WHERE share_id = $1"+
+		"GROUP BY (share_id, side, price)"+
+		"ORDER BY share_id DESC, side DESC, price DESC", shareId)
+	if err != nil {
+		return err
 	}
-	cost := BinaryLMSR(1, market.Funding, q1, q2, dq1)
-	return c.JSON(http.StatusOK, map[string]string{"status": "OK", "cost": fmt.Sprint(cost)})
+	defer rows.Close()
+	buyOrders := []Order{}
+	sellOrders := []Order{}
+	for rows.Next() {
+		var order Order
+		rows.Scan(&order.ShareId, &order.Side, &order.Price, &order.Quantity)
+		if order.Side == "BUY" {
+			buyOrders = append(buyOrders, Order{Price: order.Price, Quantity: order.Quantity})
+		} else {
+			sellOrders = append(sellOrders, Order{Price: order.Price, Quantity: order.Quantity})
+		}
+	}
+	orderBook := []OrderBookEntry{}
+	buySum := 0
+	sellSum := 0
+	for i := 0; i < Max(len(buyOrders), len(sellOrders)); i++ {
+		buyPrice, buyQuantity, sellQuantity, sellPrice := 0, 0, 0, 0
+		if i < len(buyOrders) {
+			buyPrice = buyOrders[i].Price
+			buyQuantity = buySum + buyOrders[i].Quantity
+		}
+		if i < len(sellOrders) {
+			sellPrice = sellOrders[i].Price
+			sellQuantity = sellSum + sellOrders[i].Quantity
+		}
+		buySum += buyQuantity
+		sellSum += sellQuantity
+		orderBook = append(
+			orderBook,
+			OrderBookEntry{
+				BuyQuantity:  buyQuantity,
+				BuyPrice:     buyPrice,
+				SellPrice:    sellPrice,
+				SellQuantity: sellQuantity,
+			},
+		)
+	}
+	data := map[string]any{
+		"session":     c.Get("session"),
+		"ENV":         ENV,
+		"Id":          market.Id,
+		"Description": market.Description,
+		"ShareId":     shareId,
+		"Shares":      shares,
+		"OrderBook":   orderBook,
+	}
+	return c.Render(http.StatusOK, "bmarket_order.html", data)
 }
 
 func serve500(c echo.Context) {

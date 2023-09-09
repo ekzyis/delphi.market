@@ -20,6 +20,10 @@ a:hover {
   background: #8787A4;
   color: #ffffff;
 }
+a.selected {
+  background: #8787A4;
+  color: #ffffff;
+}
 nav > a {
   margin: 0 3px;
 }
@@ -130,7 +134,20 @@ ul {
 .pt-1 {
   padding-top: 1em;
 }
+.mx-1 {
+  margin: 0 .2em;
+}
 
 .word-wrap {
   word-wrap: break-word;
+}
+
+.align-left {
+  text-align: left;
+}
+.align-center {
+  text-align: center;
+}
+.align-right {
+  text-align: right;
 }

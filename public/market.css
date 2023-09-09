@@ -20,11 +20,11 @@
     background-color: rgba(20,158,97,.24);
     color: #35df8d;
 }
-.yes:hover {
+button.yes:hover {
     background-color: #35df8d;
     color: white;
 }
-.yes.selected {
+button.yes.selected {
     background-color: #35df8d;
     color: white;
 }
@@ -33,11 +33,11 @@
     background-color: rgba(245,57,94,.24);
     color: #ff7386;
 }
-.no:hover {
+button.no:hover {
     background-color: #ff7386;
     color: white;
 }
-.no.selected {
+button.no.selected {
     background-color: #ff7386;
     color: white;
 }

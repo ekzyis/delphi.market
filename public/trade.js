@@ -43,6 +43,7 @@ function toggleYesForm() {
     noForm.style.display = "none"
 }
 yesOrderBtn.onclick = toggleYesForm
+toggleYesForm()
 
 function toggleNoForm() {
     resetInputs()
@@ -62,27 +63,23 @@ function showBuyForm() {
     resetInputs()
     yesBuyBtn.classList.add("selected")
     yesSellBtn.classList.remove("selected")
-    yesCostLabel.textContent = 'cost [sats]'
     yesSubmitLabel.textContent = 'BUY YES shares'
     yesSideInput.value = "BUY"
 
     noBuyBtn.classList.add("selected")
     noSellBtn.classList.remove("selected")
-    noCostLabel.textContent = 'cost [sats]'
-    noSubmitLabel.textContent = 'BUY YES shares'
+    noSubmitLabel.textContent = 'BUY NO shares'
     noSideInput.value = "BUY"
 }
 function showSellForm() {
     resetInputs()
     yesBuyBtn.classList.remove("selected")
     yesSellBtn.classList.add("selected")
-    yesCostLabel.textContent = 'payout [sats]'
     yesSubmitLabel.textContent = 'SELL NO shares'
     yesSideInput.value = "SELL"
 
     noBuyBtn.classList.remove("selected")
     noSellBtn.classList.add("selected")
-    noCostLabel.textContent = 'payout [sats]'
     noSubmitLabel.textContent = 'SELL YES shares'
     noSideInput.value = "SELL"
 }
@@ -130,5 +127,5 @@ function updatePrice(marketId, shareId) {
         yesCostDisplay.value = parseFloat(Math.abs(rBody.cost)).toFixed(3)
     }
 }
-yesQuantityInput.oninput = debounce(250)(updatePrice, marketId, yesShareId)
-noQuantityInput.onchange = debounce(250)(updatePrice, marketId, noShareId)
+// yesQuantityInput.oninput = debounce(250)(updatePrice, marketId, yesShareId)
+// noQuantityInput.onchange = debounce(250)(updatePrice, marketId, noShareId)

@@ -40,6 +40,10 @@
         </strong>
       </code>
     <div class="font-mono mb-1">{{.Description}}</div>
+    <div class="flex justify-start mb-1">
+      <a class="mx-1" href="/market/{{.Id}}">Orders</a>
+      <a class="mx-1 selected" href="/market/{{.Id}}/trade">Trade</a>
+    </div>
     <div class="flex flex-row justify-center mb-1">
       {{ range .Shares }} {{ if eq .Description "YES" }}
       <button id="yes-order" class="order-button sx-1 yes">YES</button>
@@ -57,7 +61,7 @@
       <input id="yes-side" hidden name="side" value="BUY" />
       <label>shares</label>
       <input id="yes-quantity" type="number" name="quantity" placeholder="quantity" />
-      <label id="yes-cost-label">cost [sats]</label>
+      <label>price [sats]</label>
       <input id="yes-cost" type="number" name="cost" disabled />
       <label id="yes-submit-label">BUY YES shares</label>
       <button type="submit">SUBMIT</button>
@@ -71,7 +75,7 @@
       <input id="no-side" hidden name="side" value="BUY" />
       <label>shares</label>
       <input id="no-quantity" type="number" name="quantity" placeholder="quantity" />
-      <label id="no-cost-label">cost [sats]</label>
+      <label>price [sats]</label>
       <input id="no-cost" type="number" name="cost" disabled />
       <label id="no-submit-label">BUY NO shares</label>
       <button type="submit">SUBMIT</button>
@@ -80,6 +84,6 @@
     {{ end }}
   </div>
 </body>
-<script src="/bmarket.js"></script>
+<script src="/trade.js"></script>
 
 </html>

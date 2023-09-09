@@ -45,7 +45,7 @@ func init() {
 	flag.Parse()
 	e = echo.New()
 	t = &Template{
-		templates: template.Must(template.ParseGlob("pages/**.html")),
+		templates: template.Must(template.New("").Funcs(FuncMap).ParseGlob("pages/**.html")),
 	}
 	COMMIT_LONG_SHA = execCmd("git", "rev-parse", "HEAD")
 	COMMIT_SHORT_SHA = execCmd("git", "rev-parse", "--short", "HEAD")
@@ -63,8 +63,9 @@ func main() {
 	e.GET("/api/login", verifyLogin)
 	e.GET("/api/session", checkSession)
 	e.POST("/logout", logout)
-	e.GET("/market/:id", sessionGuard(bmarket))
-	e.POST("/api/market/:id/cost", sessionGuard(marketCost))
+	e.GET("/market/:id", sessionGuard(orders))
+	e.GET("/market/:id/:sid", sessionGuard(orders))
+	e.GET("/market/:id/trade", sessionGuard(trades))
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format:           "${time_custom} ${method} ${uri} ${status}\n",
 		CustomTimeFormat: "2006-01-02 15:04:05.00000-0700",

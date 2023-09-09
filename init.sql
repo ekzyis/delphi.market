@@ -23,15 +23,19 @@ CREATE EXTENSION "uuid-ossp";
 CREATE TABLE shares(
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     market_id INTEGER REFERENCES markets(id),
-    description TEXT NOT NULL,
-    quantity BIGINT NOT NULL DEFAULT 0
+    description TEXT NOT NULL
 );
 CREATE TYPE order_side AS ENUM ('BUY', 'SELL');
-CREATE TABLE trades(
+CREATE TABLE orders(
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     share_id UUID NOT NULL REFERENCES shares(id),
     pubkey TEXT NOT NULL REFERENCES users(pubkey),
     side ORDER_SIDE NOT NULL,
     quantity BIGINT NOT NULL,
-    msats BIGINT NOT NULL
+    price BIGINT NOT NULL
+);
+CREATE TABLE trades(
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    order_id_1 UUID NOT NULL REFERENCES orders(id),
+    order_id_2 UUID NOT NULL REFERENCES orders(id)
 );
