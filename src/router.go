@@ -196,7 +196,7 @@ func logout(c echo.Context) error {
 	return c.Redirect(http.StatusSeeOther, "/")
 }
 
-func market(c echo.Context) error {
+func bmarket(c echo.Context) error {
 	marketId := c.Param("id")
 	var market Market
 	err := db.QueryRow("SELECT id, description FROM markets WHERE id = $1 AND active = true", marketId).Scan(&market.Id, &market.Description)
@@ -222,7 +222,7 @@ func market(c echo.Context) error {
 		"Description": market.Description,
 		"Shares":      shares,
 	}
-	return c.Render(http.StatusOK, "binary_market.html", data)
+	return c.Render(http.StatusOK, "bmarket.html", data)
 }
 
 func marketCost(c echo.Context) error {
