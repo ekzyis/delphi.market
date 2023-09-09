@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"log"
+	"time"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -70,8 +71,11 @@ func (db *DB) FetchShares(marketId int, shares *[]Share) error {
 
 func (db *DB) FetchOrders(marketId int, orders *[]Order) error {
 	rows, err := db.Query(""+
-		"SELECT id, share_id, pubkey, side, quantity, price, order_id FROM orders "+
+		"SELECT o.id, share_id, o.pubkey, side, quantity, price, order_id "+
+		"FROM orders o "+
+		"JOIN invoices i ON o.invoice_id = i.id "+
 		"WHERE share_id = ANY(SELECT id FROM shares WHERE market_id = $1) "+
+		"AND i.confirmed_at IS NOT NULL "+
 		"ORDER BY price DESC", marketId)
 	if err != nil {
 		return err
@@ -87,8 +91,35 @@ func (db *DB) FetchOrders(marketId int, orders *[]Order) error {
 
 func (db *DB) CreateOrder(order *Order) error {
 	if _, err := db.Exec(""+
-		"INSERT INTO orders(share_id, pubkey, side, quantity, price) "+
-		"VALUES ($1, $2, $3, $4, $5)", order.ShareId, order.Pubkey, order.Side, order.Quantity, order.Price); err != nil {
+		"INSERT INTO orders(share_id, pubkey, side, quantity, price, invoice_id) "+
+		"VALUES ($1, $2, $3, $4, $5, $6)",
+		order.ShareId, order.Pubkey, order.Side, order.Quantity, order.Price, order.InvoiceId); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (db *DB) CreateInvoice(invoice *Invoice) error {
+	if err := db.QueryRow(""+
+		"INSERT INTO invoices(pubkey, msats, preimage, hash, bolt11, created_at, expires_at) "+
+		"VALUES($1, $2, $3, $4, $5, $6, $7) "+
+		"RETURNING id",
+		invoice.Pubkey, invoice.Msats, invoice.Preimage, invoice.PaymentHash, invoice.PaymentRequest, invoice.CreatedAt, invoice.ExpiresAt).Scan(&invoice.Id); err != nil {
+		panic(err)
+	}
+	return nil
+}
+
+func (db *DB) FetchInvoice(invoiceId string, invoice *Invoice) error {
+	if err := db.QueryRow(""+
+		"SELECT id, pubkey, msats, preimage, hash, bolt11, created_at, expires_at FROM invoices WHERE id = $1", invoiceId).Scan(&invoice.Id, &invoice.Pubkey, &invoice.Msats, &invoice.Preimage, &invoice.PaymentHash, &invoice.PaymentRequest, &invoice.CreatedAt, &invoice.ExpiresAt); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (db *DB) ConfirmInvoice(hash string, confirmedAt time.Time, msatsReceived int) error {
+	if _, err := db.Exec("UPDATE invoices SET confirmed_at = $2, msats_received = $3 WHERE hash = $1", hash, confirmedAt, msatsReceived); err != nil {
 		return err
 	}
 	return nil

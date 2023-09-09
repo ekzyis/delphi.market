@@ -24,6 +24,19 @@ CREATE TABLE shares(
     market_id INTEGER REFERENCES markets(id),
     description TEXT NOT NULL
 );
+CREATE TABLE invoices(
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    pubkey TEXT NOT NULL REFERENCES users(pubkey),
+    msats BIGINT NOT NULL,
+    msats_received BIGINT,
+    preimage TEXT NOT NULL UNIQUE,
+    hash TEXT NOT NULL UNIQUE,
+    bolt11 TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    confirmed_at TIMESTAMP WITH TIME ZONE,
+    held_since TIMESTAMP WITH TIME ZONE
+);
 CREATE TYPE order_side AS ENUM ('BUY', 'SELL');
 CREATE TABLE orders(
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -32,6 +45,7 @@ CREATE TABLE orders(
     side ORDER_SIDE NOT NULL,
     quantity BIGINT NOT NULL,
     price BIGINT NOT NULL,
+    invoice_id UUID NOT NULL REFERENCES invoices(id),
     order_id UUID REFERENCES orders(id)
 );
 ALTER TABLE orders ADD CONSTRAINT order_price CHECK(price > 0 AND price < 100);

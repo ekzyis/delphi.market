@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>delphi.market</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="/index.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#091833" />
+    {{ if eq .ENV "development" }}
+    <script defer src="/hotreload.js"></script>
+    {{ end }}
+</head>
+
+<body>
+    <header class="flex flex-row text-center justify-center pt-1">
+        <nav>
+            <a href="/">home</a>
+            {{ if .session }}
+            <form action='/logout' method='post'>
+                <button type='submit'>logout</button>
+            </form>
+            {{ else }} <a href="/login">login</a> {{ end }}
+        </nav>
+    </header>
+    <div class="container flex flex-column text-center justify-center">
+        <code>
+        <strong>
+            <pre>
+ _  _    ___ ____  
+| || |  / _ \___ \ 
+| || |_| | | |__) |
+|__   _| |_| / __/ 
+   |_|  \___/_____|</pre>
+        </strong>
+        </code>
+        <div class="font-mono mb-1">Payment Required</div>
+        <div id="qr">
+            <a href="lightning:{{.lnurl}}">
+                <img class="m-auto mb-1" src="data:image/png;base64,{{.qr}}" width="100%" />
+            </a>
+            <div class="font-mono word-wrap mb-1">{{.lnurl}}</div>
+            <details class="font-mono mb-1 align-left">
+                <summary>details</summary>
+                <div>id: {{.Invoice.Id}}</div>
+                <div>amount: {{div .Invoice.Msats 1000}} sats</div>
+                <div>created: {{.Invoice.CreatedAt}}</div>
+                <div>expiry : {{.Invoice.ExpiresAt}}</div>
+                <div class="word-wrap">hash: {{.Invoice.PaymentHash}}</div>
+            </details>
+        </div>
+    </div>
+</body>
+<script>
+</script>
+
+</html>

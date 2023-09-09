@@ -39,7 +39,7 @@
          |___/         </pre>
         </strong>
       </code>
-    <div id="lnauth-qr">
+    <div id="qr">
       <div class="mb-1">Login with Lightning</div>
       <a href="lightning:{{.lnurl}}"><img class="m-auto mb-1" src="data:image/png;base64,{{.qr}}" width="100%" /></a>
       <div class="font-mono word-wrap">{{.lnurl}}</div>
@@ -52,7 +52,7 @@
   </div>
 </body>
 <script>
-  const qr = document.querySelector("#lnauth-qr")
+  const qr = document.querySelector("#qr")
   const success = document.querySelector("#lnauth-success")
   const pubkey = document.querySelector("#lnauth-pubkey")
   const countdown = document.querySelector("#lnauth-countdown")

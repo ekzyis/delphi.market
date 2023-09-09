@@ -45,7 +45,7 @@ nav > form > button:hover {
   color: #ffffff;
 }
 
-#lnauth-qr > a:hover {
+#qr > a:hover {
   background: none;
 }
 
@@ -156,4 +156,7 @@ ul {
 }
 .align-right {
   text-align: right;
+}
+.scroll-x {
+  overflow-x: scroll;
 }
