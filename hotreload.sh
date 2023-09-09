@@ -5,8 +5,10 @@ PID=$(pidof delphi.market)
 set -e
 
 function restart_server() {
+  set +e
   [[ -z "$PID" ]] || kill -15 $PID
   ENV=development make build -B
+  set -e
   ./delphi.market >> server.log 2>&1 &
   PID=$(pidof delphi.market)
 }
