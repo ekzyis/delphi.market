@@ -75,7 +75,7 @@
             const redirect = setInterval(() => {
                 countdown.textContent = `Redirecting in ${timer--} ...`
                 if (timer === -1) {
-                    window.location.href = redirectURL;
+                    window.location.href = redirectUrl;
                 }
             }, 1000)
         }
@@ -87,12 +87,12 @@
                 statusElement.removeAttribute("hidden")
                 statusElement.classList.add("yes")
                 label.textContent = "Paid"
-                if (redirectURL) redirect()
+                if (redirectUrl) redirect()
             } else if (new Date(body.ExpiresAt) <= new Date()) {
                 statusElement.removeAttribute("hidden")
                 statusElement.classList.add("no")
                 label.textContent = "Expired"
-                if (redirectURL) redirect()
+                if (redirectUrl) redirect()
             }
         }, 1000)
     }
