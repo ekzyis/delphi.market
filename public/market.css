@@ -41,3 +41,7 @@ button.no.selected {
     background-color: #ff7386;
     color: white;
 }
+
+th {
+    font-size: small;
+}

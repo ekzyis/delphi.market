@@ -37,21 +37,28 @@
         </strong>
       </code>
         <div class="font-mono mb-1 align-left word-wrap">
-            You are: {{substr .session.Pubkey 0 8}}
+            <div class="mb-1">
+                You are: {{substr .session.Pubkey 0 8}}
+            </div>
+            <div>
+                <form class="align-left" action="/logout" method="post">
+                    <button type="submit">logout</button>
+                </form>
+            </div>
         </div>
-        <details open class="align-left mb-1">
-            <summary><span class="font-mono mb-1"><strong>Open Orders</strong></span></summary>
+        <div class="align-left mb-1">
+            <span class="font-mono mb-1"><strong>Open Orders</strong></span>
             <table class="w-100p mb-1">
                 <tr>
-                    <th class="align-left">Market</th>
-                    <th class="align-center">Side</th>
-                    <th class="align-center">Share</th>
-                    <th class="align-right">Quantity @ Price</th>
+                    <th class="align-center">Market</th>
+                    <th class="align-center"></th>
+                    <th class="align-center"></th>
+                    <th class="align-right"></th>
                 </tr>
                 {{ range .Orders }}
                 {{ if .Invoice.ConfirmedAt.Valid }}
                 <tr class='{{ if eq .Side "BUY" }}yes{{ else }}no{{ end }}'>
-                    <td class="align-left">
+                    <td class="align-center">
                         <a href="/market/{{.Share.MarketId}}">{{.Share.MarketId}}</a>
                     </td>
                     <td class="align-center">{{.Side}}</td>
@@ -61,35 +68,32 @@
                 {{ end }}
                 {{ end }}
             </table>
-        </details>
-        <details open class="align-left mb-1">
-            <summary><span class="font-mono mb-1"><strong>Unpaid Orders</strong></span></summary>
+        </div>
+        <div class="align-left mb-1">
+            <span class="font-mono mb-1"><strong>Unpaid Orders</strong></span>
             <table class="w-100p mb-1">
                 <tr>
-                    <th class="align-left">Market</th>
-                    <th class="align-center">Side</th>
-                    <th class="align-center">Share</th>
-                    <th class="align-right">Quantity @ Price</th>
-                    <th class="align-right">Invoice</th>
+                    <th class="align-center">Market</th>
+                    <th class="align-center"></th>
+                    <th class="align-center"></th>
+                    <th class="align-right"></th>
+                    <th class="align-center">Invoice</th>
                 </tr>
                 {{ range .Orders }}
                 {{ if not .Invoice.ConfirmedAt.Valid }}
                 <tr class='{{ if eq .Side "BUY" }}yes{{ else }}no{{ end }}'>
-                    <td class="align-left">
+                    <td class="align-center">
                         <a href="/market/{{.Share.MarketId}}">{{.Share.MarketId}}</a>
                     </td>
                     <td class="align-center">{{.Side}}</td>
                     <td class="align-center">{{.Share.Description}}</td>
                     <td class="align-right">{{.Quantity}} @ {{.Price}} ⚡</td>
-                    <td class="align-right"><a href="/invoice/{{.InvoiceId}}">invoice</a></td>
+                    <td class="align-center"><a href="/invoice/{{.InvoiceId}}">invoice</a></td>
                 </tr>
                 {{ end }}
                 {{ end }}
             </table>
-        </details>
-        <form class="align-left" action="/logout" method="post">
-            <button type="submit">logout</button>
-        </form>
+        </div>
     </div>
     <footer class="flex justify-center">
         <div>
