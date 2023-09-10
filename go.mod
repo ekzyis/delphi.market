@@ -1,6 +1,8 @@
-module delphi.market
+module git.ekzyis.com/ekzyis/delphi.market
 
 go 1.20
+
+replace git.schwanenlied.me/yawning/bsaes.git v0.0.0-20180720073208-c0276d75487e => gitlab.com/yawning/bsaes.git v0.0.0-20180720073208-c0276d75487e
 
 require (
 	github.com/btcsuite/btcd/btcec/v2 v2.2.2
@@ -8,9 +10,12 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.11.1
 	github.com/lib/pq v1.10.9
+	github.com/lightninglabs/lndclient v1.0.0
+	github.com/lightningnetwork/lnd v0.10.0-beta.rc6.0.20200615174244-103c59a4889f
 	github.com/namsral/flag v1.7.4-pre
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
-	golang.org/x/exp v0.0.0-20230725093048-515e97ebf090
+	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
+	gopkg.in/guregu/null.v4 v4.0.0
 )
 
 require (
@@ -55,10 +60,8 @@ require (
 	github.com/konsorten/go-windows-terminal-sequences v1.0.1 // indirect
 	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/lightninglabs/gozmq v0.0.0-20191113021534-d20a764486bf // indirect
-	github.com/lightninglabs/lndclient v1.0.0 // indirect
 	github.com/lightninglabs/neutrino v0.11.1-0.20200316235139-bffc52e8f200 // indirect
 	github.com/lightningnetwork/lightning-onion v1.0.2-0.20200501022730-3c8c8d0b89ea // indirect
-	github.com/lightningnetwork/lnd v0.10.0-beta.rc6.0.20200615174244-103c59a4889f // indirect
 	github.com/lightningnetwork/lnd/clock v1.0.1 // indirect
 	github.com/lightningnetwork/lnd/queue v1.0.4 // indirect
 	github.com/lightningnetwork/lnd/ticker v1.0.0 // indirect
@@ -85,14 +88,13 @@ require (
 	go.uber.org/zap v1.14.1 // indirect
 	golang.org/x/crypto v0.11.0 // indirect
 	golang.org/x/net v0.12.0 // indirect
-	golang.org/x/sys v0.10.0 // indirect
+	golang.org/x/sys v0.12.0 // indirect
 	golang.org/x/term v0.10.0 // indirect
 	golang.org/x/text v0.11.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/genproto v0.0.0-20190927181202-20e1ac93f88c // indirect
 	google.golang.org/grpc v1.24.0 // indirect
 	gopkg.in/errgo.v1 v1.0.1 // indirect
-	gopkg.in/guregu/null.v4 v4.0.0 // indirect
 	gopkg.in/macaroon-bakery.v2 v2.0.1 // indirect
 	gopkg.in/macaroon.v2 v2.1.0 // indirect
 	gopkg.in/yaml.v2 v2.2.3 // indirect

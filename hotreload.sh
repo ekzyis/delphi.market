@@ -13,10 +13,9 @@ function restart_server() {
   PID=$(pidof delphi.market)
 }
 
-function sync() {
+function restart() {
   restart_server
   date +%s.%N > public/hotreload
-  rsync -avh public/ dev1.delphi.market:/var/www/dev1.delphi --delete
 }
 
 function cleanup() {
@@ -25,9 +24,9 @@ function cleanup() {
 }
 trap cleanup EXIT
 
-sync
+restart
 tail -f server.log &
 
-while inotifywait -r -e modify src/ pages/; do
-  sync
+while inotifywait -r -e modify db/ env/ lib/ lnd/ pages/ public/ server/; do
+  restart
 done

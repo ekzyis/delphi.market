@@ -51,11 +51,11 @@
             <div class="font-mono word-wrap mb-1">{{.lnurl}}</div>
             <details class="font-mono mb-1 align-left">
                 <summary>details</summary>
-                <div>id: {{.Invoice.Id}}</div>
-                <div>amount: {{div .Invoice.Msats 1000}} sats</div>
-                <div>created: {{.Invoice.CreatedAt}}</div>
-                <div>expiry : {{.Invoice.ExpiresAt}}</div>
-                <div class="word-wrap">hash: {{.Invoice.PaymentHash}}</div>
+                <div>id: {{.invoice.Id}}</div>
+                <div>amount: {{div .invoice.Msats 1000}} sats</div>
+                <div>created: {{.invoice.CreatedAt}}</div>
+                <div>expiry : {{.invoice.ExpiresAt}}</div>
+                <div class="word-wrap">hash: {{.invoice.Hash}}</div>
             </details>
         </div>
     </div>
@@ -63,10 +63,10 @@
 <script>
     const statusElement = document.querySelector("#status")
     const label = document.querySelector("#status-label")
-    const status = "{{.Status}}"
-    const redirectUrl = "{{.RedirectURL}}"
+    const status = "{{.status}}"
+    const redirectUrl = "{{.redirectURL}}"
     function poll() {
-        const invoiceId = "{{.Invoice.Id}}"
+        const invoiceId = "{{.invoice.Id}}"
         const countdown = document.querySelector("#countdown")
         const redirect = () => {
             clearInterval(interval)
