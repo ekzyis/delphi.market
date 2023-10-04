@@ -5,10 +5,11 @@ import (
 	"net/http"
 
 	"git.ekzyis.com/ekzyis/delphi.market/db"
+	"git.ekzyis.com/ekzyis/delphi.market/server/router/context"
 	"github.com/labstack/echo/v4"
 )
 
-func HandleCheckSession(envVars map[string]any) echo.HandlerFunc {
+func HandleCheckSession(sc context.ServerContext) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			cookie *http.Cookie
@@ -19,7 +20,7 @@ func HandleCheckSession(envVars map[string]any) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusBadRequest, map[string]string{"reason": "cookie required"})
 		}
 		s = db.Session{SessionId: cookie.Value}
-		if err = db.FetchSession(&s); err == sql.ErrNoRows {
+		if err = sc.Db.FetchSession(&s); err == sql.ErrNoRows {
 			return echo.NewHTTPError(http.StatusNotFound, map[string]string{"reason": "session not found"})
 		} else if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError)

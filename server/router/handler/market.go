@@ -9,12 +9,12 @@ import (
 	"git.ekzyis.com/ekzyis/delphi.market/db"
 	"git.ekzyis.com/ekzyis/delphi.market/env"
 	"git.ekzyis.com/ekzyis/delphi.market/lib"
-	"git.ekzyis.com/ekzyis/delphi.market/lnd"
+	"git.ekzyis.com/ekzyis/delphi.market/server/router/context"
 	"github.com/labstack/echo/v4"
 	"github.com/lightningnetwork/lnd/lntypes"
 )
 
-func HandleMarket(envVars map[string]any) echo.HandlerFunc {
+func HandleMarket(sc context.ServerContext) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			marketId int64
@@ -27,15 +27,15 @@ func HandleMarket(envVars map[string]any) echo.HandlerFunc {
 		if marketId, err = strconv.ParseInt(c.Param("id"), 10, 64); err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "Bad Request")
 		}
-		if err = db.FetchMarket(int(marketId), &market); err == sql.ErrNoRows {
+		if err = sc.Db.FetchMarket(int(marketId), &market); err == sql.ErrNoRows {
 			return echo.NewHTTPError(http.StatusNotFound, "Not Found")
 		} else if err != nil {
 			return err
 		}
-		if err = db.FetchShares(market.Id, &shares); err != nil {
+		if err = sc.Db.FetchShares(market.Id, &shares); err != nil {
 			return err
 		}
-		if err = db.FetchOrders(&db.FetchOrdersWhere{MarketId: market.Id, Confirmed: true}, &orders); err != nil {
+		if err = sc.Db.FetchOrders(&db.FetchOrdersWhere{MarketId: market.Id, Confirmed: true}, &orders); err != nil {
 			return err
 		}
 		data = map[string]any{
@@ -48,12 +48,11 @@ func HandleMarket(envVars map[string]any) echo.HandlerFunc {
 			"NoShare":  shares[1],
 			"Orders":   orders,
 		}
-		lib.Merge(&data, &envVars)
-		return c.Render(http.StatusOK, "market.html", data)
+		return sc.Render(c, http.StatusOK, "market.html", data)
 	}
 }
 
-func HandlePostOrder(envVars map[string]any) echo.HandlerFunc {
+func HandlePostOrder(sc context.ServerContext) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			marketId string
@@ -86,7 +85,7 @@ func HandlePostOrder(envVars map[string]any) echo.HandlerFunc {
 		// TODO: if SELL order, check share balance of user
 
 		// Create HODL invoice
-		if invoice, err = lnd.CreateInvoice(o.Pubkey, msats); err != nil {
+		if invoice, err = sc.Lnd.CreateInvoice(sc.Db, o.Pubkey, msats); err != nil {
 			return err
 		}
 		// Create QR code to pay HODL invoice
@@ -98,11 +97,11 @@ func HandlePostOrder(envVars map[string]any) echo.HandlerFunc {
 		}
 
 		// Start goroutine to poll status and update invoice in background
-		go lnd.CheckInvoice(hash)
+		go sc.Lnd.CheckInvoice(sc.Db, hash)
 
 		// Create (unconfirmed) order
 		o.InvoiceId = invoice.Id
-		if err := db.CreateOrder(&o); err != nil {
+		if err := sc.Db.CreateOrder(&o); err != nil {
 			return err
 		}
 
@@ -115,7 +114,6 @@ func HandlePostOrder(envVars map[string]any) echo.HandlerFunc {
 			"invoice":     *invoice,
 			"redirectURL": fmt.Sprintf("https://%s/market/%s", env.PublicURL, marketId),
 		}
-		lib.Merge(&data, &envVars)
-		return c.Render(http.StatusPaymentRequired, "invoice.html", data)
+		return sc.Render(c, http.StatusPaymentRequired, "invoice.html", data)
 	}
 }

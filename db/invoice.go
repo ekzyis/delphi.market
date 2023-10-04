@@ -2,7 +2,7 @@ package db
 
 import "time"
 
-func CreateInvoice(invoice *Invoice) error {
+func (db *DB) CreateInvoice(invoice *Invoice) error {
 	if err := db.QueryRow(""+
 		"INSERT INTO invoices(pubkey, msats, preimage, hash, bolt11, created_at, expires_at) "+
 		"VALUES($1, $2, $3, $4, $5, $6, $7) "+
@@ -18,7 +18,7 @@ type FetchInvoiceWhere struct {
 	Hash string
 }
 
-func FetchInvoice(where *FetchInvoiceWhere, invoice *Invoice) error {
+func (db *DB) FetchInvoice(where *FetchInvoiceWhere, invoice *Invoice) error {
 	var (
 		query = "SELECT id, pubkey, msats, preimage, hash, bolt11, created_at, expires_at, confirmed_at, held_since FROM invoices "
 		args  []any
@@ -38,7 +38,7 @@ func FetchInvoice(where *FetchInvoiceWhere, invoice *Invoice) error {
 	return nil
 }
 
-func ConfirmInvoice(hash string, confirmedAt time.Time, msatsReceived int) error {
+func (db *DB) ConfirmInvoice(hash string, confirmedAt time.Time, msatsReceived int) error {
 	if _, err := db.Exec("UPDATE invoices SET confirmed_at = $2, msats_received = $3 WHERE hash = $1", hash, confirmedAt, msatsReceived); err != nil {
 		return err
 	}

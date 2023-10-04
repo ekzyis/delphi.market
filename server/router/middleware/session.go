@@ -6,10 +6,11 @@ import (
 	"time"
 
 	"git.ekzyis.com/ekzyis/delphi.market/db"
+	"git.ekzyis.com/ekzyis/delphi.market/server/router/context"
 	"github.com/labstack/echo/v4"
 )
 
-func Session(envVars map[string]any) echo.MiddlewareFunc {
+func Session(sc context.ServerContext) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			var (
@@ -23,10 +24,10 @@ func Session(envVars map[string]any) echo.MiddlewareFunc {
 				return next(c)
 			}
 			s = &db.Session{SessionId: cookie.Value}
-			if err = db.FetchSession(s); err == nil {
+			if err = sc.Db.FetchSession(s); err == nil {
 				// session found
 				u = &db.User{Pubkey: s.Pubkey, LastSeen: time.Now()}
-				if err = db.UpdateUser(u); err != nil {
+				if err = sc.Db.UpdateUser(u); err != nil {
 					return err
 				}
 				c.Set("session", *u)
@@ -38,7 +39,7 @@ func Session(envVars map[string]any) echo.MiddlewareFunc {
 	}
 }
 
-func SessionGuard(envVars map[string]any) echo.MiddlewareFunc {
+func SessionGuard(sc context.ServerContext) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			session := c.Get("session")

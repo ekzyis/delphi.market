@@ -12,7 +12,7 @@ import (
 	"github.com/lightningnetwork/lnd/lnwire"
 )
 
-func CreateInvoice(pubkey string, msats int64) (*db.Invoice, error) {
+func (lnd *LNDClient) CreateInvoice(d *db.DB, pubkey string, msats int64) (*db.Invoice, error) {
 	var (
 		expiry         time.Duration = time.Hour
 		preimage       lntypes.Preimage
@@ -45,13 +45,13 @@ func CreateInvoice(pubkey string, msats int64) (*db.Invoice, error) {
 		CreatedAt:      lnInvoice.CreationDate,
 		ExpiresAt:      lnInvoice.CreationDate.Add(expiry),
 	}
-	if err := db.CreateInvoice(dbInvoice); err != nil {
+	if err := d.CreateInvoice(dbInvoice); err != nil {
 		return nil, err
 	}
 	return dbInvoice, nil
 }
 
-func CheckInvoice(hash lntypes.Hash) {
+func (lnd *LNDClient) CheckInvoice(d *db.DB, hash lntypes.Hash) {
 	var (
 		pollInterval = 5 * time.Second
 		invoice      db.Invoice
@@ -60,12 +60,7 @@ func CheckInvoice(hash lntypes.Hash) {
 		err          error
 	)
 
-	if !Enabled {
-		log.Printf("LND disabled, skipping checking invoice: hash=%s", hash)
-		return
-	}
-
-	if err = db.FetchInvoice(&db.FetchInvoiceWhere{Hash: hash.String()}, &invoice); err != nil {
+	if err = d.FetchInvoice(&db.FetchInvoiceWhere{Hash: hash.String()}, &invoice); err != nil {
 		log.Println(err)
 		return
 	}
@@ -100,7 +95,7 @@ func CheckInvoice(hash lntypes.Hash) {
 				handleLoopError(err)
 				continue
 			}
-			if err = db.ConfirmInvoice(hash.String(), time.Now(), int(lnInvoice.AmountPaid)); err != nil {
+			if err = d.ConfirmInvoice(hash.String(), time.Now(), int(lnInvoice.AmountPaid)); err != nil {
 				handleLoopError(err)
 				continue
 			}

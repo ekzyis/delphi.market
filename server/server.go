@@ -11,21 +11,25 @@ type Server struct {
 	*echo.Echo
 }
 
-func NewServer() *Server {
-	e := echo.New()
+type ServerContext = router.ServerContext
 
+func New(ctx ServerContext) *Server {
+	var (
+		e *echo.Echo
+		s *Server
+	)
+	e = echo.New()
 	e.Static("/", "public")
-
 	e.Renderer = router.T
-
-	router.AddRoutes(e)
-
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format:           "${time_custom} ${method} ${uri} ${status}\n",
 		CustomTimeFormat: "2006-01-02 15:04:05.00000-0700",
 	}))
-
 	e.HTTPErrorHandler = httpErrorHandler
 
-	return &Server{e}
+	s = &Server{e}
+
+	router.AddRoutes(e, ctx)
+
+	return s
 }

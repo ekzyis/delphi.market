@@ -7,12 +7,12 @@ import (
 
 	"git.ekzyis.com/ekzyis/delphi.market/db"
 	"git.ekzyis.com/ekzyis/delphi.market/lib"
-	"git.ekzyis.com/ekzyis/delphi.market/lnd"
+	"git.ekzyis.com/ekzyis/delphi.market/server/router/context"
 	"github.com/labstack/echo/v4"
 	"github.com/lightningnetwork/lnd/lntypes"
 )
 
-func HandleInvoiceAPI(envVars map[string]any) echo.HandlerFunc {
+func HandleInvoiceAPI(sc context.ServerContext) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			invoiceId string
@@ -21,7 +21,7 @@ func HandleInvoiceAPI(envVars map[string]any) echo.HandlerFunc {
 			err       error
 		)
 		invoiceId = c.Param("id")
-		if err = db.FetchInvoice(&db.FetchInvoiceWhere{Id: invoiceId}, &invoice); err == sql.ErrNoRows {
+		if err = sc.Db.FetchInvoice(&db.FetchInvoiceWhere{Id: invoiceId}, &invoice); err == sql.ErrNoRows {
 			return echo.NewHTTPError(http.StatusNotFound)
 		} else if err != nil {
 			return err
@@ -34,7 +34,7 @@ func HandleInvoiceAPI(envVars map[string]any) echo.HandlerFunc {
 	}
 }
 
-func HandleInvoice(envVars map[string]any) echo.HandlerFunc {
+func HandleInvoice(sc context.ServerContext) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			invoiceId string
@@ -46,7 +46,7 @@ func HandleInvoice(envVars map[string]any) echo.HandlerFunc {
 			err       error
 		)
 		invoiceId = c.Param("id")
-		if err = db.FetchInvoice(&db.FetchInvoiceWhere{Id: invoiceId}, &invoice); err == sql.ErrNoRows {
+		if err = sc.Db.FetchInvoice(&db.FetchInvoiceWhere{Id: invoiceId}, &invoice); err == sql.ErrNoRows {
 			return echo.NewHTTPError(http.StatusNotFound)
 		} else if err != nil {
 			return err
@@ -57,7 +57,7 @@ func HandleInvoice(envVars map[string]any) echo.HandlerFunc {
 		if hash, err = lntypes.MakeHashFromStr(invoice.Hash); err != nil {
 			return err
 		}
-		go lnd.CheckInvoice(hash)
+		go sc.Lnd.CheckInvoice(sc.Db, hash)
 		if qr, err = lib.ToQR(invoice.PaymentRequest); err != nil {
 			return err
 		}
@@ -73,6 +73,6 @@ func HandleInvoice(envVars map[string]any) echo.HandlerFunc {
 			"lnurl":   invoice.PaymentRequest,
 			"qr":      qr,
 		}
-		return c.Render(http.StatusOK, "invoice.html", data)
+		return sc.Render(c, http.StatusOK, "invoice.html", data)
 	}
 }
