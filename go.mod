@@ -14,6 +14,7 @@ require (
 	github.com/lightningnetwork/lnd v0.10.0-beta.rc6.0.20200615174244-103c59a4889f
 	github.com/namsral/flag v1.7.4-pre
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
+	github.com/stretchr/testify v1.8.1
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
 	gopkg.in/guregu/null.v4 v4.0.0
 )
@@ -72,6 +73,7 @@ require (
 	github.com/miekg/dns v0.0.0-20171125082028-79bfde677fa8 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v0.9.3 // indirect
 	github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90 // indirect
 	github.com/prometheus/common v0.4.0 // indirect
@@ -98,5 +100,6 @@ require (
 	gopkg.in/macaroon-bakery.v2 v2.0.1 // indirect
 	gopkg.in/macaroon.v2 v2.1.0 // indirect
 	gopkg.in/yaml.v2 v2.2.3 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.1.0 // indirect
 )

@@ -20,7 +20,7 @@ func New(ctx ServerContext) *Server {
 	)
 	e = echo.New()
 	e.Static("/", "public")
-	e.Renderer = router.T
+	e.Renderer = router.ParseTemplates("pages/**.html")
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format:           "${time_custom} ${method} ${uri} ${status}\n",
 		CustomTimeFormat: "2006-01-02 15:04:05.00000-0700",

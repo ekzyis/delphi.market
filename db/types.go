@@ -12,7 +12,7 @@ type (
 	LNAuth struct {
 		K1        string
 		LNURL     string
-		CreatdAt  time.Time
+		CreatedAt time.Time
 		SessionId string
 	}
 	User struct {

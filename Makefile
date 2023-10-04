@@ -10,3 +10,5 @@ delphi.market: $(SOURCE)
 run:
 	go run .
 
+test:
+	go test ./server/... ./db/... ./lnd/...
