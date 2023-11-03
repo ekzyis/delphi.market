@@ -46,7 +46,7 @@ func addBackendRoutes(e *echo.Echo, sc ServerContext) {
 	GET(e, sc, "/api/login", handler.HandleLoginCallback)
 	GET(e, sc, "/api/session", handler.HandleCheckSession)
 	GET(e, sc, "/api/invoice/:id",
-		handler.HandleInvoiceAPI,
+		handler.HandleInvoiceStatus,
 		middleware.SessionGuard)
 }
 

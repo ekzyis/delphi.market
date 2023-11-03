@@ -12,7 +12,7 @@ import (
 	"github.com/lightningnetwork/lnd/lntypes"
 )
 
-func HandleInvoiceAPI(sc context.ServerContext) echo.HandlerFunc {
+func HandleInvoiceStatus(sc context.ServerContext) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			invoiceId string
