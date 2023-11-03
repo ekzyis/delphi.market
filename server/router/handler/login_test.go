@@ -1,74 +1,31 @@
 package handler_test
 
 import (
-	"crypto/ecdsa"
-	"crypto/rand"
 	"database/sql"
-	"encoding/hex"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path"
-	"runtime"
 	"testing"
 
 	db_ "git.ekzyis.com/ekzyis/delphi.market/db"
 	"git.ekzyis.com/ekzyis/delphi.market/server/auth"
-	"git.ekzyis.com/ekzyis/delphi.market/server/router"
 	"git.ekzyis.com/ekzyis/delphi.market/server/router/context"
 	"git.ekzyis.com/ekzyis/delphi.market/server/router/handler"
-	"github.com/decred/dcrd/dcrec/secp256k1/v4"
+	"git.ekzyis.com/ekzyis/delphi.market/test"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )
 
 var (
-	dbName string = "delphi_test"
-	dbUrl  string = fmt.Sprintf("postgres://delphi:delphi@localhost:5432/%s?sslmode=disable", dbName)
-	db     *db_.DB
+	db *db_.DB
 )
 
 func init() {
-	// for ParseTemplates to work, cwd needs to be project root
-	_, filename, _, _ := runtime.Caller(0)
-	dir := path.Join(path.Dir(filename), "../../..")
-	err := os.Chdir(dir)
-	if err != nil {
-		panic(err)
-	}
-	if db, err = db_.New(dbUrl); err != nil {
-		panic(err)
-	}
+	test.Init(&db)
 }
 
 func TestMain(m *testing.M) {
-	if err := db.Reset(dbName); err != nil {
-		panic(err)
-	}
-	retCode := m.Run()
-	if err := db.Clear(dbName); err != nil {
-		panic(err)
-	}
-	os.Exit(retCode)
-}
-
-func mocks(method string, target string, body io.Reader) (*echo.Echo, context.ServerContext, *http.Request, *httptest.ResponseRecorder) {
-	var (
-		e   *echo.Echo
-		sc  context.ServerContext
-		req *http.Request
-		rec *httptest.ResponseRecorder
-	)
-	e = echo.New()
-	e.Renderer = router.ParseTemplates("pages/**.html")
-	sc = context.ServerContext{
-		Db: db,
-	}
-	req = httptest.NewRequest(method, target, body)
-	rec = httptest.NewRecorder()
-	return e, sc, req, rec
+	test.Main(m, db)
 }
 
 func TestLogin(t *testing.T) {
@@ -84,7 +41,8 @@ func TestLogin(t *testing.T) {
 		dbSessionId string
 		err         error
 	)
-	e, sc, req, rec = mocks("GET", "/login", nil)
+	sc = context.ServerContext{Db: db}
+	e, req, rec = test.HTTPMocks("GET", "/login", nil)
 	c = e.NewContext(req, rec)
 
 	err = handler.HandleLogin(sc)(c)
@@ -132,12 +90,13 @@ func TestLoginCallback(t *testing.T) {
 		return
 	}
 
-	key, sig, err = sign(lnAuth.K1)
+	key, sig, err = test.Sign(lnAuth.K1)
 	if !assert.NoErrorf(err, "error signing k1") {
 		return
 	}
 
-	e, sc, req, rec = mocks("GET", fmt.Sprintf("/api/login?k1=%s&key=%s&sig=%s", lnAuth.K1, key, sig), nil)
+	sc = context.ServerContext{Db: db}
+	e, req, rec = test.HTTPMocks("GET", fmt.Sprintf("/api/login?k1=%s&key=%s&sig=%s", lnAuth.K1, key, sig), nil)
 	c = e.NewContext(req, rec)
 
 	err = handler.HandleLoginCallback(sc)(c)
@@ -160,23 +119,4 @@ func TestLoginCallback(t *testing.T) {
 	// challenge deleted
 	err = db.FetchSessionId(u.Pubkey, &dbLnAuth.SessionId)
 	assert.ErrorIs(err, sql.ErrNoRows, "challenge not deleted")
-}
-
-func sign(k1_ string) (string, string, error) {
-	var (
-		sk  *secp256k1.PrivateKey
-		k1  []byte
-		sig []byte
-		err error
-	)
-	if k1, err = hex.DecodeString(k1_); err != nil {
-		return "", "", err
-	}
-	if sk, err = secp256k1.GeneratePrivateKey(); err != nil {
-		return "", "", err
-	}
-	if sig, err = ecdsa.SignASN1(rand.Reader, sk.ToECDSA(), k1); err != nil {
-		return "", "", err
-	}
-	return hex.EncodeToString(sk.PubKey().SerializeCompressed()), hex.EncodeToString(sig), nil
 }

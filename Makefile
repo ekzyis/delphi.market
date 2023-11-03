@@ -1,4 +1,4 @@
-.PHONY: build run
+.PHONY: build run test
 
 SOURCE := $(shell find db env lib lnd pages public server -type f)
 
