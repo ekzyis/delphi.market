@@ -2,6 +2,7 @@ package handler_test
 
 import (
 	"database/sql"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -12,20 +13,13 @@ import (
 	"git.ekzyis.com/ekzyis/delphi.market/server/router/context"
 	"git.ekzyis.com/ekzyis/delphi.market/server/router/handler"
 	"git.ekzyis.com/ekzyis/delphi.market/test"
+	"github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	db *db_.DB
-)
-
 func init() {
 	test.Init(&db)
-}
-
-func TestMain(m *testing.M) {
-	test.Main(m, db)
 }
 
 func TestLogin(t *testing.T) {
@@ -72,6 +66,8 @@ func TestLoginCallback(t *testing.T) {
 		sc       context.ServerContext
 		req      *http.Request
 		rec      *httptest.ResponseRecorder
+		sk       *secp256k1.PrivateKey
+		pk       *secp256k1.PublicKey
 		lnAuth   *auth.LNAuth
 		dbLnAuth *db_.LNAuth
 		u        *db_.User
@@ -90,10 +86,15 @@ func TestLoginCallback(t *testing.T) {
 		return
 	}
 
-	key, sig, err = test.Sign(lnAuth.K1)
+	sk, pk, err = test.GenerateKeyPair()
+	if !assert.NoErrorf(err, "error generating keypair") {
+		return
+	}
+	sig, err = test.Sign(sk, lnAuth.K1)
 	if !assert.NoErrorf(err, "error signing k1") {
 		return
 	}
+	key = hex.EncodeToString(pk.SerializeCompressed())
 
 	sc = context.ServerContext{Db: db}
 	e, req, rec = test.HTTPMocks("GET", fmt.Sprintf("/api/login?k1=%s&key=%s&sig=%s", lnAuth.K1, key, sig), nil)
