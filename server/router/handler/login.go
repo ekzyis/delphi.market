@@ -34,11 +34,10 @@ func HandleLogin(sc context.ServerContext) echo.HandlerFunc {
 			return err
 		}
 		data = map[string]any{
-			"session": c.Get("session"),
-			"lnurl":   lnAuth.LNURL,
-			"qr":      qr,
+			"lnurl": lnAuth.LNURL,
+			"qr":    qr,
 		}
-		return sc.Render(c, http.StatusOK, "login.html", data)
+		return c.JSON(http.StatusOK, data)
 	}
 }
 

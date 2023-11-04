@@ -1,26 +1,41 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App" />
+  <NavBar />
+  <div id="container">
+    <router-view />
+  </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
-
+import NavBar from './components/NavBar'
 export default {
   name: 'App',
-  components: {
-    HelloWorld
-  }
+  components: { NavBar }
 }
 </script>
 
+<script setup>
+import { useSession } from './stores/session';
+const session = useSession()
+session.init()
+</script>
+
 <style>
+html,
+body {
+  background-color: #091833;
+  color: #ffffff;
+}
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+  color: #ffffff;
+  margin-top: 1em;
+}
+
+#container {
+  margin: 1em;
 }
 </style>

@@ -37,6 +37,7 @@ func serveError(c echo.Context, code int) error {
 		c.Logger().Error(err)
 		return err
 	}
+	// TODO return errors in JSON
 	if err = c.Stream(code, "text/html", f); err != nil {
 		c.Logger().Error(err)
 		return err
