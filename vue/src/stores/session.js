@@ -11,9 +11,7 @@ export const useSession = defineStore('session', () => {
       const { pubkey } = await checkSession()
       if (pubkey) {
         console.log('authenticated as', pubkey)
-        return
-      }
-      console.log('unauthenticated')
+      } else console.log('unauthenticated')
     } catch (err) {
       console.error('error:', err.reason || err)
     }
