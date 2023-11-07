@@ -1,7 +1,23 @@
 <template>
-  <a v-if="lnurl" :href="'lightning:' + lnurl">
-    <img v-if="qr" :src="'data:image/png;base64,' + qr" />
-  </a>
+  <div class="flex flex-col">
+    <div class="font-mono my-3">
+      LNURL-auth
+    </div>
+    <router-link v-if="success" to="/" class="label success font-mono">
+        <div>Authenticated</div>
+        <small>Redirecting in {{ redirectTimeout }} ...</small>
+    </router-link>
+    <div v-if="error" class="label error font-mono">
+      <div>Authentication error</div>
+      <small>{{ error  }}</small>
+    </div>
+    <figure class="flex flex-col m-auto w-[33%]">
+      <a class="m-auto" v-if="lnurl" :href="'lightning:' + lnurl">
+        <img v-if="qr" :src="'data:image/png;base64,' + qr" />
+      </a>
+      <figcaption class="my-3 font-mono text-xs text-ellipsis overflow-hidden">{{ lnurl }}</figcaption>
+    </figure>
+  </div>
 </template>
 
 <script setup>
@@ -16,20 +32,27 @@ const qr = ref(null)
 const lnurl = ref(null)
 let interval = null
 const LOGIN_POLL = 2000
+const redirectTimeout = ref(3)
+const success = ref(null)
+const error = ref(null)
 
 const poll = async () => {
   try {
     await session.checkSession()
     if (session.isAuthenticated) {
-      // TODO schedule redirect
+      success.value = true
       clearInterval(interval)
-      router.push('/')
+      setInterval(() => {
+        if (--redirectTimeout.value === 0) {
+          router.push('/')
+        }
+      }, 1000)
     }
   } catch (err) {
-    if (err.reason === 'session not found') {
-      // ignore
-    } else {
+    // ignore 404 errors
+    if (err.reason !== 'session not found') {
       console.error(err)
+      error.value = err.reason
     }
   }
 }
@@ -59,3 +82,29 @@ await (async () => {
 })()
 
 </script>
+
+<style scoped>
+.label {
+  width: fit-content;
+  margin: 1em auto;
+  padding: 0.5em 3em;
+  cursor: pointer;
+}
+.label:hover {
+  color: white;
+}
+.success {
+  background-color: rgba(20,158,97,.24);
+  color: #35df8d;
+}
+.success:hover {
+  background-color: #35df8d;
+}
+.error {
+    background-color: rgba(245,57,94,.24);
+    color: #ff7386;
+}
+.error:hover {
+  background-color: #ff7386;
+}
+</style>
