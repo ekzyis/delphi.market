@@ -7,6 +7,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useSession } from '@/stores/session'
+import { useRouter } from 'vue-router'
 
 const qr = ref(null)
 const lnurl = ref(null)
@@ -17,17 +18,24 @@ const login = async () => {
   lnurl.value = s.lnurl
 }
 
+const router = useRouter()
 const session = useSession()
-// wait until session is initialized
-if (session.initialized && !session.isAuthenticated) {
-  await login()
-} else {
+
+await (async () => {
+  // redirect to / if session already exists
+  if (session.initialized) {
+    if (session.isAuthenticated) return router.push('/')
+    return login()
+  }
   // else subscribe to changes
-  session.$subscribe(async (_, s) => {
-    if (s.initialized && !s.isAuthenticated) {
-      await login()
+  return session.$subscribe(() => {
+    if (session.initialized) {
+      // for some reason, computed property is only updated when accessing the store directly
+      // it is not updated inside the second argument
+      if (session.isAuthenticated) return router.push('/')
+      return login()
     }
   })
-}
+})()
 
 </script>
