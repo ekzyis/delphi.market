@@ -5,18 +5,20 @@
   </div>
 </template>
 
+<script setup>
+import { useSession } from './stores/session'
+const session = useSession()
+session.init()
+</script>
+
+<!-- eslint-disable -->
+<!-- eslint wants to combine this <script> and <script setup> which breaks the code ... -->
 <script>
 import NavBar from './components/NavBar'
 export default {
   name: 'App',
   components: { NavBar }
 }
-</script>
-
-<script setup>
-import { useSession } from './stores/session';
-const session = useSession()
-session.init()
 </script>
 
 <style>
