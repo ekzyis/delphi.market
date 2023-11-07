@@ -9,17 +9,37 @@ import { ref } from 'vue'
 import { useSession } from '@/stores/session'
 import { useRouter } from 'vue-router'
 
+const router = useRouter()
+const session = useSession()
+
 const qr = ref(null)
 const lnurl = ref(null)
+let interval = null
+const LOGIN_POLL = 2000
+
+const poll = async () => {
+  try {
+    await session.checkSession()
+    if (session.isAuthenticated) {
+      // TODO schedule redirect
+      clearInterval(interval)
+      router.push('/')
+    }
+  } catch (err) {
+    if (err.reason === 'session not found') {
+      // ignore
+    } else {
+      console.error(err)
+    }
+  }
+}
 
 const login = async () => {
   const s = await session.login()
   qr.value = s.qr
   lnurl.value = s.lnurl
+  interval = setInterval(poll, LOGIN_POLL)
 }
-
-const router = useRouter()
-const session = useSession()
 
 await (async () => {
   // redirect to / if session already exists
