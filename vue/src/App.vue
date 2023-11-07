@@ -8,7 +8,7 @@
 <script setup>
 import { useSession } from './stores/session'
 const session = useSession()
-session.init()
+session.checkSession()
 </script>
 
 <!-- eslint-disable -->

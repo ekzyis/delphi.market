@@ -6,18 +6,6 @@ export const useSession = defineStore('session', () => {
   const isAuthenticated = computed(() => !!pubkey.value)
   const initialized = ref(false)
 
-  async function init () {
-    try {
-      const { pubkey } = await checkSession()
-      if (pubkey) {
-        console.log('authenticated as', pubkey)
-      } else console.log('unauthenticated')
-    } catch (err) {
-      console.error('error:', err.reason || err)
-    }
-    initialized.value = true
-  }
-
   function checkSession () {
     const url = window.origin + '/api/session'
     return fetch(url, {
@@ -25,8 +13,14 @@ export const useSession = defineStore('session', () => {
     })
       .then(async r => {
         const body = await r.json()
-        pubkey.value = body.pubkey
+        if (body.pubkey) {
+          pubkey.value = body.pubkey
+          console.log('authenticated as', body.pubkey)
+        } else console.log('unauthenticated')
+        initialized.value = true
         return body
+      }).catch(err => {
+        console.error('error:', err.reason || err)
       })
   }
 
@@ -46,5 +40,5 @@ export const useSession = defineStore('session', () => {
       })
   }
 
-  return { pubkey, isAuthenticated, initialized, init, checkSession, login, logout }
+  return { pubkey, isAuthenticated, initialized, checkSession, login, logout }
 })
