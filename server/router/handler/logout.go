@@ -18,7 +18,7 @@ func HandleLogout(sc context.ServerContext) echo.HandlerFunc {
 		)
 		if cookie, err = c.Cookie("session"); err != nil {
 			// cookie not found
-			return c.Redirect(http.StatusSeeOther, "/")
+			return c.JSON(http.StatusNotFound, map[string]string{"reason": "session not found"})
 		}
 		sessionId = cookie.Value
 		if err = sc.Db.DeleteSession(&db.Session{SessionId: sessionId}); err != nil {
@@ -26,6 +26,6 @@ func HandleLogout(sc context.ServerContext) echo.HandlerFunc {
 		}
 		// tell browser that cookie is expired and thus can be deleted
 		c.SetCookie(&http.Cookie{Name: "session", HttpOnly: true, Path: "/", Value: sessionId, Secure: true, Expires: time.Now()})
-		return c.Redirect(http.StatusSeeOther, "/")
+		return c.JSON(http.StatusSeeOther, map[string]string{"status": "OK"})
 	}
 }

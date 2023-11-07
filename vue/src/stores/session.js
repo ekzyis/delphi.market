@@ -37,5 +37,16 @@ export const useSession = defineStore('session', () => {
     return fetch(url, { credentials: 'include' }).then(r => r.json())
   }
 
-  return { pubkey, isAuthenticated, initialized, init, checkSession, login }
+  function logout () {
+    const url = window.origin + '/api/logout'
+    return fetch(url, { method: 'POST', credentials: 'include' })
+      .then(async r => {
+        const body = await r.json()
+        if (body.status === 'OK') {
+          pubkey.value = null
+        }
+      })
+  }
+
+  return { pubkey, isAuthenticated, initialized, init, checkSession, login, logout }
 })

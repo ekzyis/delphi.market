@@ -25,7 +25,6 @@ func mountMiddleware(e *echo.Echo, sc ServerContext) {
 
 func addFrontendRoutes(e *echo.Echo, sc ServerContext) {
 	GET(e, sc, "/", handler.HandleIndex)
-	POST(e, sc, "/logout", handler.HandleLogout)
 	GET(e, sc, "/user",
 		handler.HandleUser,
 		middleware.SessionGuard)
@@ -44,6 +43,7 @@ func addFrontendRoutes(e *echo.Echo, sc ServerContext) {
 func addBackendRoutes(e *echo.Echo, sc ServerContext) {
 	GET(e, sc, "/api/login", handler.HandleLogin)
 	GET(e, sc, "/api/login/callback", handler.HandleLoginCallback)
+	POST(e, sc, "/api/logout", handler.HandleLogout)
 	GET(e, sc, "/api/session", handler.HandleCheckSession)
 	GET(e, sc, "/api/invoice/:id",
 		handler.HandleInvoiceStatus,
