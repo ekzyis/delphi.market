@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 export const useSession = defineStore('session', () => {
   const pubkey = ref(null)
   const isAuthenticated = computed(() => !!pubkey.value)
+  const initialized = ref(false)
 
   async function init () {
     try {
@@ -16,6 +17,7 @@ export const useSession = defineStore('session', () => {
     } catch (err) {
       console.error('error:', err.reason || err)
     }
+    initialized.value = true
   }
 
   function checkSession () {
@@ -35,5 +37,5 @@ export const useSession = defineStore('session', () => {
     return fetch(url, { credentials: 'include' }).then(r => r.json())
   }
 
-  return { pubkey, isAuthenticated, init, checkSession, login }
+  return { pubkey, isAuthenticated, initialized, init, checkSession, login }
 })

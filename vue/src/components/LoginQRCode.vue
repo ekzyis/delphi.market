@@ -8,18 +8,26 @@
 import { ref } from 'vue'
 import { useSession } from '@/stores/session'
 
-let qr = ref(null)
-let lnurl = ref(null)
+const qr = ref(null)
+const lnurl = ref(null)
+
+const login = async () => {
+  const s = await session.login()
+  qr.value = s.qr
+  lnurl.value = s.lnurl
+}
 
 const session = useSession()
-await (async () => {
-  try {
-    if (session.isAuthenticated) return
-    const s = await session.login()
-    qr = s.qr
-    lnurl = s.lnurl
-  } catch (err) {
-    console.error('error:', err.reason || err)
-  }
-})()
+// wait until session is initialized
+if (session.initialized && !session.isAuthenticated) {
+  await login()
+} else {
+  // else subscribe to changes
+  session.$subscribe(async (_, s) => {
+    if (s.initialized && !s.isAuthenticated) {
+      await login()
+    }
+  })
+}
+
 </script>
