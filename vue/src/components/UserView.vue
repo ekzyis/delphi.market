@@ -1,7 +1,7 @@
 <template>
   <div v-if="session.pubkey">
     <div>authenticated as {{  session.pubkey.slice(0,8) }}</div>
-    <button class="my-1" @click="logout">logout</button>
+    <button class="my-3" @click="logout">logout</button>
   </div>
 </template>
 
