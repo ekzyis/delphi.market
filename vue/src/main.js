@@ -7,6 +7,7 @@ import './index.css'
 
 import HomeView from '@/components/HomeView'
 import LoginView from '@/components/LoginView'
+import UserView from '@/components/UserView'
 
 const routes = [
   {
@@ -14,6 +15,9 @@ const routes = [
   },
   {
     path: '/login', component: LoginView
+  },
+  {
+    path: '/user', component: UserView
   }
 ]
 const router = VueRouter.createRouter({

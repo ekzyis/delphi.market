@@ -2,9 +2,8 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
 export const useSession = defineStore('session', () => {
-  let pubkey = ref(null)
-  // eslint-disable-next-line vue/no-ref-as-operand
-  const isAuthenticated = computed(() => !!pubkey)
+  const pubkey = ref(null)
+  const isAuthenticated = computed(() => !!pubkey.value)
 
   async function init () {
     try {
@@ -24,9 +23,9 @@ export const useSession = defineStore('session', () => {
     return fetch(url, {
       credentials: 'include'
     })
-      .then(r => {
-        const body = r.json()
-        pubkey = body.pubkey
+      .then(async r => {
+        const body = await r.json()
+        pubkey.value = body.pubkey
         return body
       })
   }
