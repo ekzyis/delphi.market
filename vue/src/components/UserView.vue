@@ -1,4 +1,13 @@
 <template>
+  <!-- eslint-disable -->
+  <div class="my-3">
+    <pre>
+ _   _ ___  ___ _ __ 
+| | | / __|/ _ \ '__|
+| |_| \__ \  __/ |   
+ \__,_|___/\___|_|   </pre>
+  </div>
+  <!-- eslint-enable -->
   <div v-if="session.pubkey">
     <div>authenticated as {{  session.pubkey.slice(0,8) }}</div>
     <button class="my-3" @click="logout">logout</button>

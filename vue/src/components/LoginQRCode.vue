@@ -1,12 +1,12 @@
 <template>
   <div class="flex flex-col">
-    <div class="font-mono my-3">
-      LNURL-auth
-    </div>
     <router-link v-if="success" to="/" class="label success font-mono">
         <div>Authenticated</div>
         <small>Redirecting in {{ redirectTimeout }} ...</small>
     </router-link>
+    <div class="font-mono my-3">
+      LNURL-auth
+    </div>
     <div v-if="error" class="label error font-mono">
       <div>Authentication error</div>
       <small>{{ error  }}</small>

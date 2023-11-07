@@ -1,12 +1,14 @@
 <template>
   <!-- eslint-disable -->
-  <pre>
+  <div class="my-3">
+    <pre>
  _             _       
 | | ___   __ _(_)_ __  
 | |/ _ \ / _` | | '_ \ 
 | | (_) | (_| | | | | |
 |_|\___/ \__, |_|_| |_|
          |___/         </pre>
+  </div>
   <!-- eslint-enable -->
   <Suspense>
     <LoginQRCode class="flex justify-center m-3" />
@@ -16,10 +18,3 @@
 <script setup>
 import LoginQRCode from './LoginQRCode.vue'
 </script>
-
-<style scoped>
-pre {
-  font-family: monospace;
-  font-weight: bold;
-}
-</style>

@@ -5,13 +5,13 @@ import App from './App.vue'
 import './registerServiceWorker'
 import './index.css'
 
-import HomeView from '@/components/HomeView'
+import MarketView from '@/components/MarketView'
 import LoginView from '@/components/LoginView'
 import UserView from '@/components/UserView'
 
 const routes = [
   {
-    path: '/', component: HomeView
+    path: '/', component: MarketView
   },
   {
     path: '/login', component: LoginView

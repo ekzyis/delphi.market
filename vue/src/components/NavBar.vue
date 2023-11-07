@@ -1,7 +1,7 @@
 <template>
   <header class="flex flex-row text-center justify-center pt-1">
     <nav>
-      <router-link to="/">home</router-link>
+      <router-link to="/">market</router-link>
       <router-link to="/user" v-if="session.isAuthenticated">user</router-link>
       <router-link to="/login" v-else href="/login">login</router-link>
     </nav>
