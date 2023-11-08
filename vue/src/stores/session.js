@@ -3,8 +3,8 @@ import { computed, ref } from 'vue'
 
 export const useSession = defineStore('session', () => {
   const pubkey = ref(null)
-  const isAuthenticated = computed(() => !!pubkey.value)
   const initialized = ref(false)
+  const isAuthenticated = computed(() => initialized.value ? !!pubkey.value : undefined)
 
   function checkSession () {
     const url = window.origin + '/api/session'
