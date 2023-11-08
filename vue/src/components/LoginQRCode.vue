@@ -11,19 +11,22 @@
       <div>Authentication error</div>
       <small>{{ error  }}</small>
     </div>
-    <figure class="flex flex-col m-auto">
-      <a class="m-auto" v-if="lnurl" :href="'lightning:' + lnurl">
-        <img v-if="qr" :src="'data:image/png;base64,' + qr" />
+    <figure v-if="lnurl && qr" class="flex flex-col m-auto">
+      <a class="m-auto" :href="'lightning:' + lnurl">
+        <img :src="'data:image/png;base64,' + qr" />
       </a>
-      <figcaption class="my-3 font-mono text-xs text-ellipsis overflow-hidden">{{ lnurl }}</figcaption>
+      <figcaption class="flex flex-row my-3 font-mono text-xs">
+        <span class="w-[80%] text-ellipsis overflow-hidden">{{ lnurl }}</span>
+        <button @click.prevent="copy">{{ label }}</button>
+      </figcaption>
     </figure>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import { useSession } from '@/stores/session'
 import { useRouter } from 'vue-router'
+import { useSession } from '@/stores/session'
 
 const router = useRouter()
 const session = useSession()
@@ -35,6 +38,15 @@ const LOGIN_POLL = 2000
 const redirectTimeout = ref(3)
 const success = ref(null)
 const error = ref(null)
+const label = ref('copy')
+let copyTimeout = null
+
+const copy = () => {
+  navigator.clipboard?.writeText(lnurl.value)
+  label.value = 'copied'
+  if (copyTimeout) clearTimeout(copyTimeout)
+  copyTimeout = setTimeout(() => { label.value = 'copy' }, 1500)
+}
 
 const poll = async () => {
   try {

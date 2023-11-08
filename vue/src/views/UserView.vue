@@ -27,16 +27,3 @@ const logout = async () => {
 }
 
 </script>
-
-<style scoped>
-button {
-  color: #ffffff;
-  border: solid 1px #8787A4;
-  padding: 0 1em;
-}
-
-button:hover {
-  color: #ffffff;
-  background: #8787A4;
-}
-</style>
