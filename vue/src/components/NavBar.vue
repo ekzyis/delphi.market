@@ -20,21 +20,6 @@ nav {
   justify-content: center;
 }
 
-a {
-  color: #8787a4;
-  text-decoration: underline;
-}
-
-a:hover {
-  color: #ffffff;
-  background: #8787A4;
-}
-
-a.selected {
-  color: #ffffff;
-  background: #8787A4;
-}
-
 nav>a {
   margin: 0 3px;
 }

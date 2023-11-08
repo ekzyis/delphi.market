@@ -26,3 +26,16 @@ func HandleIndex(sc context.ServerContext) echo.HandlerFunc {
 		return sc.Render(c, http.StatusOK, "index.html", data)
 	}
 }
+
+func HandleMarkets(sc context.ServerContext) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		var (
+			markets []db.Market
+			err     error
+		)
+		if err = sc.Db.FetchActiveMarkets(&markets); err != nil {
+			return err
+		}
+		return c.JSON(http.StatusOK, markets)
+	}
+}

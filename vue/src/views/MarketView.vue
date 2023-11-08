@@ -11,6 +11,11 @@
 
   </div>
   <!-- eslint-enable -->
+  <Suspense>
+    <MarketList />
+  </Suspense>
 </template>
 
-<script></script>
+<script setup>
+import MarketList from '@/components/MarketList'
+</script>
