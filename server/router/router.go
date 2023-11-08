@@ -41,6 +41,7 @@ func addFrontendRoutes(e *echo.Echo, sc ServerContext) {
 
 func addBackendRoutes(e *echo.Echo, sc ServerContext) {
 	GET(e, sc, "/api/markets", handler.HandleMarkets)
+	GET(e, sc, "/api/market/:id", handler.HandleMarket)
 	GET(e, sc, "/api/login", handler.HandleLogin)
 	GET(e, sc, "/api/login/callback", handler.HandleLoginCallback)
 	POST(e, sc, "/api/logout", handler.HandleLogout)

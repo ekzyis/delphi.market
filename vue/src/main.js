@@ -5,19 +5,23 @@ import App from './App.vue'
 import './registerServiceWorker'
 import './index.css'
 
-import MarketView from '@/views/MarketView'
+import MarketsView from '@/views/MarketsView'
 import LoginView from '@/views/LoginView'
 import UserView from '@/views/UserView'
+import MarketView from '@/views/MarketView'
 
 const routes = [
   {
-    path: '/', component: MarketView
+    path: '/', component: MarketsView
   },
   {
     path: '/login', component: LoginView
   },
   {
     path: '/user', component: UserView
+  },
+  {
+    path: '/market/:id', component: MarketView
   }
 ]
 const router = VueRouter.createRouter({

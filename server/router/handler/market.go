@@ -48,7 +48,7 @@ func HandleMarket(sc context.ServerContext) echo.HandlerFunc {
 			"NoShare":  shares[1],
 			"Orders":   orders,
 		}
-		return sc.Render(c, http.StatusOK, "market.html", data)
+		return c.JSON(http.StatusOK, data)
 	}
 }
 
