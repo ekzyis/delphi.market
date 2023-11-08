@@ -5,9 +5,9 @@ import App from './App.vue'
 import './registerServiceWorker'
 import './index.css'
 
-import MarketView from '@/components/MarketView'
-import LoginView from '@/components/LoginView'
-import UserView from '@/components/UserView'
+import MarketView from '@/views/MarketView'
+import LoginView from '@/views/LoginView'
+import UserView from '@/views/UserView'
 
 const routes = [
   {

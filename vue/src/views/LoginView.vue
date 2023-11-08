@@ -16,5 +16,5 @@
 </template>
 
 <script setup>
-import LoginQRCode from './LoginQRCode.vue'
+import LoginQRCode from '@/components/LoginQRCode'
 </script>
