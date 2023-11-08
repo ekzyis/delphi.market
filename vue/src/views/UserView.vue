@@ -10,7 +10,7 @@
   </div>
   <!-- eslint-enable -->
   <div v-if="session.pubkey">
-    <div>authenticated as {{  session.pubkey.slice(0,8) }}</div>
+    <div>authenticated as {{ session.pubkey.slice(0, 8) }}</div>
     <button class="my-3" @click="logout">logout</button>
   </div>
 </template>

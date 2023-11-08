@@ -1,7 +1,7 @@
 <template>
-    <!-- eslint-disable -->
-    <div class="my-3">
-      <pre>
+  <!-- eslint-disable -->
+  <div class="my-3">
+    <pre>
      _      _       _     _ 
   __| | ___| |_ __ | |__ (_)
  / _` |/ _ \ | '_ \| '_ \| |

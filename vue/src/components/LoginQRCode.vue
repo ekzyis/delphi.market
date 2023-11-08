@@ -1,15 +1,15 @@
 <template>
   <div class="flex flex-col">
     <router-link v-if="success" to="/" class="label success font-mono">
-        <div>Authenticated</div>
-        <small>Redirecting in {{ redirectTimeout }} ...</small>
+      <div>Authenticated</div>
+      <small>Redirecting in {{ redirectTimeout }} ...</small>
     </router-link>
     <div class="font-mono my-3">
       LNURL-auth
     </div>
     <div v-if="error" class="label error font-mono">
       <div>Authentication error</div>
-      <small>{{ error  }}</small>
+      <small>{{ error }}</small>
     </div>
     <figure v-if="lnurl && qr" class="flex flex-col m-auto">
       <a class="m-auto" :href="'lightning:' + lnurl">
@@ -100,30 +100,37 @@ img {
   width: 256px;
   height: auto;
 }
+
 figcaption {
   margin: 0.75em auto;
   width: 256px;
 }
+
 .label {
   width: fit-content;
   margin: 1em auto;
   padding: 0.5em 3em;
   cursor: pointer;
 }
+
 .label:hover {
   color: white;
 }
+
 .success {
-  background-color: rgba(20,158,97,.24);
+  background-color: rgba(20, 158, 97, .24);
   color: #35df8d;
 }
+
 .success:hover {
   background-color: #35df8d;
 }
+
 .error {
-    background-color: rgba(245,57,94,.24);
-    color: #ff7386;
+  background-color: rgba(245, 57, 94, .24);
+  color: #ff7386;
 }
+
 .error:hover {
   background-color: #ff7386;
 }
