@@ -11,7 +11,7 @@
       <div>Authentication error</div>
       <small>{{ error  }}</small>
     </div>
-    <figure class="flex flex-col m-auto w-[33%]">
+    <figure class="flex flex-col m-auto">
       <a class="m-auto" v-if="lnurl" :href="'lightning:' + lnurl">
         <img v-if="qr" :src="'data:image/png;base64,' + qr" />
       </a>
@@ -84,6 +84,14 @@ await (async () => {
 </script>
 
 <style scoped>
+img {
+  width: 256px;
+  height: auto;
+}
+figcaption {
+  margin: 0.75em auto;
+  width: 256px;
+}
 .label {
   width: fit-content;
   margin: 1em auto;
