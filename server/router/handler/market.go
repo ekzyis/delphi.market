@@ -2,12 +2,10 @@ package handler
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
 	"strconv"
 
 	"git.ekzyis.com/ekzyis/delphi.market/db"
-	"git.ekzyis.com/ekzyis/delphi.market/env"
 	"git.ekzyis.com/ekzyis/delphi.market/lib"
 	"git.ekzyis.com/ekzyis/delphi.market/server/router/context"
 	"github.com/labstack/echo/v4"
@@ -39,33 +37,26 @@ func HandleMarket(sc context.ServerContext) echo.HandlerFunc {
 			return err
 		}
 		data = map[string]any{
-			"session":     c.Get("session"),
 			"Id":          market.Id,
 			"Description": market.Description,
-			// shares are sorted by description in descending order
-			// that's how we know that YES must be the first share
-			"YesShare": shares[0],
-			"NoShare":  shares[1],
-			"Orders":   orders,
+			"Shares":      shares,
 		}
 		return c.JSON(http.StatusOK, data)
 	}
 }
 
-func HandlePostOrder(sc context.ServerContext) echo.HandlerFunc {
+func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
-			marketId string
-			u        db.User
-			o        db.Order
-			invoice  *db.Invoice
-			msats    int64
-			data     map[string]any
-			qr       string
-			hash     lntypes.Hash
-			err      error
+			u       db.User
+			o       db.Order
+			invoice *db.Invoice
+			msats   int64
+			data    map[string]any
+			qr      string
+			hash    lntypes.Hash
+			err     error
 		)
-		marketId = c.Param("id")
 		// TODO:
 		//   [ ] Step 0: If SELL order, check share balance of user
 		//   [x] Create HODL invoice
@@ -108,12 +99,11 @@ func HandlePostOrder(sc context.ServerContext) echo.HandlerFunc {
 		// TODO: find matching orders
 
 		data = map[string]any{
-			"session":     c.Get("session"),
-			"lnurl":       invoice.PaymentRequest,
-			"qr":          qr,
-			"invoice":     *invoice,
-			"redirectURL": fmt.Sprintf("https://%s/market/%s", env.PublicURL, marketId),
+			"id":     invoice.Id,
+			"bolt11": invoice.PaymentRequest,
+			"amount": msats,
+			"qr":     qr,
 		}
-		return sc.Render(c, http.StatusPaymentRequired, "invoice.html", data)
+		return c.JSON(http.StatusPaymentRequired, data)
 	}
 }

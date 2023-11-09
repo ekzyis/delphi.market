@@ -107,31 +107,6 @@ figcaption {
 }
 
 .label {
-  width: fit-content;
   margin: 1em auto;
-  padding: 0.5em 3em;
-  cursor: pointer;
-}
-
-.label:hover {
-  color: white;
-}
-
-.success {
-  background-color: rgba(20, 158, 97, .24);
-  color: #35df8d;
-}
-
-.success:hover {
-  background-color: #35df8d;
-}
-
-.error {
-  background-color: rgba(245, 57, 94, .24);
-  color: #ff7386;
-}
-
-.error:hover {
-  background-color: #ff7386;
 }
 </style>

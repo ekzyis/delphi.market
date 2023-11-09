@@ -1,6 +1,6 @@
 <template>
-  <NavBar />
   <div id="container">
+    <NavBar />
     <router-view />
   </div>
 </template>
@@ -38,6 +38,7 @@ body {
 }
 
 #container {
-  margin: 1em;
+  margin: 1em auto;
+  width: fit-content;
 }
 </style>

@@ -49,12 +49,12 @@ type (
 	Order struct {
 		Id        UUID
 		CreatedAt time.Time
-		ShareId   string `form:"share_id"`
+		ShareId   string `json:"sid"`
 		Share
 		Pubkey    string
-		Side      string `form:"side"`
-		Quantity  int64  `form:"quantity"`
-		Price     int64  `form:"price"`
+		Side      string `json:"side"`
+		Quantity  int64  `json:"quantity"`
+		Price     int64  `json:"price"`
 		InvoiceId UUID
 		Invoice
 	}
