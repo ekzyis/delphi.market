@@ -1,6 +1,9 @@
 package db
 
-import "time"
+import (
+	"database/sql"
+	"time"
+)
 
 func (db *DB) CreateInvoice(invoice *Invoice) error {
 	if err := db.QueryRow(""+
@@ -34,6 +37,35 @@ func (db *DB) FetchInvoice(where *FetchInvoiceWhere, invoice *Invoice) error {
 		&invoice.Id, &invoice.Pubkey, &invoice.Msats, &invoice.Preimage, &invoice.Hash,
 		&invoice.PaymentRequest, &invoice.CreatedAt, &invoice.ExpiresAt, &invoice.ConfirmedAt, &invoice.HeldSince, &invoice.Description); err != nil {
 		return err
+	}
+	return nil
+}
+
+type FetchInvoicesWhere struct {
+	Unconfirmed bool
+}
+
+func (db *DB) FetchInvoices(where *FetchInvoicesWhere, invoices *[]Invoice) error {
+	var (
+		rows    *sql.Rows
+		invoice Invoice
+		err     error
+	)
+	var (
+		query = "SELECT id, pubkey, msats, preimage, hash, bolt11, created_at, expires_at, confirmed_at, held_since, COALESCE(description, '') FROM invoices "
+	)
+	if where.Unconfirmed {
+		query += "WHERE confirmed_at IS NULL"
+	}
+	if rows, err = db.Query(query); err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		rows.Scan(
+			&invoice.Id, &invoice.Pubkey, &invoice.Msats, &invoice.Preimage, &invoice.Hash,
+			&invoice.PaymentRequest, &invoice.CreatedAt, &invoice.ExpiresAt, &invoice.ConfirmedAt, &invoice.HeldSince, &invoice.Description)
+		*invoices = append(*invoices, invoice)
 	}
 	return nil
 }

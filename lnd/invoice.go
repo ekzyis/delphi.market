@@ -106,3 +106,21 @@ func (lnd *LNDClient) CheckInvoice(d *db.DB, hash lntypes.Hash) {
 		time.Sleep(pollInterval)
 	}
 }
+
+func (lnd *LNDClient) CheckInvoices(d *db.DB) error {
+	var (
+		invoices []db.Invoice
+		err      error
+		hash     lntypes.Hash
+	)
+	if err = d.FetchInvoices(&db.FetchInvoicesWhere{Unconfirmed: true}, &invoices); err != nil {
+		return err
+	}
+	for _, invoice := range invoices {
+		if hash, err = lntypes.MakeHashFromStr(invoice.Hash); err != nil {
+			return err
+		}
+		go lnd.CheckInvoice(d, hash)
+	}
+	return nil
+}
