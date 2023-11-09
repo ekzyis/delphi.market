@@ -77,9 +77,9 @@ const poll = async () => {
     }, 1000)
   }
 }
-const interval = setInterval(poll, INVOICE_POLL)
 
-const invoice = ref(null)
+let interval
+const invoice = ref(undefined)
 const redirectTimeout = ref(3)
 const success = ref(null)
 const error = ref(null)
@@ -96,6 +96,10 @@ const copy = () => {
 await (async () => {
   const url = window.origin + '/api/invoice/' + route.params.id
   const res = await fetch(url)
+  if (res.status === 404) {
+    error.value = 'invoice not found'
+    return
+  }
   const body = await res.json()
   if (body.Description) {
     const regexp = /\[market:(?<id>[0-9]+)\]/
@@ -107,6 +111,7 @@ await (async () => {
     }
   }
   invoice.value = body
+  interval = setInterval(poll, INVOICE_POLL)
 })()
 </script>
 
@@ -123,6 +128,10 @@ figcaption {
 
 .label {
   margin: 1em auto;
+}
+
+a.label {
+  text-decoration: none;
 }
 
 div.grid {
