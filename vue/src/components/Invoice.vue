@@ -2,7 +2,7 @@
   <div class="flex flex-col">
     <router-link v-if="success" :to="callbackUrl" class="label success font-mono">
       <div>Paid</div>
-      <small>Redirecting in {{ redirectTimeout }} ...</small>
+      <small v-if="redirectTimeout > 0">Redirecting in {{ redirectTimeout }} ...</small>
     </router-link>
     <div class="font-mono my-3">
       Payment Required
@@ -60,21 +60,27 @@ import { useRoute, useRouter } from 'vue-router'
 const router = useRouter()
 const route = useRoute()
 // TODO validate callback url
-const callbackUrl = route.params.callbackUrl ?? '/'
-
+const callbackUrl = ref('/')
+let pollCount = 0
 const INVOICE_POLL = 2000
 const poll = async () => {
+  pollCount++
   const url = window.origin + '/api/invoice/' + route.params.id
   const res = await fetch(url)
   const body = await res.json()
   if (body.ConfirmedAt) {
     success.value = true
     clearInterval(interval)
-    setInterval(() => {
-      if (--redirectTimeout.value === 0) {
-        router.push(callbackUrl)
-      }
-    }, 1000)
+    if (pollCount > 1) {
+      // only redirect if the invoice was not immediately paid
+      setInterval(() => {
+        if (--redirectTimeout.value === 0) {
+          router.push(callbackUrl.value)
+        }
+      }, 1000)
+    } else {
+      redirectTimeout.value = -1
+    }
   }
 }
 
@@ -108,6 +114,7 @@ await (async () => {
     if (marketId) {
       body.DescriptionMarketId = marketId
       body.Description = body.Description.replace(regexp, '')
+      callbackUrl.value = '/market/' + marketId
     }
   }
   invoice.value = body
