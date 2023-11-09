@@ -60,3 +60,7 @@ a.selected {
 .error:hover {
   background-color: #ff7386;
 }
+
+.text-muted {
+  opacity: 0.5
+}

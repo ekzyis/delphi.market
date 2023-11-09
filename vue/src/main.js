@@ -9,6 +9,7 @@ import MarketsView from '@/views/MarketsView'
 import LoginView from '@/views/LoginView'
 import UserView from '@/views/UserView'
 import MarketView from '@/views/MarketView'
+import InvoiceView from '@/views/InvoiceView'
 
 const routes = [
   {
@@ -22,6 +23,9 @@ const routes = [
   },
   {
     path: '/market/:id', component: MarketView
+  },
+  {
+    path: '/invoice/:id', component: InvoiceView
   }
 ]
 const router = VueRouter.createRouter({

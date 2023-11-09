@@ -18,6 +18,7 @@ func HandleInvoiceStatus(sc context.ServerContext) echo.HandlerFunc {
 			invoiceId string
 			invoice   db.Invoice
 			u         db.User
+			qr        string
 			err       error
 		)
 		invoiceId = c.Param("id")
@@ -29,8 +30,23 @@ func HandleInvoiceStatus(sc context.ServerContext) echo.HandlerFunc {
 		if u = c.Get("session").(db.User); invoice.Pubkey != u.Pubkey {
 			return echo.NewHTTPError(http.StatusUnauthorized)
 		}
+		if qr, err = lib.ToQR(invoice.PaymentRequest); err != nil {
+			return err
+		}
 		invoice.Preimage = ""
-		return c.JSON(http.StatusOK, invoice)
+		data := map[string]any{
+			"Id":             invoice.Id,
+			"Msats":          invoice.Msats,
+			"MsatsReceived":  invoice.MsatsReceived,
+			"Hash":           invoice.Hash,
+			"PaymentRequest": invoice.PaymentRequest,
+			"CreatedAt":      invoice.CreatedAt,
+			"ExpiresAt":      invoice.ExpiresAt,
+			"ConfirmedAt":    invoice.ConfirmedAt,
+			"HeldSince":      invoice.HeldSince,
+			"Qr":             qr,
+		}
+		return c.JSON(http.StatusOK, data)
 	}
 }
 
