@@ -44,6 +44,7 @@ func HandleInvoiceStatus(sc context.ServerContext) echo.HandlerFunc {
 			"ExpiresAt":      invoice.ExpiresAt,
 			"ConfirmedAt":    invoice.ConfirmedAt,
 			"HeldSince":      invoice.HeldSince,
+			"Description":    invoice.Description,
 			"Qr":             qr,
 		}
 		return c.JSON(http.StatusOK, data)

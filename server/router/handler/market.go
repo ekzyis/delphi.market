@@ -2,8 +2,10 @@ package handler
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"git.ekzyis.com/ekzyis/delphi.market/db"
 	"git.ekzyis.com/ekzyis/delphi.market/lib"
@@ -48,14 +50,16 @@ func HandleMarket(sc context.ServerContext) echo.HandlerFunc {
 func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
-			u       db.User
-			o       db.Order
-			invoice *db.Invoice
-			msats   int64
-			data    map[string]any
-			qr      string
-			hash    lntypes.Hash
-			err     error
+			u           db.User
+			o           db.Order
+			s           db.Share
+			invoice     *db.Invoice
+			msats       int64
+			description string
+			data        map[string]any
+			qr          string
+			hash        lntypes.Hash
+			err         error
 		)
 		// TODO:
 		//   [ ] Step 0: If SELL order, check share balance of user
@@ -72,11 +76,15 @@ func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
 		u = c.Get("session").(db.User)
 		o.Pubkey = u.Pubkey
 		msats = o.Quantity * o.Price * 1000
+		if err = sc.Db.FetchShare(o.ShareId, &s); err != nil {
+			return err
+		}
+		description = fmt.Sprintf("%s %d %s shares @ %d [market:%d]", strings.ToUpper(o.Side), o.Quantity, s.Description, o.Price, s.MarketId)
 
 		// TODO: if SELL order, check share balance of user
 
 		// Create HODL invoice
-		if invoice, err = sc.Lnd.CreateInvoice(sc.Db, o.Pubkey, msats); err != nil {
+		if invoice, err = sc.Lnd.CreateInvoice(sc.Db, o.Pubkey, msats, description); err != nil {
 			return err
 		}
 		// Create QR code to pay HODL invoice

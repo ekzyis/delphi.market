@@ -35,7 +35,8 @@ CREATE TABLE invoices(
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
     confirmed_at TIMESTAMP WITH TIME ZONE,
-    held_since TIMESTAMP WITH TIME ZONE
+    held_since TIMESTAMP WITH TIME ZONE,
+    description TEXT
 );
 CREATE TYPE order_side AS ENUM ('BUY', 'SELL');
 CREATE TABLE orders(

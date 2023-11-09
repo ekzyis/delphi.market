@@ -31,8 +31,22 @@
         <span class="mx-3 my-1">expires at</span><span class="text-ellipsis overflow-hidden font-mono me-3 my-1">
           {{ invoice.ExpiresAt }}
         </span>
-        <span class="mx-3 my-1">msats</span><span class="text-ellipsis overflow-hidden font-mono me-3 my-1">
-          {{ invoice.Msats }}
+        <span class="mx-3 my-1">sats</span><span class="text-ellipsis overflow-hidden font-mono me-3 my-1">
+          {{ invoice.Msats / 1000 }}
+        </span>
+        <span class="mx-3 my-1">description</span>
+        <span class="text-ellipsis overflow-hidden font-mono me-3 my-1">
+          <span v-if="invoice.DescriptionMarketId">
+            <span v-if="invoice.Description">
+              <span>{{ invoice.Description }}</span>
+              <router-link :to="'/market/' + invoice.DescriptionMarketId">[market]</router-link>
+            </span>
+            <span v-else>&lt;empty&gt;</span>
+          </span>
+          <span v-else>
+            <span v-if="invoice.Description">{{ invoice.Description }}</span>
+            <span v-else>&lt;empty&gt;</span>
+          </span>
         </span>
       </div>
     </div>
@@ -83,6 +97,15 @@ await (async () => {
   const url = window.origin + '/api/invoice/' + route.params.id
   const res = await fetch(url)
   const body = await res.json()
+  if (body.Description) {
+    const regexp = /\[market:(?<id>[0-9]+)\]/
+    const m = body.Description.match(regexp)
+    const marketId = m.groups?.id
+    if (marketId) {
+      body.DescriptionMarketId = marketId
+      body.Description = body.Description.replace(regexp, '')
+    }
+  }
   invoice.value = body
 })()
 </script>

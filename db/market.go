@@ -46,6 +46,10 @@ func (db *DB) FetchShares(marketId int, shares *[]Share) error {
 	return nil
 }
 
+func (db *DB) FetchShare(shareId string, share *Share) error {
+	return db.QueryRow("SELECT id, market_id, description FROM shares WHERE id = $1", shareId).Scan(&share.Id, &share.MarketId, &share.Description)
+}
+
 func (db *DB) FetchOrders(where *FetchOrdersWhere, orders *[]Order) error {
 	query := "" +
 		"SELECT o.id, share_id, o.pubkey, o.side, o.quantity, o.price, o.invoice_id, o.created_at, s.description, s.market_id, i.confirmed_at " +

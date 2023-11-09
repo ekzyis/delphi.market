@@ -12,7 +12,7 @@ import (
 	"github.com/lightningnetwork/lnd/lnwire"
 )
 
-func (lnd *LNDClient) CreateInvoice(d *db.DB, pubkey string, msats int64) (*db.Invoice, error) {
+func (lnd *LNDClient) CreateInvoice(d *db.DB, pubkey string, msats int64, description string) (*db.Invoice, error) {
 	var (
 		expiry         time.Duration = time.Hour
 		preimage       lntypes.Preimage
@@ -44,6 +44,7 @@ func (lnd *LNDClient) CreateInvoice(d *db.DB, pubkey string, msats int64) (*db.I
 		Hash:           hash.String(),
 		CreatedAt:      lnInvoice.CreationDate,
 		ExpiresAt:      lnInvoice.CreationDate.Add(expiry),
+		Description:    description,
 	}
 	if err := d.CreateInvoice(dbInvoice); err != nil {
 		return nil, err

@@ -45,6 +45,7 @@ type (
 		ExpiresAt      time.Time
 		ConfirmedAt    null.Time
 		HeldSince      null.Time
+		Description    string
 	}
 	Order struct {
 		Id        UUID
