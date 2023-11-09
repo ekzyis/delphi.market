@@ -64,7 +64,7 @@ const profit = computed(() => {
   return isNaN(val) ? 0 : val
 })
 
-const format = (x, i = 3) => x === null ? null : x >= 1 ? Math.round(x) : x.toFixed(i)
+const format = (x, i = 3) => x === null ? null : x >= 1 ? Math.round(x) : x === 0 ? x : x.toFixed(i)
 
 const market = ref(null)
 const url = '/api/market/' + marketId
