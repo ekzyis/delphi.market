@@ -20,7 +20,7 @@
     <input name="certainty" v-model="certainty" type="number" min="0" max="1" step="0.001"
       placeholder="fraction like 0.5" />
     <label>you receive:</label>
-    <label>{{ format(shares) }} shares @ 🗲{{ format(price) }}</label>
+    <label>{{ format(shares) }} {{ selected }} shares @ 🗲{{ format(price) }}</label>
     <label>you pay:</label>
     <label>🗲{{ format(cost) }}</label>
     <label>if you win:</label>
@@ -38,8 +38,8 @@ const route = useRoute()
 const marketId = route.params.id
 const selected = ref(null)
 const showForm = computed(() => selected.value !== null)
-const yesClass = computed(() => selected.value === 'yes' ? ['active'] : [])
-const noClass = computed(() => selected.value === 'no' ? ['active'] : [])
+const yesClass = computed(() => selected.value === 'YES' ? ['active'] : [])
+const noClass = computed(() => selected.value === 'NO' ? ['active'] : [])
 
 // how much wants the user bet?
 const stake = ref(null)
@@ -83,15 +83,15 @@ const noShareId = computed(() => {
   return market?.value.Shares.find(s => s.Description === 'NO').Id
 })
 const shareId = computed(() => {
-  return selected.value === 'yes' ? yesShareId.value : noShareId.value
+  return selected.value === 'YES' ? yesShareId.value : noShareId.value
 })
 
 const toggleYes = () => {
-  selected.value = selected.value === 'yes' ? null : 'yes'
+  selected.value = selected.value === 'YES' ? null : 'YES'
 }
 
 const toggleNo = () => {
-  selected.value = selected.value === 'no' ? null : 'no'
+  selected.value = selected.value === 'NO' ? null : 'NO'
 }
 
 const submitForm = async () => {
