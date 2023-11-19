@@ -6,7 +6,7 @@
   </ul>
   <button v-if="!showForm" @click.prevent="toggleForm">+ create market</button>
   <div v-else class="flex flex-col justify-center">
-    <MarketForm />
+    <MarketForm :onCancel="toggleForm" />
   </div>
 </template>
 
