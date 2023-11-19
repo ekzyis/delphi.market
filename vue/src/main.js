@@ -5,7 +5,7 @@ import App from './App.vue'
 import './registerServiceWorker'
 import './index.css'
 
-import MarketsView from '@/views/MarketsView'
+import HomeView from '@/views/HomeView'
 import LoginView from '@/views/LoginView'
 import UserView from '@/views/UserView'
 import MarketView from '@/views/MarketView'
@@ -13,7 +13,7 @@ import InvoiceView from '@/views/InvoiceView'
 
 const routes = [
   {
-    path: '/', component: MarketsView
+    path: '/', component: HomeView
   },
   {
     path: '/login', component: LoginView
