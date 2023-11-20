@@ -2,7 +2,6 @@ package lnd
 
 import (
 	"context"
-	"database/sql"
 	"log"
 	"time"
 
@@ -88,10 +87,6 @@ func (lnd *LNDClient) CheckInvoice(d *db.DB, hash lntypes.Hash) {
 			break
 		}
 		if lnInvoice.AmountPaid > 0 {
-			if err = RunStateTransition(d, lnInvoice.Hash); err != nil {
-				handleLoopError(err)
-				continue
-			}
 			if preimage, err = lntypes.MakePreimageFromStr(invoice.Preimage); err != nil {
 				handleLoopError(err)
 				continue
@@ -110,16 +105,6 @@ func (lnd *LNDClient) CheckInvoice(d *db.DB, hash lntypes.Hash) {
 		}
 		time.Sleep(pollInterval)
 	}
-}
-
-func RunStateTransition(d *db.DB, hash lntypes.Hash) error {
-	if err := d.MarkMarketAsActive(hash.String()); err != nil {
-		if err == sql.ErrNoRows {
-			return nil
-		}
-		return err
-	}
-	return nil
 }
 
 func (lnd *LNDClient) CheckInvoices(d *db.DB) error {

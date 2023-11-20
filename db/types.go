@@ -27,7 +27,6 @@ type (
 		Id          Serial    `json:"id"`
 		Description string    `json:"description"`
 		EndDate     time.Time `json:"endDate"`
-		Status      string    `json:"status"`
 		InvoiceId   UUID
 	}
 	Share struct {

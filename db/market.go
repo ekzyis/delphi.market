@@ -10,8 +10,8 @@ type FetchOrdersWhere struct {
 
 func (db *DB) CreateMarket(market *Market) error {
 	if err := db.QueryRow(""+
-		"INSERT INTO markets(description, end_date, status, invoice_id) "+
-		"VALUES($1, $2, 'WAITING_FOR_PAYMENT', $3) "+
+		"INSERT INTO markets(description, end_date, invoice_id) "+
+		"VALUES($1, $2, $3) "+
 		"RETURNING id", market.Description, market.EndDate, market.InvoiceId).Scan(&market.Id); err != nil {
 		return err
 	}
@@ -22,16 +22,8 @@ func (db *DB) CreateMarket(market *Market) error {
 	return nil
 }
 
-func (db *DB) MarkMarketAsActive(hash string) error {
-	_, err := db.Exec(""+
-		"UPDATE markets SET status = 'ACTIVE' "+
-		"WHERE invoice_id = (SELECT id FROM invoices WHERE hash = $1) "+
-		"AND status = 'WAITING_FOR_PAYMENT'", hash)
-	return err
-}
-
 func (db *DB) FetchMarket(marketId int, market *Market) error {
-	if err := db.QueryRow("SELECT id, description, end_date, status FROM markets WHERE id = $1", marketId).Scan(&market.Id, &market.Description, &market.EndDate, &market.Status); err != nil {
+	if err := db.QueryRow("SELECT id, description, end_date FROM markets WHERE id = $1", marketId).Scan(&market.Id, &market.Description, &market.EndDate); err != nil {
 		return err
 	}
 	return nil
@@ -43,12 +35,14 @@ func (db *DB) FetchActiveMarkets(markets *[]Market) error {
 		market Market
 		err    error
 	)
-	if rows, err = db.Query("SELECT id, description, end_date, status FROM markets WHERE status = 'ACTIVE'"); err != nil {
+	if rows, err = db.Query("" +
+		"SELECT m.id, m.description, m.end_date FROM markets m " +
+		"JOIN invoices i ON i.id = m.invoice_id WHERE i.confirmed_at IS NOT NULL"); err != nil {
 		return err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		rows.Scan(&market.Id, &market.Description, &market.EndDate, &market.Status)
+		rows.Scan(&market.Id, &market.Description, &market.EndDate)
 		*markets = append(*markets, market)
 	}
 	return nil
