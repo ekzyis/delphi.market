@@ -13,7 +13,11 @@
 <script setup>
 import MarketForm from './MarketForm'
 import { ref } from 'vue'
+import { useSession } from '@/stores/session'
+import { useRouter } from 'vue-router'
 
+const session = useSession()
+const router = useRouter()
 const markets = ref([])
 const showForm = ref(false)
 
@@ -25,6 +29,9 @@ await fetch(url).then(async r => {
 })
 
 const toggleForm = () => {
+  if (!session.isAuthenticated) {
+    return router.push('/login')
+  }
   showForm.value = !showForm.value
 }
 
