@@ -12,18 +12,6 @@ CREATE TABLE sessions(
     pubkey TEXT NOT NULL REFERENCES users(pubkey),
     session_id VARCHAR(48)
 );
-CREATE TABLE markets(
-    id SERIAL PRIMARY KEY,
-    description TEXT NOT NULL,
-    end_date TIMESTAMP WITH TIME ZONE NOT NULL,
-    invoice_id UUID NOT NULL UNIQUE REFERENCES invoices(id)
-);
-CREATE EXTENSION "uuid-ossp";
-CREATE TABLE shares(
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    market_id INTEGER REFERENCES markets(id),
-    description TEXT NOT NULL
-);
 CREATE TABLE invoices(
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     pubkey TEXT NOT NULL REFERENCES users(pubkey),
@@ -37,6 +25,18 @@ CREATE TABLE invoices(
     confirmed_at TIMESTAMP WITH TIME ZONE,
     held_since TIMESTAMP WITH TIME ZONE,
     description TEXT
+);
+CREATE TABLE markets(
+    id SERIAL PRIMARY KEY,
+    description TEXT NOT NULL,
+    end_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    invoice_id UUID NOT NULL UNIQUE REFERENCES invoices(id)
+);
+CREATE EXTENSION "uuid-ossp";
+CREATE TABLE shares(
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    market_id INTEGER REFERENCES markets(id),
+    description TEXT NOT NULL
 );
 CREATE TYPE order_side AS ENUM ('BUY', 'SELL');
 CREATE TABLE orders(
