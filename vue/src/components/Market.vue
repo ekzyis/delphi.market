@@ -15,9 +15,9 @@
   <button type="button" :class="noClass" class="label error font-mono mx-1 my-3" @click.prevent="toggleNo">NO</button>
   <form v-show="showForm" @submit.prevent="submitForm">
     <label for="stake">how much?</label>
-    <input name="stake" v-model="stake" type="number" min="0" placeholder="🗲 sats" />
+    <input name="stake" v-model="stake" type="number" min="0" placeholder="🗲 sats" required />
     <label for="certainty">how sure?</label>
-    <input name="certainty" v-model="certainty" type="range" min="0" max="1" step="0.01" />
+    <input name="certainty" v-model="certainty" type="range" min="0.01" max="1" step="0.01" required />
     <label>you receive:</label>
     <label>{{ format(shares) }} {{ selected }} shares @ 🗲{{ format(price) }}</label>
     <label>you pay:</label>
