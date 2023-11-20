@@ -109,4 +109,8 @@ figcaption {
 .label {
   margin: 1em auto;
 }
+
+a.label {
+  text-decoration: none;
+}
 </style>
