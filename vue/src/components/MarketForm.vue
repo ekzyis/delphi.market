@@ -14,17 +14,27 @@
 
 <script setup>
 import { ref, defineProps } from 'vue'
+import { useRouter } from 'vue-router'
 
 defineProps(['onCancel'])
 
+const router = useRouter()
 const form = ref(null)
 const description = ref(null)
 const endDate = ref(null)
 
+const parseEndDate = endDate => {
+  const [yyyy, mm, dd] = endDate.split('-')
+  return `${yyyy}-${mm}-${dd}T00:00:00.000Z`
+}
+
 const submitForm = async () => {
   const url = window.origin + '/api/market'
-  const body = JSON.stringify({ description: description.value, endDate: endDate.value })
-  await fetch(url, { method: 'post', headers: { 'Content-type': 'application/json' }, body })
+  const body = JSON.stringify({ description: description.value, endDate: parseEndDate(endDate.value) })
+  const res = await fetch(url, { method: 'post', headers: { 'Content-type': 'application/json' }, body })
+  const resBody = await res.json()
+  const invoiceId = resBody.id
+  router.push('/invoice/' + invoiceId)
 }
 
 </script>

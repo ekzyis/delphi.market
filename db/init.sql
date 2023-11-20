@@ -12,11 +12,13 @@ CREATE TABLE sessions(
     pubkey TEXT NOT NULL REFERENCES users(pubkey),
     session_id VARCHAR(48)
 );
-
+CREATE TYPE market_status AS ENUM ('WAITING_FOR_PAYMENT', 'ACTIVE', 'EXPIRED');
 CREATE TABLE markets(
     id SERIAL PRIMARY KEY,
     description TEXT NOT NULL,
-    active BOOLEAN DEFAULT true
+    end_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    status MARKET_STATUS NOT NULL DEFAULT 'WAITING_FOR_PAYMENT';
+    invoice_id UUID NOT NULL UNIQUE REFERENCES invoices(id)
 );
 CREATE EXTENSION "uuid-ossp";
 CREATE TABLE shares(

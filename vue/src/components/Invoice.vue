@@ -110,7 +110,7 @@ await (async () => {
   if (body.Description) {
     const regexp = /\[market:(?<id>[0-9]+)\]/
     const m = body.Description.match(regexp)
-    const marketId = m.groups?.id
+    const marketId = m?.groups?.id
     if (marketId) {
       body.DescriptionMarketId = marketId
       body.Description = body.Description.replace(regexp, '')

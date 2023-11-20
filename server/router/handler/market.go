@@ -47,6 +47,53 @@ func HandleMarket(sc context.ServerContext) echo.HandlerFunc {
 	}
 }
 
+func HandleCreateMarket(sc context.ServerContext) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		var (
+			u              db.User
+			m              db.Market
+			invoice        *db.Invoice
+			msats          int64
+			invDescription string
+			data           map[string]any
+			qr             string
+			hash           lntypes.Hash
+			err            error
+		)
+		if err := c.Bind(&m); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest)
+		}
+
+		u = c.Get("session").(db.User)
+		msats = 1000
+		// TODO: add [market:<id>] for redirect after payment
+		invDescription = fmt.Sprintf("create market \"%s\" (%s)", m.Description, m.EndDate)
+		if invoice, err = sc.Lnd.CreateInvoice(sc.Db, u.Pubkey, msats, invDescription); err != nil {
+			return err
+		}
+		if qr, err = lib.ToQR(invoice.PaymentRequest); err != nil {
+			return err
+		}
+		if hash, err = lntypes.MakeHashFromStr(invoice.Hash); err != nil {
+			return err
+		}
+		go sc.Lnd.CheckInvoice(sc.Db, hash)
+
+		m.InvoiceId = invoice.Id
+		if err := sc.Db.CreateMarket(&m); err != nil {
+			return err
+		}
+
+		data = map[string]any{
+			"id":     invoice.Id,
+			"bolt11": invoice.PaymentRequest,
+			"amount": msats,
+			"qr":     qr,
+		}
+		return c.JSON(http.StatusPaymentRequired, data)
+	}
+}
+
 func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (

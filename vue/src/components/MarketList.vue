@@ -1,7 +1,7 @@
 <template>
   <ul>
-    <li class="my-3" v-for="market in markets" :key="market.Id">
-      <router-link :to="'/market/' + market.Id">{{ market.Description }}</router-link>
+    <li class="my-3" v-for="market in markets" :key="market.id">
+      <router-link :to="'/market/' + market.id">{{ market.description }}</router-link>
     </li>
   </ul>
   <button v-if="!showForm" @click.prevent="toggleForm">+ create market</button>
