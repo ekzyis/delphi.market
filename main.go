@@ -24,6 +24,7 @@ func init() {
 		lndAddress     string
 		lndCert        string
 		lndMacaroonDir string
+		lndNetwork     string
 		db_            *db.DB
 		lnd_           *lnd.LNDClient
 		ctx            router.ServerContext
@@ -36,6 +37,7 @@ func init() {
 	flag.StringVar(&lndAddress, "LND_ADDRESS", "localhost:10001", "LND gRPC server address")
 	flag.StringVar(&lndCert, "LND_CERT", "", "Path to LND TLS certificate")
 	flag.StringVar(&lndMacaroonDir, "LND_MACAROON_DIR", "", "LND macaroon directory")
+	flag.StringVar(&lndNetwork, "LND_NETWORK", "regtest", "LND network")
 	env.Parse()
 	figlet()
 	log.Printf("Commit:      %s", env.CommitShortSha)
@@ -50,7 +52,7 @@ func init() {
 		LndAddress:  lndAddress,
 		TLSPath:     lndCert,
 		MacaroonDir: lndMacaroonDir,
-		Network:     lndclient.NetworkRegtest,
+		Network:     lndclient.Network(lndNetwork),
 	}); err != nil {
 		log.Printf("[warn] error connecting to LND: %v\n", err)
 		lnd_ = nil
