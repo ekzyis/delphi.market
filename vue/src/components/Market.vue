@@ -15,17 +15,18 @@
   <button type="button" :class="noClass" class="label error font-mono mx-1 my-3" @click.prevent="toggleNo">NO</button>
   <form v-show="showForm" @submit.prevent="submitForm">
     <label for="stake">how much?</label>
-    <input name="stake" v-model="stake" type="number" min="0" placeholder="🗲 sats" required />
+    <input name="stake" v-model="stake" type="number" min="0" placeholder="sats" required />
     <label for="certainty">how sure?</label>
-    <input name="certainty" v-model="certainty" type="range" min="0.01" max="1" step="0.01" required />
+    <input name="certainty" v-model="certainty" type="number" min="0.01" max="0.99" step="0.01" required />
     <label>you receive:</label>
-    <label>{{ format(shares) }} {{ selected }} shares @ 🗲{{ format(price) }}</label>
+    <label>{{ format(shares) }} {{ selected }} shares @ {{ format(price) }} sats</label>
     <label>you pay:</label>
-    <label>🗲{{ format(cost) }}</label>
+    <label>{{ format(cost) }} sats</label>
     <label>if you win:</label>
-    <label>+🗲{{ format(profit) }}</label>
+    <label>{{ format(profit) }} sats</label>
     <button class="col-span-2" type="submit">submit order</button>
   </form>
+  <div v-if="err" class="red text-center">{{ err }}</div>
 </template>
 
 <script setup>
@@ -39,6 +40,7 @@ const selected = ref(null)
 const showForm = computed(() => selected.value !== null)
 const yesClass = computed(() => selected.value === 'YES' ? ['active'] : [])
 const noClass = computed(() => selected.value === 'NO' ? ['active'] : [])
+const err = ref(null)
 
 // how much wants the user bet?
 const stake = ref(null)
@@ -105,6 +107,10 @@ const submitForm = async () => {
   })
   const res = await fetch(url, { method: 'POST', headers: { 'Content-type': 'application/json' }, body })
   const resBody = await res.json()
+  if (res.status !== 402) {
+    err.value = `error: server responded with HTTP ${resBody.status}`
+    return
+  }
   const invoiceId = resBody.id
   router.push('/invoice/' + invoiceId)
 }

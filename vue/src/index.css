@@ -52,6 +52,10 @@ a.selected {
   background-color: #35df8d;
 }
 
+.red {
+  color: #ff7386;
+}
+
 .error {
   background-color: rgba(245, 57, 94, .24);
   color: #ff7386;
