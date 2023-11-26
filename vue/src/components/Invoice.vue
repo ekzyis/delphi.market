@@ -22,6 +22,10 @@
         </figcaption>
       </figure>
       <div class="grid text-muted text-xs">
+        <span v-if="faucet" class="mx-3 my-1">faucet</span>
+        <span v-if="faucet" class="text-ellipsis overflow-hidden font-mono me-3 my-1">
+          <a href="https://faucet.mutinynet.com/" target="_blank">faucet.mutinynet.com</a>
+        </span>
         <span class="mx-3 my-1">payment hash</span><span class="text-ellipsis overflow-hidden font-mono me-3 my-1">
           {{ invoice.Hash }}
         </span>
@@ -122,6 +126,8 @@ await (async () => {
 })()
 
 onUnmounted(() => { clearInterval(interval) })
+
+const faucet = window.location.hostname === 'delphi.market' ? 'https://faucet.mutinynet.com' : ''
 
 </script>
 
