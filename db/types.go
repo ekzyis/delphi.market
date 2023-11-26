@@ -50,9 +50,10 @@ type (
 		Status         string
 	}
 	Order struct {
-		Id        UUID
-		CreatedAt time.Time
-		ShareId   string `json:"sid"`
+		Id               UUID
+		CreatedAt        time.Time
+		ShareId          string `json:"sid"`
+		ShareDescription string
 		Share
 		Pubkey    string
 		Side      string `json:"side"`

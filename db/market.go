@@ -111,3 +111,24 @@ func (db *DB) CreateOrder(tx *sql.Tx, ctx context.Context, order *Order) error {
 	}
 	return nil
 }
+
+func (db *DB) FetchUserOrders(pubkey string, orders *[]Order) error {
+	query := "" +
+		"SELECT o.id, share_id, o.pubkey, o.side, o.quantity, o.price, o.invoice_id, o.created_at, s.description, s.market_id, i.confirmed_at " +
+		"FROM orders o " +
+		"JOIN invoices i ON o.invoice_id = i.id " +
+		"JOIN shares s ON o.share_id = s.id " +
+		"WHERE o.pubkey = $1 AND i.confirmed_at IS NOT NULL " +
+		"ORDER BY o.created_at DESC"
+	rows, err := db.Query(query, pubkey)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var order Order
+		rows.Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.InvoiceId, &order.CreatedAt, &order.ShareDescription, &order.Share.MarketId, &order.Invoice.ConfirmedAt)
+		*orders = append(*orders, order)
+	}
+	return nil
+}

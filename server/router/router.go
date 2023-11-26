@@ -50,6 +50,9 @@ func addBackendRoutes(e *echo.Echo, sc ServerContext) {
 		handler.HandleOrder,
 		middleware.SessionGuard,
 		middleware.LNDGuard)
+	GET(e, sc, "/api/orders",
+		handler.HandleOrders,
+		middleware.SessionGuard)
 	GET(e, sc, "/api/login", handler.HandleLogin)
 	GET(e, sc, "/api/login/callback", handler.HandleLoginCallback)
 	POST(e, sc, "/api/logout", handler.HandleLogout)

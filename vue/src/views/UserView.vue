@@ -13,6 +13,7 @@
     <nav>
       <StyledLink to="/user/settings">settings</StyledLink>
       <StyledLink to="/user/invoices">invoices</StyledLink>
+      <StyledLink to="/user/orders">orders</StyledLink>
     </nav>
   </header>
   <Suspense>

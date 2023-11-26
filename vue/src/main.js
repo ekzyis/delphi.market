@@ -12,6 +12,7 @@ import MarketView from '@/views/MarketView'
 import InvoiceView from '@/views/InvoiceView'
 import UserSettings from '@/components/UserSettings'
 import UserInvoices from '@/components/UserInvoices'
+import UserOrders from '@/components/UserOrders'
 
 const routes = [
   {
@@ -25,7 +26,8 @@ const routes = [
     component: UserView,
     children: [
       { path: 'settings', name: 'user', component: UserSettings },
-      { path: 'invoices', name: 'invoices', component: UserInvoices }
+      { path: 'invoices', name: 'invoices', component: UserInvoices },
+      { path: 'orders', name: 'orders', component: UserOrders }
     ]
   },
   {

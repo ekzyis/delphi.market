@@ -196,3 +196,18 @@ func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
 		return c.JSON(http.StatusPaymentRequired, data)
 	}
 }
+
+func HandleOrders(sc context.ServerContext) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		var (
+			u      db.User
+			orders []db.Order
+			err    error
+		)
+		u = c.Get("session").(db.User)
+		if err = sc.Db.FetchUserOrders(u.Pubkey, &orders); err != nil {
+			return err
+		}
+		return c.JSON(http.StatusOK, orders)
+	}
+}
