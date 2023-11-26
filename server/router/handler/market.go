@@ -109,12 +109,11 @@ func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
 			err         error
 		)
 		// TODO:
-		//   [ ] Step 0: If SELL order, check share balance of user
-		//   [x] Create HODL invoice
+		//   [ ] If SELL order, check share balance of user
 		//   [x] Create (unconfirmed) order
+		//   [x] Create invoice
 		//   [ ] Find matching orders
-		//   [ ] Settle invoice when matching order was found,
-		//         else cancel invoice if expired
+		//   [ ] show invoice to user
 
 		// parse body
 		if err := c.Bind(&o); err != nil {
