@@ -10,7 +10,7 @@ import LoginView from '@/views/LoginView'
 import UserView from '@/views/UserView'
 import MarketView from '@/views/MarketView'
 import InvoiceView from '@/views/InvoiceView'
-import UserHome from '@/components/UserHome'
+import UserSettings from '@/components/UserSettings'
 import UserInvoices from '@/components/UserInvoices'
 
 const routes = [
@@ -24,7 +24,7 @@ const routes = [
     path: '/user',
     component: UserView,
     children: [
-      { path: 'settings', name: 'user', component: UserHome },
+      { path: 'settings', name: 'user', component: UserSettings },
       { path: 'invoices', name: 'invoices', component: UserInvoices }
     ]
   },
