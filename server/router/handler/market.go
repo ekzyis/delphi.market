@@ -142,14 +142,14 @@ func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
 			return err
 		}
 
-		// Start goroutine to poll status and update invoice in background
-		go sc.Lnd.CheckInvoice(sc.Db, hash)
-
 		// Create (unconfirmed) order
 		o.InvoiceId = invoice.Id
 		if err := sc.Db.CreateOrder(&o); err != nil {
 			return err
 		}
+
+		// Start goroutine to poll status and update invoice in background
+		go sc.Lnd.CheckInvoice(sc.Db, hash)
 
 		// TODO: find matching orders
 
