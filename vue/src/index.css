@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+button {
+  color: #ffffff;
+  border: solid 1px #8787A4;
+  padding: 0 1em;
+}
+
+button:hover {
+  color: #ffffff;
+  background: #8787A4;
+}
+
+input {
+  color: #000;
+}
+
+a {
+  color: #8787a4;
+  text-decoration: underline;
+}
+
+a:hover {
+  color: #ffffff;
+  background: #8787A4;
+}
+
+a.selected {
+  color: #ffffff;
+  background: #8787A4;
+}
+
+.label {
+  border: none;
+  width: fit-content;
+  padding: 0.5em 3em;
+  cursor: pointer;
+}
+
+.label:hover {
+  color: white;
+}
+
+.success {
+  background-color: rgba(20, 158, 97, .24);
+  color: #35df8d;
+}
+
+.success:hover {
+  background-color: #35df8d;
+}
+
+.red {
+  color: #ff7386;
+}
+
+.error {
+  background-color: rgba(245, 57, 94, .24);
+  color: #ff7386;
+}
+
+.error:hover {
+  background-color: #ff7386;
+}
+
+.text-muted {
+  opacity: 0.67
+}

@@ -7,21 +7,22 @@ import (
 
 	"git.ekzyis.com/ekzyis/delphi.market/db"
 	"git.ekzyis.com/ekzyis/delphi.market/lib"
-	"git.ekzyis.com/ekzyis/delphi.market/lnd"
+	"git.ekzyis.com/ekzyis/delphi.market/server/router/context"
 	"github.com/labstack/echo/v4"
 	"github.com/lightningnetwork/lnd/lntypes"
 )
 
-func HandleInvoiceAPI(envVars map[string]any) echo.HandlerFunc {
+func HandleInvoiceStatus(sc context.ServerContext) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			invoiceId string
 			invoice   db.Invoice
 			u         db.User
+			qr        string
 			err       error
 		)
 		invoiceId = c.Param("id")
-		if err = db.FetchInvoice(&db.FetchInvoiceWhere{Id: invoiceId}, &invoice); err == sql.ErrNoRows {
+		if err = sc.Db.FetchInvoice(&db.FetchInvoiceWhere{Id: invoiceId}, &invoice); err == sql.ErrNoRows {
 			return echo.NewHTTPError(http.StatusNotFound)
 		} else if err != nil {
 			return err
@@ -29,12 +30,28 @@ func HandleInvoiceAPI(envVars map[string]any) echo.HandlerFunc {
 		if u = c.Get("session").(db.User); invoice.Pubkey != u.Pubkey {
 			return echo.NewHTTPError(http.StatusUnauthorized)
 		}
+		if qr, err = lib.ToQR(invoice.PaymentRequest); err != nil {
+			return err
+		}
 		invoice.Preimage = ""
-		return c.JSON(http.StatusOK, invoice)
+		data := map[string]any{
+			"Id":             invoice.Id,
+			"Msats":          invoice.Msats,
+			"MsatsReceived":  invoice.MsatsReceived,
+			"Hash":           invoice.Hash,
+			"PaymentRequest": invoice.PaymentRequest,
+			"CreatedAt":      invoice.CreatedAt,
+			"ExpiresAt":      invoice.ExpiresAt,
+			"ConfirmedAt":    invoice.ConfirmedAt,
+			"HeldSince":      invoice.HeldSince,
+			"Description":    invoice.Description,
+			"Qr":             qr,
+		}
+		return c.JSON(http.StatusOK, data)
 	}
 }
 
-func HandleInvoice(envVars map[string]any) echo.HandlerFunc {
+func HandleInvoice(sc context.ServerContext) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			invoiceId string
@@ -46,7 +63,7 @@ func HandleInvoice(envVars map[string]any) echo.HandlerFunc {
 			err       error
 		)
 		invoiceId = c.Param("id")
-		if err = db.FetchInvoice(&db.FetchInvoiceWhere{Id: invoiceId}, &invoice); err == sql.ErrNoRows {
+		if err = sc.Db.FetchInvoice(&db.FetchInvoiceWhere{Id: invoiceId}, &invoice); err == sql.ErrNoRows {
 			return echo.NewHTTPError(http.StatusNotFound)
 		} else if err != nil {
 			return err
@@ -57,7 +74,7 @@ func HandleInvoice(envVars map[string]any) echo.HandlerFunc {
 		if hash, err = lntypes.MakeHashFromStr(invoice.Hash); err != nil {
 			return err
 		}
-		go lnd.CheckInvoice(hash)
+		go sc.Lnd.CheckInvoice(sc.Db, hash)
 		if qr, err = lib.ToQR(invoice.PaymentRequest); err != nil {
 			return err
 		}
@@ -73,6 +90,6 @@ func HandleInvoice(envVars map[string]any) echo.HandlerFunc {
 			"lnurl":   invoice.PaymentRequest,
 			"qr":      qr,
 		}
-		return c.Render(http.StatusOK, "invoice.html", data)
+		return sc.Render(c, http.StatusOK, "invoice.html", data)
 	}
 }

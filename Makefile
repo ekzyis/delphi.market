@@ -1,6 +1,6 @@
-.PHONY: build run
+.PHONY: build run test
 
-SOURCE := $(shell find db env lib lnd pages public server -type f)
+SOURCE := $(shell find db env lib lnd pages public server -type f) main.go
 
 build: delphi.market
 
@@ -10,3 +10,5 @@ delphi.market: $(SOURCE)
 run:
 	go run .
 
+test:
+	go test -v -count=1 ./server/router/handler/...

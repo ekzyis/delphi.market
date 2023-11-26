@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"git.ekzyis.com/ekzyis/delphi.market/db"
-	"git.ekzyis.com/ekzyis/delphi.market/env"
 	"git.ekzyis.com/ekzyis/delphi.market/lib"
-	"git.ekzyis.com/ekzyis/delphi.market/lnd"
+	"git.ekzyis.com/ekzyis/delphi.market/server/router/context"
 	"github.com/labstack/echo/v4"
 	"github.com/lightningnetwork/lnd/lntypes"
 )
 
-func HandleMarket(envVars map[string]any) echo.HandlerFunc {
+func HandleMarket(sc context.ServerContext) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			marketId int64
@@ -27,53 +27,93 @@ func HandleMarket(envVars map[string]any) echo.HandlerFunc {
 		if marketId, err = strconv.ParseInt(c.Param("id"), 10, 64); err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "Bad Request")
 		}
-		if err = db.FetchMarket(int(marketId), &market); err == sql.ErrNoRows {
+		if err = sc.Db.FetchMarket(int(marketId), &market); err == sql.ErrNoRows {
 			return echo.NewHTTPError(http.StatusNotFound, "Not Found")
 		} else if err != nil {
 			return err
 		}
-		if err = db.FetchShares(market.Id, &shares); err != nil {
+		if err = sc.Db.FetchShares(market.Id, &shares); err != nil {
 			return err
 		}
-		if err = db.FetchOrders(&db.FetchOrdersWhere{MarketId: market.Id, Confirmed: true}, &orders); err != nil {
+		if err = sc.Db.FetchOrders(&db.FetchOrdersWhere{MarketId: market.Id, Confirmed: true}, &orders); err != nil {
 			return err
 		}
 		data = map[string]any{
-			"session":     c.Get("session"),
 			"Id":          market.Id,
 			"Description": market.Description,
-			// shares are sorted by description in descending order
-			// that's how we know that YES must be the first share
-			"YesShare": shares[0],
-			"NoShare":  shares[1],
-			"Orders":   orders,
+			"Shares":      shares,
 		}
-		lib.Merge(&data, &envVars)
-		return c.Render(http.StatusOK, "market.html", data)
+		return c.JSON(http.StatusOK, data)
 	}
 }
 
-func HandlePostOrder(envVars map[string]any) echo.HandlerFunc {
+func HandleCreateMarket(sc context.ServerContext) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
-			marketId string
-			u        db.User
-			o        db.Order
-			invoice  *db.Invoice
-			msats    int64
-			data     map[string]any
-			qr       string
-			hash     lntypes.Hash
-			err      error
+			u              db.User
+			m              db.Market
+			invoice        *db.Invoice
+			msats          int64
+			invDescription string
+			data           map[string]any
+			qr             string
+			hash           lntypes.Hash
+			err            error
 		)
-		marketId = c.Param("id")
+		if err := c.Bind(&m); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest)
+		}
+
+		u = c.Get("session").(db.User)
+		msats = 1000
+		// TODO: add [market:<id>] for redirect after payment
+		invDescription = fmt.Sprintf("create market \"%s\" (%s)", m.Description, m.EndDate)
+		if invoice, err = sc.Lnd.CreateInvoice(sc.Db, u.Pubkey, msats, invDescription); err != nil {
+			return err
+		}
+		if qr, err = lib.ToQR(invoice.PaymentRequest); err != nil {
+			return err
+		}
+		if hash, err = lntypes.MakeHashFromStr(invoice.Hash); err != nil {
+			return err
+		}
+		go sc.Lnd.CheckInvoice(sc.Db, hash)
+
+		m.InvoiceId = invoice.Id
+		if err := sc.Db.CreateMarket(&m); err != nil {
+			return err
+		}
+
+		data = map[string]any{
+			"id":     invoice.Id,
+			"bolt11": invoice.PaymentRequest,
+			"amount": msats,
+			"qr":     qr,
+		}
+		return c.JSON(http.StatusPaymentRequired, data)
+	}
+}
+
+func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		var (
+			u           db.User
+			o           db.Order
+			s           db.Share
+			invoice     *db.Invoice
+			msats       int64
+			description string
+			data        map[string]any
+			qr          string
+			hash        lntypes.Hash
+			err         error
+		)
 		// TODO:
-		//   [ ] Step 0: If SELL order, check share balance of user
-		//   [x] Create HODL invoice
+		//   [ ] If SELL order, check share balance of user
 		//   [x] Create (unconfirmed) order
+		//   [x] Create invoice
 		//   [ ] Find matching orders
-		//   [ ] Settle invoice when matching order was found,
-		//         else cancel invoice if expired
+		//   [ ] show invoice to user
 
 		// parse body
 		if err := c.Bind(&o); err != nil {
@@ -82,11 +122,15 @@ func HandlePostOrder(envVars map[string]any) echo.HandlerFunc {
 		u = c.Get("session").(db.User)
 		o.Pubkey = u.Pubkey
 		msats = o.Quantity * o.Price * 1000
+		if err = sc.Db.FetchShare(o.ShareId, &s); err != nil {
+			return err
+		}
+		description = fmt.Sprintf("%s %d %s shares @ %d sats [market:%d]", strings.ToUpper(o.Side), o.Quantity, s.Description, o.Price, s.MarketId)
 
 		// TODO: if SELL order, check share balance of user
 
 		// Create HODL invoice
-		if invoice, err = lnd.CreateInvoice(o.Pubkey, msats); err != nil {
+		if invoice, err = sc.Lnd.CreateInvoice(sc.Db, o.Pubkey, msats, description); err != nil {
 			return err
 		}
 		// Create QR code to pay HODL invoice
@@ -97,25 +141,23 @@ func HandlePostOrder(envVars map[string]any) echo.HandlerFunc {
 			return err
 		}
 
-		// Start goroutine to poll status and update invoice in background
-		go lnd.CheckInvoice(hash)
-
 		// Create (unconfirmed) order
 		o.InvoiceId = invoice.Id
-		if err := db.CreateOrder(&o); err != nil {
+		if err := sc.Db.CreateOrder(&o); err != nil {
 			return err
 		}
+
+		// Start goroutine to poll status and update invoice in background
+		go sc.Lnd.CheckInvoice(sc.Db, hash)
 
 		// TODO: find matching orders
 
 		data = map[string]any{
-			"session":     c.Get("session"),
-			"lnurl":       invoice.PaymentRequest,
-			"qr":          qr,
-			"invoice":     *invoice,
-			"redirectURL": fmt.Sprintf("https://%s/market/%s", env.PublicURL, marketId),
+			"id":     invoice.Id,
+			"bolt11": invoice.PaymentRequest,
+			"amount": msats,
+			"qr":     qr,
 		}
-		lib.Merge(&data, &envVars)
-		return c.Render(http.StatusPaymentRequired, "invoice.html", data)
+		return c.JSON(http.StatusPaymentRequired, data)
 	}
 }

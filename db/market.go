@@ -2,31 +2,53 @@ package db
 
 import "database/sql"
 
-func FetchMarket(marketId int, market *Market) error {
-	if err := db.QueryRow("SELECT id, description FROM markets WHERE id = $1", marketId).Scan(&market.Id, &market.Description); err != nil {
+type FetchOrdersWhere struct {
+	MarketId  int
+	Pubkey    string
+	Confirmed bool
+}
+
+func (db *DB) CreateMarket(market *Market) error {
+	if err := db.QueryRow(""+
+		"INSERT INTO markets(description, end_date, invoice_id) "+
+		"VALUES($1, $2, $3) "+
+		"RETURNING id", market.Description, market.EndDate, market.InvoiceId).Scan(&market.Id); err != nil {
+		return err
+	}
+	// For now, we only support binary markets.
+	if _, err := db.Exec("INSERT INTO shares(market_id, description) VALUES ($1, 'YES'), ($1, 'NO')", market.Id); err != nil {
 		return err
 	}
 	return nil
 }
 
-func FetchActiveMarkets(markets *[]Market) error {
+func (db *DB) FetchMarket(marketId int, market *Market) error {
+	if err := db.QueryRow("SELECT id, description, end_date FROM markets WHERE id = $1", marketId).Scan(&market.Id, &market.Description, &market.EndDate); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (db *DB) FetchActiveMarkets(markets *[]Market) error {
 	var (
 		rows   *sql.Rows
 		market Market
 		err    error
 	)
-	if rows, err = db.Query("SELECT id, description, active FROM markets WHERE active = true"); err != nil {
+	if rows, err = db.Query("" +
+		"SELECT m.id, m.description, m.end_date FROM markets m " +
+		"JOIN invoices i ON i.id = m.invoice_id WHERE i.confirmed_at IS NOT NULL"); err != nil {
 		return err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		rows.Scan(&market.Id, &market.Description, &market.Active)
+		rows.Scan(&market.Id, &market.Description, &market.EndDate)
 		*markets = append(*markets, market)
 	}
 	return nil
 }
 
-func FetchShares(marketId int, shares *[]Share) error {
+func (db *DB) FetchShares(marketId int, shares *[]Share) error {
 	rows, err := db.Query("SELECT id, market_id, description FROM shares WHERE market_id = $1 ORDER BY description DESC", marketId)
 	if err != nil {
 		return err
@@ -40,13 +62,11 @@ func FetchShares(marketId int, shares *[]Share) error {
 	return nil
 }
 
-type FetchOrdersWhere struct {
-	MarketId  int
-	Pubkey    string
-	Confirmed bool
+func (db *DB) FetchShare(shareId string, share *Share) error {
+	return db.QueryRow("SELECT id, market_id, description FROM shares WHERE id = $1", shareId).Scan(&share.Id, &share.MarketId, &share.Description)
 }
 
-func FetchOrders(where *FetchOrdersWhere, orders *[]Order) error {
+func (db *DB) FetchOrders(where *FetchOrdersWhere, orders *[]Order) error {
 	query := "" +
 		"SELECT o.id, share_id, o.pubkey, o.side, o.quantity, o.price, o.invoice_id, o.created_at, s.description, s.market_id, i.confirmed_at " +
 		"FROM orders o " +
@@ -79,7 +99,7 @@ func FetchOrders(where *FetchOrdersWhere, orders *[]Order) error {
 	return nil
 }
 
-func CreateOrder(order *Order) error {
+func (db *DB) CreateOrder(order *Order) error {
 	if _, err := db.Exec(""+
 		"INSERT INTO orders(share_id, pubkey, side, quantity, price, invoice_id) "+
 		"VALUES ($1, $2, $3, $4, $5, $6)",

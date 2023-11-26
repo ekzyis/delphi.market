@@ -20,12 +20,8 @@ func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Con
 	return t.templates.ExecuteTemplate(w, name, data)
 }
 
-var (
-	T *Template
-)
-
-func init() {
-	T = &Template{
+func ParseTemplates(pattern string) *Template {
+	return &Template{
 		templates: template.Must(template.New("").Funcs(template.FuncMap{
 			"add":    add[int64],
 			"sub":    sub[int64],

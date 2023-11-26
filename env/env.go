@@ -19,13 +19,17 @@ var (
 	Version        string
 )
 
-func init() {
+func Load(filenames ...string) error {
 	if err := godotenv.Load(); err != nil {
-		log.Fatalf("error loading env vars: %s", err)
+		return err
 	}
 	flag.StringVar(&PublicURL, "PUBLIC_URL", "delphi.market", "Public URL of website")
 	flag.IntVar(&Port, "PORT", 4321, "Server port")
-	flag.StringVar(&Env, "ENV", "development", "Specify for which environment files should be built")
+	flag.StringVar(&Env, "ENV", "development", "Specify environment")
+	return nil
+}
+
+func Parse() {
 	flag.Parse()
 	CommitLongSha = execCmd("git", "rev-parse", "HEAD")
 	CommitShortSha = execCmd("git", "rev-parse", "--short", "HEAD")

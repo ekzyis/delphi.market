@@ -1,13 +1,16 @@
 package db
 
-import "time"
+import (
+	"database/sql"
+	"time"
+)
 
-func CreateInvoice(invoice *Invoice) error {
+func (db *DB) CreateInvoice(invoice *Invoice) error {
 	if err := db.QueryRow(""+
-		"INSERT INTO invoices(pubkey, msats, preimage, hash, bolt11, created_at, expires_at) "+
-		"VALUES($1, $2, $3, $4, $5, $6, $7) "+
+		"INSERT INTO invoices(pubkey, msats, preimage, hash, bolt11, created_at, expires_at, description) "+
+		"VALUES($1, $2, $3, $4, $5, $6, $7, $8) "+
 		"RETURNING id",
-		invoice.Pubkey, invoice.Msats, invoice.Preimage, invoice.Hash, invoice.PaymentRequest, invoice.CreatedAt, invoice.ExpiresAt).Scan(&invoice.Id); err != nil {
+		invoice.Pubkey, invoice.Msats, invoice.Preimage, invoice.Hash, invoice.PaymentRequest, invoice.CreatedAt, invoice.ExpiresAt, invoice.Description).Scan(&invoice.Id); err != nil {
 		return err
 	}
 	return nil
@@ -18,9 +21,9 @@ type FetchInvoiceWhere struct {
 	Hash string
 }
 
-func FetchInvoice(where *FetchInvoiceWhere, invoice *Invoice) error {
+func (db *DB) FetchInvoice(where *FetchInvoiceWhere, invoice *Invoice) error {
 	var (
-		query = "SELECT id, pubkey, msats, preimage, hash, bolt11, created_at, expires_at, confirmed_at, held_since FROM invoices "
+		query = "SELECT id, pubkey, msats, preimage, hash, bolt11, created_at, expires_at, confirmed_at, held_since, COALESCE(description, '') FROM invoices "
 		args  []any
 	)
 	if where.Id != "" {
@@ -32,13 +35,42 @@ func FetchInvoice(where *FetchInvoiceWhere, invoice *Invoice) error {
 	}
 	if err := db.QueryRow(query, args...).Scan(
 		&invoice.Id, &invoice.Pubkey, &invoice.Msats, &invoice.Preimage, &invoice.Hash,
-		&invoice.PaymentRequest, &invoice.CreatedAt, &invoice.ExpiresAt, &invoice.ConfirmedAt, &invoice.HeldSince); err != nil {
+		&invoice.PaymentRequest, &invoice.CreatedAt, &invoice.ExpiresAt, &invoice.ConfirmedAt, &invoice.HeldSince, &invoice.Description); err != nil {
 		return err
 	}
 	return nil
 }
 
-func ConfirmInvoice(hash string, confirmedAt time.Time, msatsReceived int) error {
+type FetchInvoicesWhere struct {
+	Unconfirmed bool
+}
+
+func (db *DB) FetchInvoices(where *FetchInvoicesWhere, invoices *[]Invoice) error {
+	var (
+		rows    *sql.Rows
+		invoice Invoice
+		err     error
+	)
+	var (
+		query = "SELECT id, pubkey, msats, preimage, hash, bolt11, created_at, expires_at, confirmed_at, held_since, COALESCE(description, '') FROM invoices "
+	)
+	if where.Unconfirmed {
+		query += "WHERE confirmed_at IS NULL"
+	}
+	if rows, err = db.Query(query); err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		rows.Scan(
+			&invoice.Id, &invoice.Pubkey, &invoice.Msats, &invoice.Preimage, &invoice.Hash,
+			&invoice.PaymentRequest, &invoice.CreatedAt, &invoice.ExpiresAt, &invoice.ConfirmedAt, &invoice.HeldSince, &invoice.Description)
+		*invoices = append(*invoices, invoice)
+	}
+	return nil
+}
+
+func (db *DB) ConfirmInvoice(hash string, confirmedAt time.Time, msatsReceived int) error {
 	if _, err := db.Exec("UPDATE invoices SET confirmed_at = $2, msats_received = $3 WHERE hash = $1", hash, confirmedAt, msatsReceived); err != nil {
 		return err
 	}

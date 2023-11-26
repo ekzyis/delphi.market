@@ -2,44 +2,70 @@ package db
 
 import (
 	"database/sql"
-	"log"
+	"fmt"
+	"io/ioutil"
 
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
-	"github.com/namsral/flag"
-)
-
-var (
-	db *DB
 )
 
 type DB struct {
 	*sql.DB
 }
 
-func init() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatalf("error loading env vars: %s", err)
-	}
-	var dbUrl string
-	flag.StringVar(&dbUrl, "DATABASE_URL", "", "Database URL")
-	flag.Parse()
-	if dbUrl == "" {
-		log.Fatal("DATABASE_URL not set")
-	}
-	db = initDB(dbUrl)
-}
+var (
+	initSqlPath = "./db/init.sql"
+)
 
-func initDB(url string) *DB {
-	db, err := sql.Open("postgres", url)
-	if err != nil {
-		log.Fatal(err)
+func New(dbUrl string) (*DB, error) {
+	var (
+		db_ *sql.DB
+		db  *DB
+		err error
+	)
+	if db_, err = sql.Open("postgres", dbUrl); err != nil {
+		return nil, err
 	}
 	// test connection
-	_, err = db.Exec("SELECT 1")
-	if err != nil {
-		log.Fatal(err)
+	if _, err = db_.Exec("SELECT 1"); err != nil {
+		return nil, err
 	}
 	// TODO: run migrations
-	return &DB{DB: db}
+	db = &DB{DB: db_}
+	return db, nil
+}
+
+func (db *DB) Reset(dbName string) error {
+	var (
+		f   []byte
+		err error
+	)
+	if err = db.Clear(dbName); err != nil {
+		return err
+	}
+	if f, err = ioutil.ReadFile(initSqlPath); err != nil {
+		return err
+	}
+	if _, err = db.Exec(string(f)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (db *DB) Clear(dbName string) error {
+	var (
+		tables = []string{"lnauth", "users", "sessions", "markets", "shares", "invoices", "order_side", "orders", "matches"}
+		sql    []string
+		err    error
+	)
+	for _, t := range tables {
+		sql = append(sql, fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", t))
+	}
+	sql = append(sql, "DROP EXTENSION IF EXISTS \"uuid-ossp\"")
+	sql = append(sql, "DROP TYPE IF EXISTS order_side")
+	for _, s := range sql {
+		if _, err = db.Exec(s); err != nil {
+			return err
+		}
+	}
+	return nil
 }
