@@ -50,6 +50,7 @@ CREATE TABLE orders(
     invoice_id UUID NOT NULL REFERENCES invoices(id)
 );
 ALTER TABLE orders ADD CONSTRAINT order_price CHECK(price > 0 AND price < 100);
+ALTER TABLE orders ADD CONSTRAINT order_quantity CHECK(quantity > 0);
 CREATE TABLE matches(
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     oid1 UUID NOT NULL REFERENCES orders(id),
