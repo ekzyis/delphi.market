@@ -24,7 +24,7 @@ const routes = [
     path: '/user',
     component: UserView,
     children: [
-      { path: '', name: 'user', component: UserHome },
+      { path: 'settings', name: 'user', component: UserHome },
       { path: 'invoices', name: 'invoices', component: UserInvoices }
     ]
   },

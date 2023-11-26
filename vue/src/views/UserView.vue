@@ -11,14 +11,18 @@
   <!-- eslint-enable -->
   <header class="flex flex-row text-center justify-center pt-1">
     <nav>
-      <router-link to="/user">settings</router-link>
-      <router-link to="/user/invoices">invoices</router-link>
+      <StyledLink to="/user/settings">settings</StyledLink>
+      <StyledLink to="/user/invoices">invoices</StyledLink>
     </nav>
   </header>
   <Suspense>
     <router-view />
   </Suspense>
 </template>
+
+<script setup>
+import StyledLink from '@/components/StyledLink'
+</script>
 
 <style scoped>
 nav {
