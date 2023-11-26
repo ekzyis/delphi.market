@@ -10,6 +10,7 @@
       <button type="submit">submit</button>
     </div>
   </form>
+  <div v-if="err" class="red text-center">{{ err }}</div>
 </template>
 
 <script setup>
@@ -22,6 +23,7 @@ const router = useRouter()
 const form = ref(null)
 const description = ref(null)
 const endDate = ref(null)
+const err = ref(null)
 
 const parseEndDate = endDate => {
   const [yyyy, mm, dd] = endDate.split('-')
@@ -33,6 +35,10 @@ const submitForm = async () => {
   const body = JSON.stringify({ description: description.value, endDate: parseEndDate(endDate.value) })
   const res = await fetch(url, { method: 'post', headers: { 'Content-type': 'application/json' }, body })
   const resBody = await res.json()
+  if (res.status !== 402) {
+    err.value = `error: server responded with HTTP ${resBody.status}`
+    return
+  }
   const invoiceId = resBody.id
   router.push('/invoice/' + invoiceId)
 }
