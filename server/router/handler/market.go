@@ -79,7 +79,7 @@ func HandleCreateMarket(sc context.ServerContext) echo.HandlerFunc {
 		u = c.Get("session").(db.User)
 		msats = 1000
 		// TODO: add [market:<id>] for redirect after payment
-		invDescription = fmt.Sprintf("create market \"%s\" (%s)", m.Description, m.EndDate)
+		invDescription = fmt.Sprintf("create market \"%s\"", m.Description)
 		if invoice, err = sc.Lnd.CreateInvoice(tx, ctx, sc.Db, u.Pubkey, msats, invDescription); err != nil {
 			return err
 		}
