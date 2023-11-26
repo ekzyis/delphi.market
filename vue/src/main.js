@@ -10,6 +10,8 @@ import LoginView from '@/views/LoginView'
 import UserView from '@/views/UserView'
 import MarketView from '@/views/MarketView'
 import InvoiceView from '@/views/InvoiceView'
+import UserHome from '@/components/UserHome'
+import UserInvoices from '@/components/UserInvoices'
 
 const routes = [
   {
@@ -19,7 +21,12 @@ const routes = [
     path: '/login', component: LoginView
   },
   {
-    path: '/user', component: UserView
+    path: '/user',
+    component: UserView,
+    children: [
+      { path: '', name: 'user', component: UserHome },
+      { path: 'invoices', name: 'invoices', component: UserInvoices }
+    ]
   },
   {
     path: '/market/:id', component: MarketView

@@ -47,6 +47,7 @@ type (
 		ConfirmedAt    null.Time
 		HeldSince      null.Time
 		Description    string
+		Status         string
 	}
 	Order struct {
 		Id        UUID

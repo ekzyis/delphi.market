@@ -9,21 +9,24 @@
  \__,_|___/\___|_|   </pre>
   </div>
   <!-- eslint-enable -->
-  <div v-if="session.pubkey">
-    <div>authenticated as {{ session.pubkey.slice(0, 8) }}</div>
-    <button class="my-3" @click="logout">logout</button>
-  </div>
+  <header class="flex flex-row text-center justify-center pt-1">
+    <nav>
+      <router-link to="/user">settings</router-link>
+      <router-link to="/user/invoices">invoices</router-link>
+    </nav>
+  </header>
+  <Suspense>
+    <router-view />
+  </Suspense>
 </template>
 
-<script setup>
-import { useSession } from '@/stores/session'
-import { useRouter } from 'vue-router'
-const session = useSession()
-const router = useRouter()
-
-const logout = async () => {
-  await session.logout()
-  router.push('/')
+<style scoped>
+nav {
+  display: flex;
+  justify-content: center;
 }
 
-</script>
+nav>a {
+  margin: 0 3px;
+}
+</style>

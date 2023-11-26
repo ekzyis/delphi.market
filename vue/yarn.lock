@@ -4012,6 +4012,11 @@ run-parallel@^1.1.9:
   dependencies:
     queue-microtask "^1.2.2"
 
+s-ago@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/s-ago/-/s-ago-2.2.0.tgz#4143a9d0176b3100dcf649c78e8a1ec8a59b1312"
+  integrity sha512-t6Q/aFCCJSBf5UUkR/WH0mDHX8EGm2IBQ7nQLobVLsdxOlkryYMbOlwu2D4Cf7jPUp0v1LhfPgvIZNoi9k8lUA==
+
 safe-array-concat@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/safe-array-concat/-/safe-array-concat-1.0.1.tgz#91686a63ce3adbea14d61b14c99572a8ff84754c"

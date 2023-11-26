@@ -57,6 +57,9 @@ func addBackendRoutes(e *echo.Echo, sc ServerContext) {
 	GET(e, sc, "/api/invoice/:id",
 		handler.HandleInvoiceStatus,
 		middleware.SessionGuard)
+	GET(e, sc, "/api/invoices",
+		handler.HandleInvoices,
+		middleware.SessionGuard)
 }
 
 func GET(e *echo.Echo, sc ServerContext, path string, scF HandlerFunc, scM ...MiddlewareFunc) *echo.Route {
