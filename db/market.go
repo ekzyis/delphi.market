@@ -19,7 +19,7 @@ func (db *DB) CreateMarket(tx *sql.Tx, ctx context.Context, market *Market) erro
 		return err
 	}
 	// For now, we only support binary markets.
-	if _, err := db.Exec("INSERT INTO shares(market_id, description) VALUES ($1, 'YES'), ($1, 'NO')", market.Id); err != nil {
+	if _, err := tx.Exec("INSERT INTO shares(market_id, description) VALUES ($1, 'YES'), ($1, 'NO')", market.Id); err != nil {
 		return err
 	}
 	return nil

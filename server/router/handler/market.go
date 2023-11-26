@@ -81,18 +81,22 @@ func HandleCreateMarket(sc context.ServerContext) echo.HandlerFunc {
 		// TODO: add [market:<id>] for redirect after payment
 		invDescription = fmt.Sprintf("create market \"%s\"", m.Description)
 		if invoice, err = sc.Lnd.CreateInvoice(tx, ctx, sc.Db, u.Pubkey, msats, invDescription); err != nil {
+			tx.Rollback()
 			return err
 		}
 		if qr, err = lib.ToQR(invoice.PaymentRequest); err != nil {
+			tx.Rollback()
 			return err
 		}
 		if hash, err = lntypes.MakeHashFromStr(invoice.Hash); err != nil {
+			tx.Rollback()
 			return err
 		}
 		go sc.Lnd.CheckInvoice(sc.Db, hash)
 
 		m.InvoiceId = invoice.Id
 		if err := sc.Db.CreateMarket(tx, ctx, &m); err != nil {
+			tx.Rollback()
 			return err
 		}
 
