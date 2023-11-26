@@ -92,13 +92,15 @@ func HandleCreateMarket(sc context.ServerContext) echo.HandlerFunc {
 			tx.Rollback()
 			return err
 		}
-		go sc.Lnd.CheckInvoice(sc.Db, hash)
-
 		m.InvoiceId = invoice.Id
 		if err := sc.Db.CreateMarket(tx, ctx, &m); err != nil {
 			tx.Rollback()
 			return err
 		}
+
+		// need to commit before starting to poll invoice status
+		tx.Commit()
+		go sc.Lnd.CheckInvoice(sc.Db, hash)
 
 		data = map[string]any{
 			"id":     invoice.Id,
@@ -179,7 +181,8 @@ func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
 			return err
 		}
 
-		// Start goroutine to poll status and update invoice in background
+		// need to commit before startign to poll invoice status
+		tx.Commit()
 		go sc.Lnd.CheckInvoice(sc.Db, hash)
 
 		// TODO: find matching orders
