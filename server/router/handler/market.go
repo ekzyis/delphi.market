@@ -1,11 +1,13 @@
 package handler
 
 import (
+	context_ "context"
 	"database/sql"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"git.ekzyis.com/ekzyis/delphi.market/db"
 	"git.ekzyis.com/ekzyis/delphi.market/lib"
@@ -50,6 +52,7 @@ func HandleMarket(sc context.ServerContext) echo.HandlerFunc {
 func HandleCreateMarket(sc context.ServerContext) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
+			tx             *sql.Tx
 			u              db.User
 			m              db.Market
 			invoice        *db.Invoice
@@ -64,11 +67,20 @@ func HandleCreateMarket(sc context.ServerContext) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusBadRequest)
 		}
 
+		// transaction start
+		ctx, cancel := context_.WithTimeout(c.Request().Context(), 5*time.Second)
+		defer cancel()
+		if tx, err = sc.Db.BeginTx(ctx, nil); err != nil {
+			tx.Rollback()
+			return err
+		}
+		defer tx.Commit()
+
 		u = c.Get("session").(db.User)
 		msats = 1000
 		// TODO: add [market:<id>] for redirect after payment
 		invDescription = fmt.Sprintf("create market \"%s\" (%s)", m.Description, m.EndDate)
-		if invoice, err = sc.Lnd.CreateInvoice(sc.Db, u.Pubkey, msats, invDescription); err != nil {
+		if invoice, err = sc.Lnd.CreateInvoice(tx, ctx, sc.Db, u.Pubkey, msats, invDescription); err != nil {
 			return err
 		}
 		if qr, err = lib.ToQR(invoice.PaymentRequest); err != nil {
@@ -80,7 +92,7 @@ func HandleCreateMarket(sc context.ServerContext) echo.HandlerFunc {
 		go sc.Lnd.CheckInvoice(sc.Db, hash)
 
 		m.InvoiceId = invoice.Id
-		if err := sc.Db.CreateMarket(&m); err != nil {
+		if err := sc.Db.CreateMarket(tx, ctx, &m); err != nil {
 			return err
 		}
 
@@ -97,6 +109,7 @@ func HandleCreateMarket(sc context.ServerContext) echo.HandlerFunc {
 func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
+			tx          *sql.Tx
 			u           db.User
 			o           db.Order
 			s           db.Share
@@ -122,7 +135,18 @@ func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
 		u = c.Get("session").(db.User)
 		o.Pubkey = u.Pubkey
 		msats = o.Quantity * o.Price * 1000
-		if err = sc.Db.FetchShare(o.ShareId, &s); err != nil {
+
+		// transaction start
+		ctx, cancel := context_.WithTimeout(c.Request().Context(), 5*time.Second)
+		defer cancel()
+		if tx, err = sc.Db.BeginTx(ctx, nil); err != nil {
+			tx.Rollback()
+			return err
+		}
+		defer tx.Commit()
+
+		if err = sc.Db.FetchShare(tx, ctx, o.ShareId, &s); err != nil {
+			tx.Rollback()
 			return err
 		}
 		description = fmt.Sprintf("%s %d %s shares @ %d sats [market:%d]", strings.ToUpper(o.Side), o.Quantity, s.Description, o.Price, s.MarketId)
@@ -130,20 +154,24 @@ func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
 		// TODO: if SELL order, check share balance of user
 
 		// Create HODL invoice
-		if invoice, err = sc.Lnd.CreateInvoice(sc.Db, o.Pubkey, msats, description); err != nil {
+		if invoice, err = sc.Lnd.CreateInvoice(tx, ctx, sc.Db, o.Pubkey, msats, description); err != nil {
+			tx.Rollback()
 			return err
 		}
 		// Create QR code to pay HODL invoice
 		if qr, err = lib.ToQR(invoice.PaymentRequest); err != nil {
+			tx.Rollback()
 			return err
 		}
 		if hash, err = lntypes.MakeHashFromStr(invoice.Hash); err != nil {
+			tx.Rollback()
 			return err
 		}
 
 		// Create (unconfirmed) order
 		o.InvoiceId = invoice.Id
-		if err := sc.Db.CreateOrder(&o); err != nil {
+		if err := sc.Db.CreateOrder(tx, ctx, &o); err != nil {
+			tx.Rollback()
 			return err
 		}
 

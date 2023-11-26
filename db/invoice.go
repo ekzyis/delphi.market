@@ -1,12 +1,13 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"time"
 )
 
-func (db *DB) CreateInvoice(invoice *Invoice) error {
-	if err := db.QueryRow(""+
+func (db *DB) CreateInvoice(tx *sql.Tx, ctx context.Context, invoice *Invoice) error {
+	if err := tx.QueryRowContext(ctx, ""+
 		"INSERT INTO invoices(pubkey, msats, preimage, hash, bolt11, created_at, expires_at, description) "+
 		"VALUES($1, $2, $3, $4, $5, $6, $7, $8) "+
 		"RETURNING id",

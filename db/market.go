@@ -1,6 +1,9 @@
 package db
 
-import "database/sql"
+import (
+	"context"
+	"database/sql"
+)
 
 type FetchOrdersWhere struct {
 	MarketId  int
@@ -8,8 +11,8 @@ type FetchOrdersWhere struct {
 	Confirmed bool
 }
 
-func (db *DB) CreateMarket(market *Market) error {
-	if err := db.QueryRow(""+
+func (db *DB) CreateMarket(tx *sql.Tx, ctx context.Context, market *Market) error {
+	if err := tx.QueryRowContext(ctx, ""+
 		"INSERT INTO markets(description, end_date, invoice_id) "+
 		"VALUES($1, $2, $3) "+
 		"RETURNING id", market.Description, market.EndDate, market.InvoiceId).Scan(&market.Id); err != nil {
@@ -62,8 +65,8 @@ func (db *DB) FetchShares(marketId int, shares *[]Share) error {
 	return nil
 }
 
-func (db *DB) FetchShare(shareId string, share *Share) error {
-	return db.QueryRow("SELECT id, market_id, description FROM shares WHERE id = $1", shareId).Scan(&share.Id, &share.MarketId, &share.Description)
+func (db *DB) FetchShare(tx *sql.Tx, ctx context.Context, shareId string, share *Share) error {
+	return tx.QueryRowContext(ctx, "SELECT id, market_id, description FROM shares WHERE id = $1", shareId).Scan(&share.Id, &share.MarketId, &share.Description)
 }
 
 func (db *DB) FetchOrders(where *FetchOrdersWhere, orders *[]Order) error {
@@ -99,8 +102,8 @@ func (db *DB) FetchOrders(where *FetchOrdersWhere, orders *[]Order) error {
 	return nil
 }
 
-func (db *DB) CreateOrder(order *Order) error {
-	if _, err := db.Exec(""+
+func (db *DB) CreateOrder(tx *sql.Tx, ctx context.Context, order *Order) error {
+	if _, err := tx.ExecContext(ctx, ""+
 		"INSERT INTO orders(share_id, pubkey, side, quantity, price, invoice_id) "+
 		"VALUES ($1, $2, $3, $4, $5, $6)",
 		order.ShareId, order.Pubkey, order.Side, order.Quantity, order.Price, order.InvoiceId); err != nil {
