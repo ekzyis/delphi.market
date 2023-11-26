@@ -54,7 +54,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -120,6 +120,9 @@ await (async () => {
   invoice.value = body
   interval = setInterval(poll, INVOICE_POLL)
 })()
+
+onUnmounted(() => { clearInterval(interval) })
+
 </script>
 
 <style scoped>
