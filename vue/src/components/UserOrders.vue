@@ -29,7 +29,6 @@ const url = '/api/orders'
 await fetch(url)
   .then(r => r.json())
   .then(body => {
-    console.log(body)
     orders.value = body
   })
   .catch(console.error)
