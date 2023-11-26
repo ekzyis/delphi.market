@@ -126,7 +126,7 @@ func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
 		if err = sc.Db.FetchShare(o.ShareId, &s); err != nil {
 			return err
 		}
-		description = fmt.Sprintf("%s %d %s shares @ %d [market:%d]", strings.ToUpper(o.Side), o.Quantity, s.Description, o.Price, s.MarketId)
+		description = fmt.Sprintf("%s %d %s shares @ %d sats [market:%d]", strings.ToUpper(o.Side), o.Quantity, s.Description, o.Price, s.MarketId)
 
 		// TODO: if SELL order, check share balance of user
 
