@@ -11,7 +11,7 @@
         <tr v-for="o in orders " :key="o.id">
           <td><router-link :to="/market/ + o.MarketId">{{ o.MarketId }}</router-link></td>
           <td>{{ o.side }} {{ o.quantity }} {{ o.ShareDescription }} @ {{ o.price }} sats</td>
-          <td class="hidden-sm">{{ ago(new Date(o.CreatedAt)) }}</td>
+          <td :title="o.CreatedAt" class="hidden-sm">{{ ago(new Date(o.CreatedAt)) }}</td>
           <td></td>
         </tr>
       </tbody>
