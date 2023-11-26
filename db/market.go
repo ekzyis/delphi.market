@@ -132,3 +132,23 @@ func (db *DB) FetchUserOrders(pubkey string, orders *[]Order) error {
 	}
 	return nil
 }
+
+func (db *DB) FetchMarketOrders(marketId int64, orders *[]Order) error {
+	query := "" +
+		"SELECT o.id, share_id, o.pubkey, o.side, o.quantity, o.price, o.invoice_id, o.created_at, s.description, s.market_id " +
+		"FROM orders o " +
+		"JOIN shares s ON o.share_id = s.id " +
+		"WHERE s.market_id = $1 " +
+		"ORDER BY o.created_at DESC"
+	rows, err := db.Query(query, marketId)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var order Order
+		rows.Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.InvoiceId, &order.CreatedAt, &order.ShareDescription, &order.Share.MarketId)
+		*orders = append(*orders, order)
+	}
+	return nil
+}
