@@ -67,6 +67,15 @@ a.selected {
   color: white;
 }
 
+.info {
+  background-color: #f9db6d3d;
+  color: rgba(245, 198, 57, 0.78);
+}
+.info:hover {
+  background-color: rgba(245, 198, 57, 0.78);
+  color: white;
+}
+
 .text-muted {
   opacity: 0.67
 }

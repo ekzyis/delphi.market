@@ -9,11 +9,11 @@
         <th>details</th>
       </thead>
       <tbody>
-        <tr v-for="i in  invoices " :key="i.id">
+        <tr v-for="i in  invoices" :key="i.id">
           <td>{{ i.Msats / 1000 }}</td>
           <td :title="i.CreatedAt">{{ ago(new Date(i.CreatedAt)) }}</td>
           <td :title="i.ExpiresAt" class="hidden-sm">{{ ago(new Date(i.ExpiresAt)) }}</td>
-          <td class="font-mono">{{ i.Status }}</td>
+          <td :class="'font-mono ' + classFromStatus(i.Status)">{{ i.Status }}</td>
           <td>
             <router-link :to="/invoice/ + i.Id">open</router-link>
           </td>
@@ -26,6 +26,8 @@
 <script setup>
 import { ref } from 'vue'
 import ago from 's-ago'
+
+const classFromStatus = (status) => status === 'PAID' ? 'success' : 'error'
 
 const invoices = ref(null)
 
