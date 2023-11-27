@@ -8,12 +8,7 @@
         <th>status</th>
       </thead>
       <tbody>
-        <tr v-for="o in orders " :key="o.id">
-          <td><router-link :to="/market/ + o.MarketId">{{ o.MarketId }}</router-link></td>
-          <td>{{ o.side }} {{ o.quantity }} {{ o.ShareDescription }} @ {{ o.price }} sats</td>
-          <td :title="o.CreatedAt" class="hidden-sm">{{ ago(new Date(o.CreatedAt)) }}</td>
-          <td></td>
-        </tr>
+        <OrderRow :order="o" v-for="o in orders" :key="o.id" />
       </tbody>
     </table>
   </div>
@@ -21,7 +16,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import ago from 's-ago'
+import OrderRow from './OrderRow.vue'
 
 const orders = ref(null)
 

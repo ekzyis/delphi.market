@@ -7,11 +7,7 @@
         <th>status</th>
       </thead>
       <tbody>
-        <tr v-for="o in orders " :key="o.id" class="success">
-          <td>{{ o.side }} {{ o.quantity }} {{ o.ShareDescription }} @ {{ o.price }} sats</td>
-          <td class="hidden-sm">{{ ago(new Date(o.CreatedAt)) }}</td>
-          <td class="font-mono">PENDING</td>
-        </tr>
+        <OrderRow :order="o" v-for="o in orders" :key="o.id" />
       </tbody>
     </table>
   </div>
@@ -20,7 +16,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
-import ago from 's-ago'
+import OrderRow from './OrderRow.vue'
 
 const route = useRoute()
 const marketId = route.params.id
@@ -30,7 +26,11 @@ const url = `/api/market/${marketId}/orders`
 await fetch(url)
   .then(r => r.json())
   .then(body => {
-    orders.value = body
+    orders.value = body.map(o => {
+      // remove market column
+      delete o.MarketId
+      return o
+    })
   })
   .catch(console.error)
 </script>
