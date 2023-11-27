@@ -35,7 +35,7 @@ await fetch(url)
   .catch(console.error)
 </script>
 
-<style scoped>
+<style>
 table {
   width: 100%;
   align-items: center;
