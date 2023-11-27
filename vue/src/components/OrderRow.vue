@@ -3,7 +3,7 @@
     <td v-if="order.MarketId"><router-link :to="/market/ + order.MarketId">{{ order.MarketId }}</router-link></td>
     <td>{{ order.side }} {{ order.quantity }} {{ order.ShareDescription }} @ {{ order.price }} sats</td>
     <td :title="order.CreatedAt" class="hidden-sm">{{ ago(new Date(order.CreatedAt)) }}</td>
-    <td></td>
+    <td class="font-mono">{{ order.Status }}</td>
   </tr>
 </template>
 
