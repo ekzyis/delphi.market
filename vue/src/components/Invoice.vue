@@ -22,14 +22,18 @@
         </figcaption>
       </figure>
       <div class="grid text-muted text-xs">
+        <span v-if="faucet" class="mx-3 my-1">faucet</span>
+        <span v-if="faucet" class="text-ellipsis overflow-hidden font-mono me-3 my-1">
+          <a href="https://faucet.mutinynet.com/" target="_blank">faucet.mutinynet.com</a>
+        </span>
         <span class="mx-3 my-1">payment hash</span><span class="text-ellipsis overflow-hidden font-mono me-3 my-1">
           {{ invoice.Hash }}
         </span>
         <span class="mx-3 my-1">created at</span><span class="text-ellipsis overflow-hidden font-mono me-3 my-1">
-          {{ invoice.CreatedAt }}
+          {{ invoice.CreatedAt }} ({{ ago(new Date(invoice.CreatedAt)) }})
         </span>
         <span class="mx-3 my-1">expires at</span><span class="text-ellipsis overflow-hidden font-mono me-3 my-1">
-          {{ invoice.ExpiresAt }}
+          {{ invoice.ExpiresAt }} ({{ ago(new Date(invoice.ExpiresAt)) }})
         </span>
         <span class="mx-3 my-1">sats</span><span class="text-ellipsis overflow-hidden font-mono me-3 my-1">
           {{ invoice.Msats / 1000 }}
@@ -54,8 +58,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import ago from 's-ago'
 
 const router = useRouter()
 const route = useRoute()
@@ -120,6 +125,11 @@ await (async () => {
   invoice.value = body
   interval = setInterval(poll, INVOICE_POLL)
 })()
+
+onUnmounted(() => { clearInterval(interval) })
+
+const faucet = window.location.hostname === 'delphi.market' ? 'https://faucet.mutinynet.com' : ''
+
 </script>
 
 <style scoped>

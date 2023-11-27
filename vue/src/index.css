@@ -50,6 +50,7 @@ a.selected {
 
 .success:hover {
   background-color: #35df8d;
+  color: white;
 }
 
 .red {
@@ -63,6 +64,7 @@ a.selected {
 
 .error:hover {
   background-color: #ff7386;
+  color: white;
 }
 
 .text-muted {

@@ -10,6 +10,11 @@ import LoginView from '@/views/LoginView'
 import UserView from '@/views/UserView'
 import MarketView from '@/views/MarketView'
 import InvoiceView from '@/views/InvoiceView'
+import UserSettings from '@/components/UserSettings'
+import UserInvoices from '@/components/UserInvoices'
+import UserOrders from '@/components/UserOrders'
+import OrderForm from '@/components/OrderForm'
+import MarketOrders from '@/components/MarketOrders'
 
 const routes = [
   {
@@ -19,10 +24,21 @@ const routes = [
     path: '/login', component: LoginView
   },
   {
-    path: '/user', component: UserView
+    path: '/user',
+    component: UserView,
+    children: [
+      { path: 'settings', name: 'user', component: UserSettings },
+      { path: 'invoices', name: 'invoices', component: UserInvoices },
+      { path: 'orders', name: 'orders', component: UserOrders }
+    ]
   },
   {
-    path: '/market/:id', component: MarketView
+    path: '/market/:id',
+    component: MarketView,
+    children: [
+      { path: 'form', name: 'form', component: OrderForm },
+      { path: 'orders', name: 'market-orders', component: MarketOrders }
+    ]
   },
   {
     path: '/invoice/:id', component: InvoiceView

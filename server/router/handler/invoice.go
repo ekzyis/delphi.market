@@ -93,3 +93,18 @@ func HandleInvoice(sc context.ServerContext) echo.HandlerFunc {
 		return sc.Render(c, http.StatusOK, "invoice.html", data)
 	}
 }
+
+func HandleInvoices(sc context.ServerContext) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		var (
+			u        db.User
+			invoices []db.Invoice
+			err      error
+		)
+		u = c.Get("session").(db.User)
+		if err = sc.Db.FetchUserInvoices(u.Pubkey, &invoices); err != nil {
+			return err
+		}
+		return c.JSON(http.StatusOK, invoices)
+	}
+}

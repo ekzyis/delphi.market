@@ -2,6 +2,7 @@ package lnd
 
 import (
 	"context"
+	"database/sql"
 	"log"
 	"time"
 
@@ -12,7 +13,7 @@ import (
 	"github.com/lightningnetwork/lnd/lnwire"
 )
 
-func (lnd *LNDClient) CreateInvoice(d *db.DB, pubkey string, msats int64, description string) (*db.Invoice, error) {
+func (lnd *LNDClient) CreateInvoice(tx *sql.Tx, ctx context.Context, d *db.DB, pubkey string, msats int64, description string) (*db.Invoice, error) {
 	var (
 		expiry         time.Duration = time.Hour
 		preimage       lntypes.Preimage
@@ -26,14 +27,14 @@ func (lnd *LNDClient) CreateInvoice(d *db.DB, pubkey string, msats int64, descri
 		return nil, err
 	}
 	hash = preimage.Hash()
-	if paymentRequest, err = lnd.Invoices.AddHoldInvoice(context.TODO(), &invoicesrpc.AddInvoiceData{
+	if paymentRequest, err = lnd.Invoices.AddHoldInvoice(ctx, &invoicesrpc.AddInvoiceData{
 		Hash:   &hash,
 		Value:  lnwire.MilliSatoshi(msats),
 		Expiry: int64(expiry / time.Millisecond),
 	}); err != nil {
 		return nil, err
 	}
-	if lnInvoice, err = lnd.Client.LookupInvoice(context.TODO(), hash); err != nil {
+	if lnInvoice, err = lnd.Client.LookupInvoice(ctx, hash); err != nil {
 		return nil, err
 	}
 	dbInvoice = &db.Invoice{
@@ -46,7 +47,7 @@ func (lnd *LNDClient) CreateInvoice(d *db.DB, pubkey string, msats int64, descri
 		ExpiresAt:      lnInvoice.CreationDate.Add(expiry),
 		Description:    description,
 	}
-	if err := d.CreateInvoice(dbInvoice); err != nil {
+	if err := d.CreateInvoice(tx, ctx, dbInvoice); err != nil {
 		return nil, err
 	}
 	return dbInvoice, nil

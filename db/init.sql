@@ -47,7 +47,8 @@ CREATE TABLE orders(
     side ORDER_SIDE NOT NULL,
     quantity BIGINT NOT NULL,
     price BIGINT NOT NULL,
-    invoice_id UUID NOT NULL REFERENCES invoices(id)
+    invoice_id UUID NOT NULL REFERENCES invoices(id),
+    order_id UUID REFERENCES orders(id)
 );
 ALTER TABLE orders ADD CONSTRAINT order_price CHECK(price > 0 AND price < 100);
 ALTER TABLE orders ADD CONSTRAINT order_quantity CHECK(quantity > 0);

@@ -1,6 +1,9 @@
 package db
 
-import "database/sql"
+import (
+	"context"
+	"database/sql"
+)
 
 type FetchOrdersWhere struct {
 	MarketId  int
@@ -8,15 +11,15 @@ type FetchOrdersWhere struct {
 	Confirmed bool
 }
 
-func (db *DB) CreateMarket(market *Market) error {
-	if err := db.QueryRow(""+
+func (db *DB) CreateMarket(tx *sql.Tx, ctx context.Context, market *Market) error {
+	if err := tx.QueryRowContext(ctx, ""+
 		"INSERT INTO markets(description, end_date, invoice_id) "+
 		"VALUES($1, $2, $3) "+
 		"RETURNING id", market.Description, market.EndDate, market.InvoiceId).Scan(&market.Id); err != nil {
 		return err
 	}
 	// For now, we only support binary markets.
-	if _, err := db.Exec("INSERT INTO shares(market_id, description) VALUES ($1, 'YES'), ($1, 'NO')", market.Id); err != nil {
+	if _, err := tx.Exec("INSERT INTO shares(market_id, description) VALUES ($1, 'YES'), ($1, 'NO')", market.Id); err != nil {
 		return err
 	}
 	return nil
@@ -62,8 +65,8 @@ func (db *DB) FetchShares(marketId int, shares *[]Share) error {
 	return nil
 }
 
-func (db *DB) FetchShare(shareId string, share *Share) error {
-	return db.QueryRow("SELECT id, market_id, description FROM shares WHERE id = $1", shareId).Scan(&share.Id, &share.MarketId, &share.Description)
+func (db *DB) FetchShare(tx *sql.Tx, ctx context.Context, shareId string, share *Share) error {
+	return tx.QueryRowContext(ctx, "SELECT id, market_id, description FROM shares WHERE id = $1", shareId).Scan(&share.Id, &share.MarketId, &share.Description)
 }
 
 func (db *DB) FetchOrders(where *FetchOrdersWhere, orders *[]Order) error {
@@ -99,12 +102,56 @@ func (db *DB) FetchOrders(where *FetchOrdersWhere, orders *[]Order) error {
 	return nil
 }
 
-func (db *DB) CreateOrder(order *Order) error {
-	if _, err := db.Exec(""+
+func (db *DB) CreateOrder(tx *sql.Tx, ctx context.Context, order *Order) error {
+	if _, err := tx.ExecContext(ctx, ""+
 		"INSERT INTO orders(share_id, pubkey, side, quantity, price, invoice_id) "+
 		"VALUES ($1, $2, $3, $4, $5, $6)",
 		order.ShareId, order.Pubkey, order.Side, order.Quantity, order.Price, order.InvoiceId); err != nil {
 		return err
+	}
+	return nil
+}
+
+func (db *DB) FetchUserOrders(pubkey string, orders *[]Order) error {
+	query := "" +
+		"SELECT o.id, share_id, o.pubkey, o.side, o.quantity, o.price, o.invoice_id, o.created_at, s.description, s.market_id, i.confirmed_at, " +
+		"CASE WHEN o.order_id IS NOT NULL THEN 'EXECUTED' ELSE 'WAITING' END AS status " +
+		"FROM orders o " +
+		"JOIN invoices i ON o.invoice_id = i.id " +
+		"JOIN shares s ON o.share_id = s.id " +
+		"WHERE o.pubkey = $1 AND i.confirmed_at IS NOT NULL " +
+		"ORDER BY o.created_at DESC"
+	rows, err := db.Query(query, pubkey)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var order Order
+		rows.Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.InvoiceId, &order.CreatedAt, &order.ShareDescription, &order.Share.MarketId, &order.Invoice.ConfirmedAt, &order.Status)
+		*orders = append(*orders, order)
+	}
+	return nil
+}
+
+func (db *DB) FetchMarketOrders(marketId int64, orders *[]Order) error {
+	query := "" +
+		"SELECT o.id, share_id, o.pubkey, o.side, o.quantity, o.price, o.invoice_id, o.created_at, s.description, s.market_id, " +
+		"CASE WHEN o.order_id IS NOT NULL THEN 'EXECUTED' ELSE 'WAITING' END AS status " +
+		"FROM orders o " +
+		"JOIN shares s ON o.share_id = s.id " +
+		"JOIN invoices i ON i.id = o.invoice_id " +
+		"WHERE s.market_id = $1 AND i.confirmed_at IS NOT NULL " +
+		"ORDER BY o.created_at DESC"
+	rows, err := db.Query(query, marketId)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var order Order
+		rows.Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.InvoiceId, &order.CreatedAt, &order.ShareDescription, &order.Share.MarketId, &order.Status)
+		*orders = append(*orders, order)
 	}
 	return nil
 }
