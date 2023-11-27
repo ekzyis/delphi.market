@@ -10,7 +10,7 @@
         <tr v-for="o in orders " :key="o.id" class="success">
           <td>{{ o.side }} {{ o.quantity }} {{ o.ShareDescription }} @ {{ o.price }} sats</td>
           <td class="hidden-sm">{{ ago(new Date(o.CreatedAt)) }}</td>
-          <td>PENDING</td>
+          <td class="font-mono">PENDING</td>
         </tr>
       </tbody>
     </table>
