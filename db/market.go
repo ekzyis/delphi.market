@@ -115,7 +115,7 @@ func (db *DB) CreateOrder(tx *sql.Tx, ctx context.Context, order *Order) error {
 func (db *DB) FetchUserOrders(pubkey string, orders *[]Order) error {
 	query := "" +
 		"SELECT o.id, share_id, o.pubkey, o.side, o.quantity, o.price, o.invoice_id, o.created_at, s.description, s.market_id, i.confirmed_at, " +
-		"CASE WHEN o.order_id IS NOT NULL THEN 'EXECUTED' ELSE 'WAITING' END AS status " +
+		"CASE WHEN o.order_id IS NOT NULL THEN 'EXECUTED' ELSE 'PENDING' END AS status " +
 		"FROM orders o " +
 		"JOIN invoices i ON o.invoice_id = i.id " +
 		"JOIN shares s ON o.share_id = s.id " +
@@ -137,7 +137,7 @@ func (db *DB) FetchUserOrders(pubkey string, orders *[]Order) error {
 func (db *DB) FetchMarketOrders(marketId int64, orders *[]Order) error {
 	query := "" +
 		"SELECT o.id, share_id, o.pubkey, o.side, o.quantity, o.price, o.invoice_id, o.created_at, s.description, s.market_id, " +
-		"CASE WHEN o.order_id IS NOT NULL THEN 'EXECUTED' ELSE 'WAITING' END AS status " +
+		"CASE WHEN o.order_id IS NOT NULL THEN 'EXECUTED' ELSE 'PENDING' END AS status " +
 		"FROM orders o " +
 		"JOIN shares s ON o.share_id = s.id " +
 		"JOIN invoices i ON i.id = o.invoice_id " +

@@ -23,7 +23,7 @@ const descClassName = computed(() => {
 const statusClassName = computed(() => {
   const status = order.value.Status
   if (status === 'PAID') return 'success'
-  if (status === 'WAITING') return 'info'
+  if (status === 'PENDING') return 'info'
   return 'error'
 })
 
