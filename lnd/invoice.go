@@ -87,7 +87,7 @@ func (lnd *LNDClient) CheckInvoice(d *db.DB, hash lntypes.Hash) {
 			log.Printf("invoice expired: hash=%s", hash)
 			break
 		}
-		if lnInvoice.AmountPaid > 0 {
+		if lnInvoice.AmountPaid == lnInvoice.Amount {
 			if preimage, err = lntypes.MakePreimageFromStr(invoice.Preimage); err != nil {
 				handleLoopError(err)
 				continue
