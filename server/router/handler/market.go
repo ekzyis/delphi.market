@@ -198,7 +198,7 @@ func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
 			return err
 		}
 
-		// need to commit before startign to poll invoice status
+		// need to commit before starting to poll invoice status
 		tx.Commit()
 		go sc.Lnd.CheckInvoice(sc.Db, hash)
 
