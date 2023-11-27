@@ -30,10 +30,10 @@
           {{ invoice.Hash }}
         </span>
         <span class="mx-3 my-1">created at</span><span class="text-ellipsis overflow-hidden font-mono me-3 my-1">
-          {{ invoice.CreatedAt }}
+          {{ invoice.CreatedAt }} ({{ ago(new Date(invoice.CreatedAt)) }})
         </span>
         <span class="mx-3 my-1">expires at</span><span class="text-ellipsis overflow-hidden font-mono me-3 my-1">
-          {{ invoice.ExpiresAt }}
+          {{ invoice.ExpiresAt }} ({{ ago(new Date(invoice.ExpiresAt)) }})
         </span>
         <span class="mx-3 my-1">sats</span><span class="text-ellipsis overflow-hidden font-mono me-3 my-1">
           {{ invoice.Msats / 1000 }}
@@ -60,6 +60,7 @@
 <script setup>
 import { onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import ago from 's-ago'
 
 const router = useRouter()
 const route = useRoute()
