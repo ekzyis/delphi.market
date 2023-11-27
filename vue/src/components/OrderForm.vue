@@ -32,9 +32,9 @@ const noClass = computed(() => selected.value === 'NO' ? ['active'] : [])
 const err = ref(null)
 
 // how much wants the user bet?
-const stake = ref(null)
+const stake = ref(100)
 // how sure is the user he will win?
-const certainty = ref(null)
+const certainty = ref(0.5)
 // price per share: more risk, lower price, higher reward
 const price = computed(() => certainty.value * 100)
 // how many (full) shares can be bought?
