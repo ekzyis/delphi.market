@@ -18,7 +18,7 @@ const order = ref(props.order)
 
 const statusClassName = computed(() => {
   const status = order.value.Status
-  if (status === 'PAID') return 'success'
+  if (status === 'EXECUTED') return 'success'
   if (status === 'PENDING') return 'info'
   return 'error'
 })
