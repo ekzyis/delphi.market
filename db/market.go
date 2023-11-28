@@ -3,6 +3,8 @@ package db
 import (
 	"context"
 	"database/sql"
+	"log"
+	"time"
 )
 
 type FetchOrdersWhere struct {
@@ -112,6 +114,16 @@ func (db *DB) CreateOrder(tx *sql.Tx, ctx context.Context, order *Order) error {
 	return nil
 }
 
+func (db *DB) FetchOrder(tx *sql.Tx, ctx context.Context, orderId string, order *Order) error {
+	query := "" +
+		"SELECT o.id, o.share_id, o.pubkey, o.side, o.quantity, o.price, o.invoice_id, o.created_at, s.description, s.market_id, i.confirmed_at " +
+		"FROM orders o " +
+		"JOIN invoices i ON o.invoice_id = i.id " +
+		"JOIN shares s ON o.share_id = s.id " +
+		"WHERE o.id = $1"
+	return tx.QueryRowContext(ctx, query, orderId).Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.InvoiceId, &order.CreatedAt, &order.Share.Description, &order.MarketId, &order.Invoice.ConfirmedAt)
+}
+
 func (db *DB) FetchUserOrders(pubkey string, orders *[]Order) error {
 	query := "" +
 		"SELECT o.id, share_id, o.pubkey, o.side, o.quantity, o.price, o.invoice_id, o.created_at, s.description, s.market_id, i.confirmed_at, " +
@@ -154,4 +166,56 @@ func (db *DB) FetchMarketOrders(marketId int64, orders *[]Order) error {
 		*orders = append(*orders, order)
 	}
 	return nil
+}
+
+func (db *DB) RunMatchmaking(orderId string) {
+	var (
+		ctx    context.Context
+		cancel context.CancelFunc
+		tx     *sql.Tx
+		o1     Order
+		o2     Order
+		err    error
+	)
+	ctx, cancel = context.WithTimeout(context.TODO(), 10*time.Second)
+	defer cancel()
+	if tx, err = db.BeginTx(ctx, nil); err != nil {
+		log.Println(err)
+		return
+	}
+	// TODO: assert that order was confirmed
+	if err = db.FetchOrder(tx, ctx, orderId, &o1); err != nil {
+		log.Println(err)
+		tx.Rollback()
+		return
+	}
+	if err = db.FindOrderMatches(tx, ctx, &o1, &o2); err != nil {
+		log.Println(err)
+		tx.Rollback()
+		return
+	}
+	if _, err = tx.ExecContext(ctx, "UPDATE orders SET order_id = $1 WHERE id = $2", o1.Id, o2.Id); err != nil {
+		log.Println(err)
+		tx.Rollback()
+		return
+	}
+	if _, err = tx.ExecContext(ctx, "UPDATE orders SET order_id = $1 WHERE id = $2", o2.Id, o1.Id); err != nil {
+		log.Println(err)
+		tx.Rollback()
+		return
+	}
+	log.Printf("Matched orders: %s <> %s\n", o1.Id, o2.Id)
+	tx.Commit()
+}
+
+func (db *DB) FindOrderMatches(tx *sql.Tx, ctx context.Context, o1 *Order, o2 *Order) error {
+	query := "" +
+		"SELECT o.id FROM orders o " +
+		"JOIN shares s ON s.id = o.share_id " +
+		"JOIN invoices i ON i.id = o.invoice_id " +
+		"WHERE i.confirmed_at IS NOT NULL " +
+		"AND o.order_id IS NULL AND o.pubkey <> $1 AND o.quantity = $2 AND s.market_id = $3 AND " +
+		"( (o.share_id <> $4 AND o.side = $5::ORDER_SIDE AND o.price = (100 - $6)) OR (o.share_id = $4 AND o.side <> $5::ORDER_SIDE AND o.price = $6)) " +
+		"ORDER BY o.created_at ASC LIMIT 1"
+	return tx.QueryRowContext(ctx, query, o1.Pubkey, o1.Quantity, o1.Share.MarketId, o1.ShareId, o1.Side, o1.Price).Scan(&o2.Id)
 }

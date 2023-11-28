@@ -112,7 +112,21 @@ func (lnd *LNDClient) CheckInvoice(d *db.DB, hash lntypes.Hash) {
 				continue
 			}
 			log.Printf("invoice confirmed: hash=%s", hash)
+
+			// Run matchmaking if an order was paid
+			var orderId string
+			if err = d.QueryRowContext(ctx,
+				"SELECT o.id FROM orders o WHERE invoice_id = (SELECT i.id FROM invoices i WHERE hash = $1)",
+				hash.String(),
+			).Scan(&orderId); err != nil && err != sql.ErrNoRows {
+				handleLoopError(err)
+				continue
+			}
+			if orderId != "" {
+				go d.RunMatchmaking(orderId)
+			}
 			tx.Commit()
+
 			break
 		}
 		time.Sleep(pollInterval)
