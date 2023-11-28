@@ -39,7 +39,7 @@ const url = `/api/market/${marketId}/orders`
 await fetch(url)
   .then(r => r.json())
   .then(body => {
-    orders.value = body.map(o => {
+    orders.value = body?.map(o => {
       // remove market column
       delete o.MarketId
       return o
