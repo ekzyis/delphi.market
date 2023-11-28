@@ -7,7 +7,8 @@
         <th>status</th>
       </thead>
       <tbody>
-        <OrderRow :order="o" v-for="o in orders" :key="o.id" />
+        <OrderRow :order="o" v-for="o in orders" :key="o.Id" @mouseover="() => mouseover(o.Id)"
+          :selected="selected" />
       </tbody>
     </table>
   </div>
@@ -20,6 +21,18 @@ import OrderRow from './OrderRow.vue'
 
 const route = useRoute()
 const marketId = route.params.id
+
+const selected = ref([])
+
+function mouseover (oid) {
+  const o2id = orders.value.find(i => i.OrderId === oid)?.Id
+  if (o2id) {
+    selected.value = [oid, o2id]
+  } else {
+    // reset selection
+    selected.value = []
+  }
+}
 
 const orders = ref([])
 const url = `/api/market/${marketId}/orders`

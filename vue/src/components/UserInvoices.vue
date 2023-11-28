@@ -46,6 +46,10 @@ table {
   align-items: center;
 }
 
+td {
+  padding: 0 0.5em;
+}
+
 th {
   padding: 0 2rem;
 }

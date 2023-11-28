@@ -4,7 +4,7 @@
     <td>{{ order.side }} {{ order.quantity }} {{ order.ShareDescription }} @ {{ order.price }} sats
     </td>
     <td :title="order.CreatedAt" class="hidden-sm">{{ ago(new Date(order.CreatedAt)) }}</td>
-    <td :class="'font-mono ' + statusClassName">{{ order.Status }}</td>
+    <td :class="'font-mono ' + statusClassName + ' ' + selectedClassName">{{ order.Status }}</td>
   </tr>
 </template>
 
@@ -12,7 +12,7 @@
 import { ref, defineProps, computed } from 'vue'
 import ago from 's-ago'
 
-const props = defineProps(['order'])
+const props = defineProps(['order', 'selected'])
 
 const order = ref(props.order)
 
@@ -23,4 +23,25 @@ const statusClassName = computed(() => {
   return 'error'
 })
 
+const selectedClassName = computed(() => {
+  if (typeof props.selected === 'boolean') {
+    return props.selected ? 'selected' : ''
+  }
+  if (Array.isArray(props.selected)) {
+    return props.selected.some(id => id === order.value.Id) ? 'selected' : ''
+  }
+  return ''
+})
+
 </script>
+
+<style scoped>
+td {
+  padding: 0 0.5em;
+}
+
+.selected {
+  background-color: #35df8d;
+  color: white;
+}
+</style>

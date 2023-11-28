@@ -149,7 +149,7 @@ func (db *DB) FetchUserOrders(pubkey string, orders *[]Order) error {
 func (db *DB) FetchMarketOrders(marketId int64, orders *[]Order) error {
 	query := "" +
 		"SELECT o.id, share_id, o.pubkey, o.side, o.quantity, o.price, o.invoice_id, o.created_at, s.description, s.market_id, " +
-		"CASE WHEN o.order_id IS NOT NULL THEN 'EXECUTED' ELSE 'PENDING' END AS status " +
+		"CASE WHEN o.order_id IS NOT NULL THEN 'EXECUTED' ELSE 'PENDING' END AS status, o.order_id " +
 		"FROM orders o " +
 		"JOIN shares s ON o.share_id = s.id " +
 		"JOIN invoices i ON i.id = o.invoice_id " +
@@ -162,7 +162,7 @@ func (db *DB) FetchMarketOrders(marketId int64, orders *[]Order) error {
 	defer rows.Close()
 	for rows.Next() {
 		var order Order
-		rows.Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.InvoiceId, &order.CreatedAt, &order.ShareDescription, &order.Share.MarketId, &order.Status)
+		rows.Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.InvoiceId, &order.CreatedAt, &order.ShareDescription, &order.Share.MarketId, &order.Status, &order.OrderId)
 		*orders = append(*orders, order)
 	}
 	return nil

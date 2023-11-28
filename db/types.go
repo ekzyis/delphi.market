@@ -61,5 +61,6 @@ type (
 		Price     int64  `json:"price"`
 		InvoiceId UUID
 		Invoice
+		OrderId UUID
 	}
 )
