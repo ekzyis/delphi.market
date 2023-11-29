@@ -1,10 +1,10 @@
 <template>
-  <tr @mouseover="mouseover" @mouseleave="mouseleave">
+  <tr @mouseleave="mouseleave">
     <td v-if="order.MarketId"><router-link :to="/market/ + order.MarketId">{{ order.MarketId }}</router-link></td>
     <td>{{ order.side }} {{ order.quantity }} {{ order.ShareDescription }} @ {{ order.price }} sats
     </td>
     <td :title="order.CreatedAt" class="hidden-sm">{{ ago(new Date(order.CreatedAt)) }}</td>
-    <td :class="'font-mono ' + statusClassName + ' ' + selectedClassName">{{ order.Status }}</td>
+    <td :class="'font-mono ' + statusClassName + ' ' + selectedClassName" @mouseover="mouseover">{{ order.Status }}</td>
     <td v-if="showContextMenu && !!session.pubkey">
       <button @click="() => click(order)" :disabled="mine">match</button>
     </td>
