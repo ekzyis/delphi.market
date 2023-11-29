@@ -59,7 +59,8 @@ await fetch(url)
 const yesShareId = computed(() => market?.value.Shares.find(s => s.Description === 'YES').Id)
 const noShareId = computed(() => market?.value.Shares.find(s => s.Description === 'NO').Id)
 const shareId = computed(() => selected.value === 'YES' ? yesShareId.value : noShareId.value)
-const userShares = computed(() => (selected.value === 'YES' ? market.value.user?.YES : market.value.user?.NO) || 0)
+const sold = ref(0)
+const userShares = computed(() => (((selected.value === 'YES' ? market.value.user?.YES : market.value.user?.NO) || 0) - sold.value))
 
 const disabled = computed(() => userShares.value === 0)
 
@@ -76,6 +77,10 @@ const submitForm = async () => {
   })
   const res = await fetch(url, { method: 'POST', headers: { 'Content-type': 'application/json' }, body })
   const resBody = await res.json()
+  if (res.status === 201) {
+    sold.value += shares.value
+    return
+  }
   if (res.status !== 402) {
     err.value = `error: server responded with HTTP ${resBody.status}`
     return
