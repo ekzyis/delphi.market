@@ -219,3 +219,50 @@ func (db *DB) FindOrderMatches(tx *sql.Tx, ctx context.Context, o1 *Order, o2 *O
 		"ORDER BY o.created_at ASC LIMIT 1"
 	return tx.QueryRowContext(ctx, query, o1.Pubkey, o1.Quantity, o1.Share.MarketId, o1.ShareId, o1.Side, o1.Price).Scan(&o2.Id)
 }
+
+// [
+//
+//	{ "x": <timestamp>, "y": { <share_description>: <score>, ... } },
+//
+// ]
+type MarketStat struct {
+	X time.Time      `json:"x"`
+	Y map[string]int `json:"y"`
+}
+type MarketStats = []MarketStat
+
+func (db *DB) FetchMarketStats(marketId int64, stats *MarketStats) error {
+	query := "" +
+		"SELECT " +
+		"s.description, " +
+		"GREATEST(i.confirmed_at, i2.confirmed_at) AS confirmed_at, " +
+		"SUM(o.price * o.quantity) OVER (PARTITION BY o.share_id ORDER BY o.created_at ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS score " +
+		"FROM orders o " +
+		"JOIN orders o2 ON o2.id = o.order_id " +
+		"JOIN shares s ON s.id = o.share_id " +
+		"JOIN invoices i ON i.id = o.invoice_id " +
+		"JOIN invoices i2 ON i2.id = o2.invoice_id " +
+		"WHERE s.market_id = $1 AND i.confirmed_at IS NOT NULL AND o.order_id IS NOT NULL ORDER BY i.confirmed_at ASC"
+	rows, err := db.Query(query, marketId)
+	if err != nil {
+		return err
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		var stat MarketStat
+		var (
+			timestamp   time.Time
+			description string
+			score       int
+		)
+		rows.Scan(&description, &timestamp, &score)
+		stat.X = timestamp
+		stat.Y = map[string]int{
+			description: score,
+		}
+		log.Println(timestamp, description, score)
+		*stats = append(*stats, stat)
+	}
+	return nil
+}

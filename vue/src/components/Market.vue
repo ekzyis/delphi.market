@@ -14,6 +14,7 @@
     <nav>
       <StyledLink :to="'/market/' + marketId + '/form'">form</StyledLink>
       <StyledLink :to="'/market/' + marketId + '/orders'">orders</StyledLink>
+      <StyledLink :to="'/market/' + marketId + '/stats'">stats</StyledLink>
     </nav>
   </header>
   <Suspense>

@@ -15,6 +15,7 @@ import UserInvoices from '@/components/UserInvoices'
 import UserOrders from '@/components/UserOrders'
 import OrderForm from '@/components/OrderForm'
 import MarketOrders from '@/components/MarketOrders'
+import MarketStats from '@/components/MarketStats'
 
 const routes = [
   {
@@ -37,7 +38,8 @@ const routes = [
     component: MarketView,
     children: [
       { path: 'form', name: 'form', component: OrderForm },
-      { path: 'orders', name: 'market-orders', component: MarketOrders }
+      { path: 'orders', name: 'market-orders', component: MarketOrders },
+      { path: 'stats', name: 'market-stats', component: MarketStats }
     ]
   },
   {

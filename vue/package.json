@@ -9,12 +9,14 @@
   },
   "dependencies": {
     "@vitejs/plugin-vue": "^4.4.0",
+    "chart.js": "^4.4.0",
     "core-js": "^3.8.3",
     "pinia": "^2.1.7",
     "register-service-worker": "^1.7.2",
     "s-ago": "^2.2.0",
     "vite": "^4.5.0",
     "vue": "^3.2.13",
+    "vue-chartjs": "^5.2.0",
     "vue-router": "4"
   },
   "devDependencies": {

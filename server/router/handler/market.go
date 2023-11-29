@@ -228,3 +228,20 @@ func HandleOrders(sc context.ServerContext) echo.HandlerFunc {
 		return c.JSON(http.StatusOK, orders)
 	}
 }
+
+func HandleMarketStats(sc context.ServerContext) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		var (
+			marketId int64
+			stats    db.MarketStats
+			err      error
+		)
+		if marketId, err = strconv.ParseInt(c.Param("id"), 10, 64); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Bad Request")
+		}
+		if err = sc.Db.FetchMarketStats(marketId, &stats); err != nil {
+			return err
+		}
+		return c.JSON(http.StatusOK, stats)
+	}
+}

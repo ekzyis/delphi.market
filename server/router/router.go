@@ -47,6 +47,7 @@ func addBackendRoutes(e *echo.Echo, sc ServerContext) {
 		middleware.LNDGuard)
 	GET(e, sc, "/api/market/:id", handler.HandleMarket)
 	GET(e, sc, "/api/market/:id/orders", handler.HandleMarketOrders)
+	GET(e, sc, "/api/market/:id/stats", handler.HandleMarketStats)
 	POST(e, sc, "/api/order",
 		handler.HandleOrder,
 		middleware.SessionGuard,
