@@ -80,7 +80,6 @@ func HandleCreateMarket(sc context.ServerContext) echo.HandlerFunc {
 		ctx, cancel := context_.WithTimeout(c.Request().Context(), 5*time.Second)
 		defer cancel()
 		if tx, err = sc.Db.BeginTx(ctx, nil); err != nil {
-			tx.Rollback()
 			return err
 		}
 		defer tx.Commit()
@@ -172,7 +171,6 @@ func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
 		ctx, cancel := context_.WithTimeout(c.Request().Context(), 5*time.Second)
 		defer cancel()
 		if tx, err = sc.Db.BeginTx(ctx, nil); err != nil {
-			tx.Rollback()
 			return err
 		}
 		defer tx.Commit()
