@@ -13,8 +13,8 @@
       <label>you sell:</label>
       <label>{{ shares }} {{ selected }} shares @ {{ price }} sats</label>
       <label>you make:</label>
-      <label>+{{ format(profit) }} sats</label>
-      <button class="col-span-2" type="submit">submit sell order</button>
+      <label>{{ format(profit) }} sats</label>
+      <button class="col-span-2" type="submit" :disabled="disabled">submit sell order</button>
     </form>
     <div v-if="err" class="red text-center">{{ err }}</div>
   </div>
@@ -34,7 +34,7 @@ const showForm = computed(() => selected.value !== null)
 const err = ref(null)
 
 // how many shares wants the user sell?
-const shares = ref(route.query.shares || 1)
+const shares = ref(route.query.shares || 0)
 // at which price?
 const price = ref(route.query.price || 50)
 // how high is the potential reward?
@@ -56,18 +56,12 @@ await fetch(url)
   .catch(console.error)
 // Currently, we only support binary markets.
 // (only events which can be answered with YES and NO)
-const yesShareId = computed(() => {
-  return market?.value.Shares.find(s => s.Description === 'YES').Id
-})
-const noShareId = computed(() => {
-  return market?.value.Shares.find(s => s.Description === 'NO').Id
-})
-const shareId = computed(() => {
-  return selected.value === 'YES' ? yesShareId.value : noShareId.value
-})
-const userShares = computed(() => {
-  return selected.value === 'YES' ? market.value.user.YES : market.value.user.NO
-})
+const yesShareId = computed(() => market?.value.Shares.find(s => s.Description === 'YES').Id)
+const noShareId = computed(() => market?.value.Shares.find(s => s.Description === 'NO').Id)
+const shareId = computed(() => selected.value === 'YES' ? yesShareId.value : noShareId.value)
+const userShares = computed(() => (selected.value === 'YES' ? market.value.user?.YES : market.value.user?.NO) || 0)
+
+const disabled = computed(() => userShares.value === 0)
 
 const submitForm = async () => {
   if (!session.isAuthenticated) return router.push('/login')

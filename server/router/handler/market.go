@@ -26,6 +26,7 @@ func HandleMarket(sc context.ServerContext) echo.HandlerFunc {
 			err      error
 			data     map[string]any
 			u        db.User
+			tx       *sql.Tx
 		)
 		if marketId, err = strconv.ParseInt(c.Param("id"), 10, 64); err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "Bad Request")
@@ -48,8 +49,15 @@ func HandleMarket(sc context.ServerContext) echo.HandlerFunc {
 		}
 		if session := c.Get("session"); session != nil {
 			u = session.(db.User)
+			ctx, cancel := context_.WithTimeout(context_.TODO(), 10*time.Second)
+			defer cancel()
+			if tx, err = sc.Db.BeginTx(ctx, nil); err != nil {
+				return err
+			}
+			defer tx.Commit()
 			uBalance := make(map[string]any)
-			if err = sc.Db.FetchUserBalance(marketId, u.Pubkey, &uBalance); err != nil {
+			if err = sc.Db.FetchUserBalance(tx, ctx, int(marketId), u.Pubkey, &uBalance); err != nil {
+				tx.Rollback()
 				return err
 			}
 			lib.Merge(&data, &map[string]any{"user": uBalance})
@@ -181,43 +189,61 @@ func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
 		}
 		description = fmt.Sprintf("%s %d %s shares @ %d sats [market:%d]", strings.ToUpper(o.Side), o.Quantity, s.Description, o.Price, s.MarketId)
 
-		// TODO: if SELL order, check share balance of user
+		if o.Side == "BUY" {
+			// === Create invoice ===
+			// We do this for BUY and SELL orders such that we can continue to use `invoice.confirmed_at IS NOT NULL`
+			// to check for confirmed orders
+			if invoice, err = sc.Lnd.CreateInvoice(tx, ctx, sc.Db, o.Pubkey, msats, description); err != nil {
+				tx.Rollback()
+				return err
+			}
+			// Create QR code to pay HODL invoice
+			if qr, err = lib.ToQR(invoice.PaymentRequest); err != nil {
+				tx.Rollback()
+				return err
+			}
+			if hash, err = lntypes.MakeHashFromStr(invoice.Hash); err != nil {
+				tx.Rollback()
+				return err
+			}
 
-		// Create HODL invoice
-		if invoice, err = sc.Lnd.CreateInvoice(tx, ctx, sc.Db, o.Pubkey, msats, description); err != nil {
-			tx.Rollback()
-			return err
-		}
-		// Create QR code to pay HODL invoice
-		if qr, err = lib.ToQR(invoice.PaymentRequest); err != nil {
-			tx.Rollback()
-			return err
-		}
-		if hash, err = lntypes.MakeHashFromStr(invoice.Hash); err != nil {
-			tx.Rollback()
-			return err
+			// Create (unconfirmed) order
+			o.InvoiceId = invoice.Id
+			if err := sc.Db.CreateOrder(tx, ctx, &o); err != nil {
+				tx.Rollback()
+				return err
+			}
+			// need to commit before starting to poll invoice status
+			tx.Commit()
+			go sc.Lnd.CheckInvoice(sc.Db, hash)
+
+			// TODO: find matching orders
+
+			data = map[string]any{
+				"id":     invoice.Id,
+				"bolt11": invoice.PaymentRequest,
+				"amount": msats,
+				"qr":     qr,
+			}
+			return c.JSON(http.StatusPaymentRequired, data)
 		}
 
-		// Create (unconfirmed) order
-		o.InvoiceId = invoice.Id
+		// sell order: check user balance
+		balance := make(map[string]any)
+		if err = sc.Db.FetchUserBalance(tx, ctx, s.MarketId, o.Pubkey, &balance); err != nil {
+			return err
+		}
+		if balance[s.Description].(int) < int(o.Quantity) {
+			tx.Rollback()
+			return c.JSON(http.StatusBadRequest, nil)
+		}
+		// SELL orders don't require payment by user
 		if err := sc.Db.CreateOrder(tx, ctx, &o); err != nil {
 			tx.Rollback()
 			return err
 		}
-
-		// need to commit before starting to poll invoice status
 		tx.Commit()
-		go sc.Lnd.CheckInvoice(sc.Db, hash)
-
-		// TODO: find matching orders
-
-		data = map[string]any{
-			"id":     invoice.Id,
-			"bolt11": invoice.PaymentRequest,
-			"amount": msats,
-			"qr":     qr,
-		}
-		return c.JSON(http.StatusPaymentRequired, data)
+		return c.JSON(http.StatusCreated, nil)
 	}
 }
 

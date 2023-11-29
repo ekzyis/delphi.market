@@ -107,7 +107,7 @@ func (db *DB) FetchOrders(where *FetchOrdersWhere, orders *[]Order) error {
 func (db *DB) CreateOrder(tx *sql.Tx, ctx context.Context, order *Order) error {
 	if _, err := tx.ExecContext(ctx, ""+
 		"INSERT INTO orders(share_id, pubkey, side, quantity, price, invoice_id) "+
-		"VALUES ($1, $2, $3, $4, $5, $6)",
+		"VALUES ($1, $2, $3, $4, $5, CASE WHEN $6 = '' THEN NULL ELSE $6::UUID END)",
 		order.ShareId, order.Pubkey, order.Side, order.Quantity, order.Price, order.InvoiceId); err != nil {
 		return err
 	}
@@ -131,7 +131,7 @@ func (db *DB) FetchUserOrders(pubkey string, orders *[]Order) error {
 		"FROM orders o " +
 		"JOIN invoices i ON o.invoice_id = i.id " +
 		"JOIN shares s ON o.share_id = s.id " +
-		"WHERE o.pubkey = $1 AND i.confirmed_at IS NOT NULL " +
+		"WHERE o.pubkey = $1 AND ( (o.side = 'BUY' AND i.confirmed_at IS NOT NULL) OR o.side = 'SELL' ) " +
 		"ORDER BY o.created_at DESC"
 	rows, err := db.Query(query, pubkey)
 	if err != nil {
@@ -153,7 +153,7 @@ func (db *DB) FetchMarketOrders(marketId int64, orders *[]Order) error {
 		"FROM orders o " +
 		"JOIN shares s ON o.share_id = s.id " +
 		"JOIN invoices i ON i.id = o.invoice_id " +
-		"WHERE s.market_id = $1 AND i.confirmed_at IS NOT NULL " +
+		"WHERE s.market_id = $1 AND ( (o.side = 'BUY' AND i.confirmed_at IS NOT NULL) OR o.side = 'SELL' ) " +
 		"ORDER BY o.created_at DESC"
 	rows, err := db.Query(query, marketId)
 	if err != nil {
@@ -266,16 +266,16 @@ func (db *DB) FetchMarketStats(marketId int64, stats *MarketStats) error {
 	return nil
 }
 
-func (db *DB) FetchUserBalance(marketId int64, pubkey string, balance *map[string]any) error {
+func (db *DB) FetchUserBalance(tx *sql.Tx, ctx context.Context, marketId int, pubkey string, balance *map[string]any) error {
 	query := "" +
 		"SELECT s.description, " +
 		"SUM(CASE WHEN o.side = 'BUY' THEN o.quantity ELSE -o.quantity END) " +
 		"FROM orders o " +
 		"JOIN invoices i ON i.id = o.invoice_id " +
 		"JOIN shares s ON s.id = o.share_id " +
-		"WHERE o.pubkey = $1 AND s.market_id = $2 AND i.confirmed_at IS NOT NULL AND o.order_id IS NOT NULL " +
+		"WHERE o.pubkey = $1 AND s.market_id = $2 AND ( (o.side = 'BUY' AND i.confirmed_at IS NOT NULL AND o.order_id IS NOT NULL) OR o.side = 'SELL' ) " +
 		"GROUP BY o.pubkey, s.description"
-	rows, err := db.Query(query, pubkey, marketId)
+	rows, err := tx.QueryContext(ctx, query, pubkey, marketId)
 	if err != nil {
 		return err
 	}

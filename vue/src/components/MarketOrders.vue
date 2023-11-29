@@ -38,11 +38,20 @@ function mouseover (oid) {
 
 const click = (order) => {
   // redirect to form with prefilled inputs to match order
-  const stake = order.quantity * (100 - order.price)
-  const certainty = (100 - order.price) / 100
-  const share = order.ShareDescription === 'YES' ? 'NO' : 'YES'
-  const side = 'BUY'
-  router.push(`/market/${marketId}/form?stake=${stake}&certainty=${certainty}&side=${side}&share=${share}`)
+  if (order.side === 'BUY') {
+    // match BUY YES with BUY NO and vice versa
+    const stake = order.quantity * (100 - order.price)
+    const certainty = (100 - order.price) / 100
+    const share = order.ShareDescription === 'YES' ? 'NO' : 'YES'
+    router.push(`/market/${marketId}/form/buy?stake=${stake}&certainty=${certainty}&share=${share}`)
+  }
+  if (order.side === 'SELL') {
+    // match SELL YES with BUY YES and vice versa
+    const stake = order.quantity * order.price
+    const certainty = order.price / 100
+    const share = order.ShareDescription === 'YES' ? 'YES' : 'NO'
+    router.push(`/market/${marketId}/form/buy?stake=${stake}&certainty=${certainty}&share=${share}`)
+  }
 }
 
 const orders = ref([])
