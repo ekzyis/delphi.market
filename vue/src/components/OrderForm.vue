@@ -27,16 +27,16 @@ import { useRoute, useRouter } from 'vue-router'
 const router = useRouter()
 const route = useRoute()
 const marketId = route.params.id
-const selected = ref(null)
+const selected = ref(route.query.share || null)
 const showForm = computed(() => selected.value !== null)
 const yesClass = computed(() => selected.value === 'YES' ? ['active'] : [])
 const noClass = computed(() => selected.value === 'NO' ? ['active'] : [])
 const err = ref(null)
 
 // how much wants the user bet?
-const stake = ref(100)
+const stake = ref(route.query.stake || 100)
 // how sure is the user he will win?
-const certainty = ref(0.5)
+const certainty = ref(route.query.certainty || 0.5)
 // price per share: more risk, lower price, higher reward
 const price = computed(() => certainty.value * 100)
 // how many (full) shares can be bought?

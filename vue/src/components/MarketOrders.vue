@@ -5,10 +5,11 @@
         <th>description</th>
         <th class="hidden-sm">created at</th>
         <th>status</th>
+        <th></th>
       </thead>
       <tbody>
         <OrderRow :order="o" v-for="o in orders" :key="o.Id" @mouseover="() => mouseover(o.Id)"
-          :selected="selected" />
+          :selected="selected" :click="click" />
       </tbody>
     </table>
   </div>
@@ -16,9 +17,10 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import OrderRow from './OrderRow.vue'
 
+const router = useRouter()
 const route = useRoute()
 const marketId = route.params.id
 
@@ -32,6 +34,15 @@ function mouseover (oid) {
     // reset selection
     selected.value = []
   }
+}
+
+const click = (order) => {
+  // redirect to form with prefilled inputs to match order
+  const stake = order.quantity * (100 - order.price)
+  const certainty = (100 - order.price) / 100
+  const share = order.ShareDescription === 'YES' ? 'NO' : 'YES'
+  const side = 'BUY'
+  router.push(`/market/${marketId}/form?stake=${stake}&certainty=${certainty}&side=${side}&share=${share}`)
 }
 
 const orders = ref([])

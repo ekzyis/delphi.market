@@ -13,6 +13,11 @@ button:hover {
   background: #8787A4;
 }
 
+button:disabled {
+  opacity: 0.67;
+  font-style: italic;
+}
+
 input {
   color: #000;
 }
