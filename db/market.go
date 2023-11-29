@@ -87,7 +87,7 @@ func (db *DB) FetchOrders(where *FetchOrdersWhere, orders *[]Order) error {
 		args = append(args, where.Pubkey)
 	}
 	if where.Confirmed {
-		query += "AND i.confirmed_at IS NOT NULL "
+		query += "AND o.order_id IS NOT NULL "
 	}
 	query += "AND (i.confirmed_at IS NOT NULL OR i.expires_at > CURRENT_TIMESTAMP) "
 	query += "ORDER BY price DESC"
@@ -152,8 +152,7 @@ func (db *DB) FetchMarketOrders(marketId int64, orders *[]Order) error {
 		"CASE WHEN o.order_id IS NOT NULL THEN 'EXECUTED' ELSE 'PENDING' END AS status, o.order_id " +
 		"FROM orders o " +
 		"JOIN shares s ON o.share_id = s.id " +
-		"LEFT JOIN invoices i ON i.id = o.invoice_id " +
-		"WHERE s.market_id = $1 AND ( (o.side = 'BUY' AND i.confirmed_at IS NOT NULL) OR o.side = 'SELL' ) " +
+		"WHERE s.market_id = $1 AND ( (o.side = 'BUY' AND o.order_id IS NOT NULL) OR o.side = 'SELL' ) " +
 		"ORDER BY o.created_at DESC"
 	rows, err := db.Query(query, marketId)
 	if err != nil {
