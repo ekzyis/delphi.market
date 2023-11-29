@@ -261,7 +261,6 @@ func (db *DB) FetchMarketStats(marketId int64, stats *MarketStats) error {
 		stat.Y = map[string]int{
 			description: score,
 		}
-		log.Println(timestamp, description, score)
 		*stats = append(*stats, stat)
 	}
 	return nil
