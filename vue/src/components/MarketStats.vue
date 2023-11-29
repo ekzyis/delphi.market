@@ -1,8 +1,8 @@
 <template>
   <div>
     <div class="mb-1">
-      <span>YES: {{  currentYes * 100 }}%</span>
-      <span>NO: {{  currentNo * 100 }}%</span>
+      <span>YES: {{  (currentYes * 100).toFixed(2) }}%</span>
+      <span>NO: {{  (currentNo * 100).toFixed(2) }}%</span>
     </div>
     <div class="mb-2">
       <span>Volume: {{ volume }} sats</span>
@@ -37,9 +37,11 @@ const getFilterData = key => {
   for (let i = 0; i < stats.value.length - 1; i += 2) {
     const s1 = stats.value[i]
     const s2 = stats.value[i + 1]
-    const sum = s1.y.YES + s2.y.NO
+    const yes = 'YES' in s1.y ? s1.y.YES : s2.y.YES
+    const no = 'NO' in s1.y ? s1.y.NO : s2.y.NO
+    const sum = yes + no
     volume = sum
-    key === 'YES' ? y.push(s1.y.YES / sum) : y.push(s2.y.NO / sum)
+    key === 'YES' ? y.push(yes / sum) : y.push(no / sum)
   }
   return y
 }
