@@ -18,7 +18,7 @@
     </nav>
   </header>
   <Suspense>
-    <router-view class="m-3" />
+    <router-view />
   </Suspense>
 </template>
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="text w-auto">
+  <div class="text w-auto mt-3">
     <table>
       <thead>
         <th>description</th>

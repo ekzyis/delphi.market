@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="mt-3">
     <div class="mb-1">
       <span>YES: {{  (currentYes * 100).toFixed(2) }}%</span>
       <span>NO: {{  (currentNo * 100).toFixed(2) }}%</span>

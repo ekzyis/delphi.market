@@ -25,6 +25,7 @@ func HandleMarket(sc context.ServerContext) echo.HandlerFunc {
 			orders   []db.Order
 			err      error
 			data     map[string]any
+			u        db.User
 		)
 		if marketId, err = strconv.ParseInt(c.Param("id"), 10, 64); err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "Bad Request")
@@ -44,6 +45,14 @@ func HandleMarket(sc context.ServerContext) echo.HandlerFunc {
 			"Id":          market.Id,
 			"Description": market.Description,
 			"Shares":      shares,
+		}
+		if session := c.Get("session"); session != nil {
+			u = session.(db.User)
+			uBalance := make(map[string]any)
+			if err = sc.Db.FetchUserBalance(marketId, u.Pubkey, &uBalance); err != nil {
+				return err
+			}
+			lib.Merge(&data, &map[string]any{"user": uBalance})
 		}
 		return c.JSON(http.StatusOK, data)
 	}

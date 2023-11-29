@@ -265,3 +265,31 @@ func (db *DB) FetchMarketStats(marketId int64, stats *MarketStats) error {
 	}
 	return nil
 }
+
+func (db *DB) FetchUserBalance(marketId int64, pubkey string, balance *map[string]any) error {
+	query := "" +
+		"SELECT s.description, " +
+		"SUM(CASE WHEN o.side = 'BUY' THEN o.quantity ELSE -o.quantity END) " +
+		"FROM orders o " +
+		"JOIN invoices i ON i.id = o.invoice_id " +
+		"JOIN shares s ON s.id = o.share_id " +
+		"WHERE o.pubkey = $1 AND s.market_id = $2 AND i.confirmed_at IS NOT NULL AND o.order_id IS NOT NULL " +
+		"GROUP BY o.pubkey, s.description"
+	rows, err := db.Query(query, pubkey, marketId)
+	if err != nil {
+		return err
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		var (
+			sdesc string
+			val   int
+		)
+		if err = rows.Scan(&sdesc, &val); err != nil {
+			return err
+		}
+		(*balance)[sdesc] = val
+	}
+	return nil
+}
