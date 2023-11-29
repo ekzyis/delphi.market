@@ -21,9 +21,11 @@
 </template>
 
 <script setup>
+import { useSession } from '@/stores/session'
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+const session = useSession()
 const router = useRouter()
 const route = useRoute()
 const marketId = route.params.id
@@ -68,6 +70,7 @@ const userShares = computed(() => {
 })
 
 const submitForm = async () => {
+  if (!session.isAuthenticated) return router.push('/login')
   // TODO validate form
   const url = window.origin + '/api/order'
   const body = JSON.stringify({
