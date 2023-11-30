@@ -34,7 +34,7 @@ await fetch(url)
 
 const getFilterData = key => {
   const y = []
-  for (let i = 0; i < stats.value.length - 1; i += 2) {
+  for (let i = 0; i < stats.value?.length - 1; i += 2) {
     const s1 = stats.value[i]
     const s2 = stats.value[i + 1]
     const yes = 'YES' in s1.y ? s1.y.YES : s2.y.YES
@@ -54,7 +54,7 @@ const currentYes = yesData.at(-1)
 const currentNo = noData.at(-1)
 
 const chartData = {
-  labels: stats.value.map(({ x }) => ago(new Date(x))),
+  labels: stats.value ? stats.value.map(({ x }) => ago(new Date(x))) : [],
   datasets: [
     {
       label: 'YES',
