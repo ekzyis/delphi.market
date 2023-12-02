@@ -108,7 +108,7 @@ func (db *DB) CreateOrder(tx *sql.Tx, ctx context.Context, order *Order) error {
 	if _, err := tx.ExecContext(ctx, ""+
 		"INSERT INTO orders(share_id, pubkey, side, quantity, price, invoice_id) "+
 		"VALUES ($1, $2, $3, $4, $5, CASE WHEN $6 = '' THEN NULL ELSE $6::UUID END)",
-		order.ShareId, order.Pubkey, order.Side, order.Quantity, order.Price, order.InvoiceId); err != nil {
+		order.ShareId, order.Pubkey, order.Side, order.Quantity, order.Price, order.InvoiceId.String); err != nil {
 		return err
 	}
 	return nil
