@@ -52,6 +52,9 @@ func addBackendRoutes(e *echo.Echo, sc ServerContext) {
 		handler.HandleOrder,
 		middleware.SessionGuard,
 		middleware.LNDGuard)
+	DELETE(e, sc, "/api/order/:id",
+		handler.HandleDeleteOrder,
+		middleware.SessionGuard)
 	GET(e, sc, "/api/orders",
 		handler.HandleOrders,
 		middleware.SessionGuard)
@@ -73,6 +76,10 @@ func GET(e *echo.Echo, sc ServerContext, path string, scF HandlerFunc, scM ...Mi
 
 func POST(e *echo.Echo, sc ServerContext, path string, scF HandlerFunc, scM ...MiddlewareFunc) *echo.Route {
 	return e.POST(path, scF(sc), toMiddlewareFunc(sc, scM...)...)
+}
+
+func DELETE(e *echo.Echo, sc ServerContext, path string, scF HandlerFunc, scM ...MiddlewareFunc) *echo.Route {
+	return e.DELETE(path, scF(sc), toMiddlewareFunc(sc, scM...)...)
 }
 
 func Use(e *echo.Echo, sc ServerContext, scM ...MiddlewareFunc) {

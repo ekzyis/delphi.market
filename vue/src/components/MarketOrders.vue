@@ -8,8 +8,8 @@
         <th></th>
       </thead>
       <tbody>
-        <OrderRow :order="o" v-for="o in orders" :key="o.Id" @mouseover="() => mouseover(o.Id)"
-          :selected="selected" :click="click" />
+        <OrderRow :order="o" v-for="o in orders" :key="o.Id" @mouseover="() => mouseover(o.Id)" :selected="selected"
+          :onMatchClick="onMatchClick" />
       </tbody>
     </table>
   </div>
@@ -36,7 +36,7 @@ const mouseover = (oid) => {
   }
 }
 
-const click = (order) => {
+const onMatchClick = (order) => {
   // redirect to form with prefilled inputs to match order
   if (order.side === 'BUY') {
     // match BUY YES with BUY NO and vice versa

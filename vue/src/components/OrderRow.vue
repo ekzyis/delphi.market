@@ -5,8 +5,9 @@
     </td>
     <td :title="order.CreatedAt" class="hidden-sm">{{ ago(new Date(order.CreatedAt)) }}</td>
     <td :class="'font-mono ' + statusClassName + ' ' + selectedClassName" @mouseover="mouseover">{{ order.Status }}</td>
-    <td v-if="showContextMenu && !!session.pubkey">
-      <button @click="() => click(order)" :disabled="mine">match</button>
+    <td v-if="showContextMenu">
+      <button @click="() => onMatchClick?.(order)" v-if="showMatch">match</button>
+      <button @click="() => cancelOrder(order)" v-if="showCancel">cancel</button>
     </td>
   </tr>
 </template>
@@ -17,13 +18,14 @@ import ago from 's-ago'
 import { useSession } from '@/stores/session'
 
 const session = useSession()
-const props = defineProps(['order', 'selected', 'click'])
+const props = defineProps(['order', 'selected', 'onMatchClick'])
 
 const order = ref(props.order)
 const showContextMenu = ref(false)
-const click = ref(props.click)
-
-const mine = order.value.Pubkey === session?.pubkey
+const onMatchClick = ref(props.onMatchClick)
+const mine = computed(() => order.value.Pubkey === session?.pubkey)
+const showMatch = computed(() => !mine.value && order.value.Status !== 'EXECUTED')
+const showCancel = computed(() => mine.value && order.value.Status !== 'EXECUTED')
 
 const statusClassName = computed(() => {
   const status = order.value.Status
@@ -43,13 +45,16 @@ const selectedClassName = computed(() => {
 })
 
 const mouseover = () => {
-  if (!!props.click && order.value.Status === 'PENDING') {
-    showContextMenu.value = true
-  }
+  showContextMenu.value = true && !!session.pubkey
 }
 
 const mouseleave = () => {
   showContextMenu.value = false
+}
+
+const cancelOrder = async () => {
+  const url = '/api/order/' + order.value.Id
+  await fetch(url, { method: 'DELETE' }).catch(console.error)
 }
 
 </script>

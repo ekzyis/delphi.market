@@ -73,17 +73,17 @@ func (db *DB) FetchShare(tx *sql.Tx, ctx context.Context, shareId string, share 
 
 func (db *DB) FetchOrders(where *FetchOrdersWhere, orders *[]Order) error {
 	query := "" +
-		"SELECT o.id, share_id, o.pubkey, o.side, o.quantity, o.price, o.invoice_id, o.created_at, s.description, s.market_id, i.confirmed_at " +
+		"SELECT o.id, share_id, o.pubkey, o.side, o.quantity, o.price, o.invoice_id, o.created_at, o.deleted_at, s.description, s.market_id, i.confirmed_at " +
 		"FROM orders o " +
 		"JOIN invoices i ON o.invoice_id = i.id " +
 		"JOIN shares s ON o.share_id = s.id " +
-		"WHERE "
+		"WHERE o.deleted_at IS NULL "
 	var args []any
 	if where.MarketId > 0 {
-		query += "share_id = ANY(SELECT id FROM shares WHERE market_id = $1) "
+		query += "AND share_id = ANY(SELECT id FROM shares WHERE market_id = $1) "
 		args = append(args, where.MarketId)
 	} else if where.Pubkey != "" {
-		query += "o.pubkey = $1 "
+		query += "AND o.pubkey = $1 "
 		args = append(args, where.Pubkey)
 	}
 	if where.Confirmed {
@@ -98,7 +98,7 @@ func (db *DB) FetchOrders(where *FetchOrdersWhere, orders *[]Order) error {
 	defer rows.Close()
 	for rows.Next() {
 		var order Order
-		rows.Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.InvoiceId, &order.CreatedAt, &order.Share.Description, &order.Share.MarketId, &order.Invoice.ConfirmedAt)
+		rows.Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.InvoiceId, &order.CreatedAt, &order.DeletedAt, &order.Share.Description, &order.Share.MarketId, &order.Invoice.ConfirmedAt)
 		*orders = append(*orders, order)
 	}
 	return nil
@@ -116,12 +116,12 @@ func (db *DB) CreateOrder(tx *sql.Tx, ctx context.Context, order *Order) error {
 
 func (db *DB) FetchOrder(tx *sql.Tx, ctx context.Context, orderId string, order *Order) error {
 	query := "" +
-		"SELECT o.id, o.share_id, o.pubkey, o.side, o.quantity, o.price, o.invoice_id, o.created_at, s.description, s.market_id, i.confirmed_at " +
+		"SELECT o.id, o.share_id, o.pubkey, o.side, o.quantity, o.price, o.created_at, o.deleted_at, s.description, s.market_id, i.confirmed_at, o.invoice_id, COALESCE(i.msats_received, 0) " +
 		"FROM orders o " +
-		"JOIN invoices i ON o.invoice_id = i.id " +
+		"LEFT JOIN invoices i ON o.invoice_id = i.id " +
 		"JOIN shares s ON o.share_id = s.id " +
 		"WHERE o.id = $1"
-	return tx.QueryRowContext(ctx, query, orderId).Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.InvoiceId, &order.CreatedAt, &order.Share.Description, &order.MarketId, &order.Invoice.ConfirmedAt)
+	return tx.QueryRowContext(ctx, query, orderId).Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.CreatedAt, &order.DeletedAt, &order.Share.Description, &order.MarketId, &order.Invoice.ConfirmedAt, &order.InvoiceId, &order.Invoice.MsatsReceived)
 }
 
 func (db *DB) FetchUserOrders(pubkey string, orders *[]Order) error {
@@ -131,7 +131,7 @@ func (db *DB) FetchUserOrders(pubkey string, orders *[]Order) error {
 		"FROM orders o " +
 		"LEFT JOIN invoices i ON o.invoice_id = i.id " +
 		"JOIN shares s ON o.share_id = s.id " +
-		"WHERE o.pubkey = $1 AND ( (o.side = 'BUY' AND i.confirmed_at IS NOT NULL) OR o.side = 'SELL' ) " +
+		"WHERE o.pubkey = $1 AND ( (o.side = 'BUY' AND i.confirmed_at IS NOT NULL) OR o.side = 'SELL' ) AND o.deleted_at IS NULL " +
 		"ORDER BY o.created_at DESC"
 	rows, err := db.Query(query, pubkey)
 	if err != nil {
@@ -153,7 +153,7 @@ func (db *DB) FetchMarketOrders(marketId int64, orders *[]Order) error {
 		"FROM orders o " +
 		"JOIN shares s ON o.share_id = s.id " +
 		"LEFT JOIN invoices i ON o.invoice_id = i.id " +
-		"WHERE s.market_id = $1 AND ( (o.side = 'BUY' AND i.confirmed_at IS NOT NULL) OR o.side = 'SELL' ) " +
+		"WHERE s.market_id = $1 AND ( (o.side = 'BUY' AND i.confirmed_at IS NOT NULL) OR o.side = 'SELL' ) AND o.deleted_at IS NULL " +
 		"ORDER BY o.created_at DESC"
 	rows, err := db.Query(query, marketId)
 	if err != nil {

@@ -208,7 +208,7 @@ func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
 			}
 
 			// Create (unconfirmed) order
-			o.InvoiceId = invoice.Id
+			o.InvoiceId.String = invoice.Id
 			if err := sc.Db.CreateOrder(tx, ctx, &o); err != nil {
 				tx.Rollback()
 				return err
@@ -216,8 +216,6 @@ func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
 			// need to commit before starting to poll invoice status
 			tx.Commit()
 			go sc.Lnd.CheckInvoice(sc.Db, hash)
-
-			// TODO: find matching orders
 
 			data = map[string]any{
 				"id":     invoice.Id,
@@ -244,6 +242,82 @@ func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
 		}
 		tx.Commit()
 		return c.JSON(http.StatusCreated, nil)
+	}
+}
+
+func HandleDeleteOrder(sc context.ServerContext) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		var (
+			orderId string
+			tx      *sql.Tx
+			u       db.User
+			o       db.Order
+			msats   int64
+			err     error
+		)
+
+		if orderId = c.Param("id"); orderId == "" {
+			return echo.NewHTTPError(http.StatusBadRequest)
+		}
+		u = c.Get("session").(db.User)
+
+		// transaction start
+		ctx, cancel := context_.WithTimeout(c.Request().Context(), 5*time.Second)
+		defer cancel()
+		if tx, err = sc.Db.BeginTx(ctx, nil); err != nil {
+			return err
+		}
+		defer tx.Commit()
+
+		if err = sc.Db.FetchOrder(tx, ctx, orderId, &o); err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		if u.Pubkey != o.Pubkey {
+			// order does not belong to user
+			tx.Rollback()
+			return echo.NewHTTPError(http.StatusForbidden)
+		}
+
+		if o.OrderId != "" {
+			// order already settled
+			tx.Rollback()
+			return echo.NewHTTPError(http.StatusBadRequest)
+		}
+
+		if o.DeletedAt.Valid {
+			// order already deleted
+			tx.Rollback()
+			return echo.NewHTTPError(http.StatusBadRequest)
+		}
+
+		if o.Invoice.ConfirmedAt.Valid {
+			// order already paid: we need to move paid sats to user balance before deleting the order
+			msats = o.Invoice.MsatsReceived
+			if res, err := tx.ExecContext(ctx, "UPDATE users SET msats = msats + $1 WHERE pubkey = $2", msats, u.Pubkey); err != nil {
+				tx.Rollback()
+				return err
+			} else {
+				// make sure exactly one row was affected
+				if rowsAffected, err := res.RowsAffected(); err != nil {
+					tx.Rollback()
+					return err
+				} else if rowsAffected != 1 {
+					tx.Rollback()
+					return echo.NewHTTPError(http.StatusInternalServerError)
+				}
+			}
+		}
+
+		if _, err = tx.ExecContext(ctx, "UPDATE orders SET deleted_at = CURRENT_TIMESTAMP WHERE id = $1", o.Id); err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		tx.Commit()
+
+		return c.JSON(http.StatusOK, nil)
 	}
 }
 

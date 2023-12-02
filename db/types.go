@@ -52,6 +52,7 @@ type (
 	Order struct {
 		Id               UUID
 		CreatedAt        time.Time
+		DeletedAt        null.Time
 		ShareId          string `json:"sid"`
 		ShareDescription string
 		Share
@@ -59,7 +60,7 @@ type (
 		Side      string `json:"side"`
 		Quantity  int64  `json:"quantity"`
 		Price     int64  `json:"price"`
-		InvoiceId UUID
+		InvoiceId null.String
 		Invoice
 		OrderId UUID
 	}
