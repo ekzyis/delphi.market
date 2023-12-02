@@ -3,13 +3,15 @@
     <div class="font-mono mb-3">
       Payment Required
     </div>
-    <router-link v-if="invoice.ConfirmedAt" :to="callbackUrl" class="label success font-mono">
+    <router-link v-if="invoice?.ConfirmedAt" :to="callbackUrl" class="label success font-mono">
       <div>Paid</div>
       <small v-if="redirectTimeout < 4">Redirecting in {{ redirectTimeout }} ...</small>
     </router-link>
-    <div v-if="error" class="label error font-mono">
-      <div>Error</div>
-      <small>{{ error }}</small>
+    <div v-if="invoice && !invoice.ConfirmedAt && new Date(invoice.ExpiresAt) < new Date()" class="label error font-mono">
+      <div>Expired</div>
+    </div>
+    <div v-if="notFound" class="label error font-mono">
+      <div>Not Found</div>
     </div>
     <div v-if="invoice">
       <figure class="flex flex-col m-auto">
@@ -67,7 +69,7 @@ const route = useRoute()
 
 const invoice = ref(undefined)
 const redirectTimeout = ref(4)
-const error = ref(null)
+const notFound = ref(undefined)
 const label = ref('copy')
 let copyTimeout = null
 
@@ -86,8 +88,8 @@ const INVOICE_POLL = 2000
 const fetchInvoice = async () => {
   const url = window.origin + '/api/invoice/' + route.params.id
   const res = await fetch(url)
+  notFound.value = res.status === 404
   if (res.status === 404) {
-    error.value = 'invoice not found'
     return
   }
   const body = await res.json()
@@ -103,6 +105,10 @@ const fetchInvoice = async () => {
     }
   }
   invoice.value = body
+  if (new Date(invoice.value.ExpiresAt) < new Date()) {
+    // invoice expired
+    return
+  }
   if (!invoice.value.ConfirmedAt) {
     // invoice not pad (yet?)
     pollTimeout = setTimeout(() => {
