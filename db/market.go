@@ -126,10 +126,10 @@ func (db *DB) FetchOrder(tx *sql.Tx, ctx context.Context, orderId string, order 
 
 func (db *DB) FetchUserOrders(pubkey string, orders *[]Order) error {
 	query := "" +
-		"SELECT o.id, share_id, o.pubkey, o.side, o.quantity, o.price, o.invoice_id, o.created_at, s.description, s.market_id, i.confirmed_at, " +
-		"CASE WHEN o.order_id IS NOT NULL THEN 'EXECUTED' ELSE 'PENDING' END AS status " +
+		"SELECT o.id, share_id, o.pubkey, o.side, o.quantity, o.price, o.created_at, s.description, s.market_id, i.confirmed_at, " +
+		"CASE WHEN o.order_id IS NOT NULL THEN 'EXECUTED' ELSE 'PENDING' END AS status, o.order_id, o.invoice_id " +
 		"FROM orders o " +
-		"JOIN invoices i ON o.invoice_id = i.id " +
+		"LEFT JOIN invoices i ON o.invoice_id = i.id " +
 		"JOIN shares s ON o.share_id = s.id " +
 		"WHERE o.pubkey = $1 AND ( (o.side = 'BUY' AND i.confirmed_at IS NOT NULL) OR o.side = 'SELL' ) " +
 		"ORDER BY o.created_at DESC"
@@ -140,7 +140,7 @@ func (db *DB) FetchUserOrders(pubkey string, orders *[]Order) error {
 	defer rows.Close()
 	for rows.Next() {
 		var order Order
-		rows.Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.InvoiceId, &order.CreatedAt, &order.ShareDescription, &order.Share.MarketId, &order.Invoice.ConfirmedAt, &order.Status)
+		rows.Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.CreatedAt, &order.ShareDescription, &order.Share.MarketId, &order.Invoice.ConfirmedAt, &order.Status, &order.OrderId, &order.InvoiceId)
 		*orders = append(*orders, order)
 	}
 	return nil
@@ -148,11 +148,11 @@ func (db *DB) FetchUserOrders(pubkey string, orders *[]Order) error {
 
 func (db *DB) FetchMarketOrders(marketId int64, orders *[]Order) error {
 	query := "" +
-		"SELECT o.id, share_id, o.pubkey, o.side, o.quantity, o.price, o.invoice_id, o.created_at, s.description, s.market_id, " +
-		"CASE WHEN o.order_id IS NOT NULL THEN 'EXECUTED' ELSE 'PENDING' END AS status, o.order_id " +
+		"SELECT o.id, share_id, o.pubkey, o.side, o.quantity, o.price, o.created_at, s.description, s.market_id, " +
+		"CASE WHEN o.order_id IS NOT NULL THEN 'EXECUTED' ELSE 'PENDING' END AS status, o.order_id, o.invoice_id " +
 		"FROM orders o " +
 		"JOIN shares s ON o.share_id = s.id " +
-		"JOIN invoices i ON o.invoice_id = i.id " +
+		"LEFT JOIN invoices i ON o.invoice_id = i.id " +
 		"WHERE s.market_id = $1 AND ( (o.side = 'BUY' AND i.confirmed_at IS NOT NULL) OR o.side = 'SELL' ) " +
 		"ORDER BY o.created_at DESC"
 	rows, err := db.Query(query, marketId)
@@ -162,7 +162,7 @@ func (db *DB) FetchMarketOrders(marketId int64, orders *[]Order) error {
 	defer rows.Close()
 	for rows.Next() {
 		var order Order
-		rows.Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.InvoiceId, &order.CreatedAt, &order.ShareDescription, &order.Share.MarketId, &order.Status, &order.OrderId)
+		rows.Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.CreatedAt, &order.ShareDescription, &order.Share.MarketId, &order.Status, &order.OrderId, &order.InvoiceId)
 		*orders = append(*orders, order)
 	}
 	return nil
