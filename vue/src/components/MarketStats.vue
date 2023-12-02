@@ -1,8 +1,8 @@
 <template>
   <div class="mt-3">
     <div class="mb-1">
-      <span>YES: {{  (currentYes * 100).toFixed(2) }}%</span>
-      <span>NO: {{  (currentNo * 100).toFixed(2) }}%</span>
+      <span>YES: {{ typeof currentYes === "string" ? currentYes : (currentYes * 100).toFixed(2) + "%" }}</span>
+      <span>NO: {{ typeof currentNo === "string" ? currentNo : (currentNo * 100).toFixed(2) + "%" }}</span>
     </div>
     <div class="mb-2">
       <span>Volume: {{ volume }} sats</span>
@@ -50,8 +50,10 @@ let volume = 0
 const yesData = getFilterData('YES')
 const noData = getFilterData('NO')
 
-const currentYes = yesData.at(-1)
-const currentNo = noData.at(-1)
+let currentYes = yesData.at(-1)
+if (!currentYes) currentYes = 'n/a'
+let currentNo = noData.at(-1)
+if (!currentNo) currentNo = 'n/a'
 
 const chartData = {
   labels: stats.value ? stats.value.map(({ x }) => ago(new Date(x))) : [],
