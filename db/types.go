@@ -17,10 +17,12 @@ type (
 	}
 	User struct {
 		Pubkey   string
+		Msats    int64
 		LastSeen time.Time
 	}
 	Session struct {
 		Pubkey    string
+		Msats     int64
 		SessionId string
 	}
 	Market struct {

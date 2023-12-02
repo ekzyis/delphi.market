@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 
 export const useSession = defineStore('session', () => {
   const pubkey = ref(null)
+  const msats = ref(0)
   const initialized = ref(false)
   const isAuthenticated = computed(() => initialized.value ? !!pubkey.value : undefined)
 
@@ -17,6 +18,9 @@ export const useSession = defineStore('session', () => {
           pubkey.value = body.pubkey
           console.log('authenticated as', body.pubkey)
         } else console.log('unauthenticated')
+        if (body.msats) {
+          msats.value = body.msats
+        }
         initialized.value = true
         return body
       }).catch(err => {
@@ -40,5 +44,5 @@ export const useSession = defineStore('session', () => {
       })
   }
 
-  return { pubkey, isAuthenticated, initialized, checkSession, login, logout }
+  return { pubkey, isAuthenticated, initialized, msats, checkSession, login, logout }
 })

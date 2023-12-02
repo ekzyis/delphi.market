@@ -6,7 +6,8 @@ func (db *DB) CreateSession(s *Session) error {
 }
 
 func (db *DB) FetchSession(s *Session) error {
-	err := db.QueryRow("SELECT pubkey FROM sessions WHERE session_id = $1", s.SessionId).Scan(&s.Pubkey)
+	query := "SELECT u.pubkey, u.msats FROM sessions s LEFT JOIN users u ON u.pubkey = s.pubkey WHERE session_id = $1"
+	err := db.QueryRow(query, s.SessionId).Scan(&s.Pubkey, &s.Msats)
 	return err
 }
 

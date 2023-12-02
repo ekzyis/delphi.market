@@ -26,7 +26,7 @@ func Session(sc context.ServerContext) echo.MiddlewareFunc {
 			s = &db.Session{SessionId: cookie.Value}
 			if err = sc.Db.FetchSession(s); err == nil {
 				// session found
-				u = &db.User{Pubkey: s.Pubkey, LastSeen: time.Now()}
+				u = &db.User{Pubkey: s.Pubkey, Msats: s.Msats, LastSeen: time.Now()}
 				if err = sc.Db.UpdateUser(u); err != nil {
 					return err
 				}

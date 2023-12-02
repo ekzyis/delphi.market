@@ -25,6 +25,6 @@ func HandleCheckSession(sc context.ServerContext) echo.HandlerFunc {
 		} else if err != nil {
 			return c.JSON(http.StatusInternalServerError, nil)
 		}
-		return c.JSON(http.StatusOK, map[string]string{"pubkey": s.Pubkey})
+		return c.JSON(http.StatusOK, map[string]any{"pubkey": s.Pubkey, "msats": s.Msats})
 	}
 }
