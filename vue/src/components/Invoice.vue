@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col">
-    <div class="font-mono my-1">
+    <div class="font-mono mb-3">
       Payment Required
     </div>
     <router-link v-if="invoice.ConfirmedAt" :to="callbackUrl" class="label success font-mono">
@@ -143,7 +143,8 @@ figcaption {
 }
 
 .label {
-  margin: 1em auto;
+  margin: auto;
+  margin-bottom: 0.75em
 }
 
 a.label {
