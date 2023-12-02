@@ -160,14 +160,6 @@ func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
 			hash        lntypes.Hash
 			err         error
 		)
-		// TODO:
-		//   [ ] If SELL order, check share balance of user
-		//   [x] Create (unconfirmed) order
-		//   [x] Create invoice
-		//   [ ] Find matching orders
-		//   [ ] show invoice to user
-
-		// parse body
 		if err := c.Bind(&o); err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest)
 		}
