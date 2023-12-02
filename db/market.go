@@ -271,7 +271,7 @@ func (db *DB) FetchUserBalance(tx *sql.Tx, ctx context.Context, marketId int, pu
 		"SELECT s.description, " +
 		"SUM(CASE WHEN o.side = 'BUY' THEN o.quantity ELSE -o.quantity END) " +
 		"FROM orders o " +
-		"JOIN invoices i ON i.id = o.invoice_id " +
+		"LEFT JOIN invoices i ON i.id = o.invoice_id " +
 		"JOIN shares s ON s.id = o.share_id " +
 		"WHERE o.pubkey = $1 AND s.market_id = $2 AND ( (o.side = 'BUY' AND i.confirmed_at IS NOT NULL AND o.order_id IS NOT NULL) OR o.side = 'SELL' ) " +
 		"GROUP BY o.pubkey, s.description"
