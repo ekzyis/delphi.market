@@ -24,8 +24,8 @@ const order = ref(props.order)
 const showContextMenu = ref(false)
 const onMatchClick = ref(props.onMatchClick)
 const mine = computed(() => order.value.Pubkey === session?.pubkey)
-const showMatch = computed(() => !mine.value && order.value.Status !== 'EXECUTED')
-const showCancel = computed(() => mine.value && order.value.Status !== 'EXECUTED')
+const showMatch = computed(() => !mine.value && order.value.Status === 'PENDING')
+const showCancel = computed(() => mine.value && order.value.Status === 'PENDING')
 
 const statusClassName = computed(() => {
   const status = order.value.Status
