@@ -26,7 +26,7 @@ const marketId = route.params.id
 
 const selected = ref([])
 
-function mouseover (oid) {
+const mouseover = (oid) => {
   const o2id = orders.value.find(i => i.OrderId === oid)?.Id
   if (o2id) {
     selected.value = [oid, o2id]
