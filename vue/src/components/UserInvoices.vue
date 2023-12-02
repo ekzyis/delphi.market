@@ -9,7 +9,7 @@
         <th>details</th>
       </thead>
       <tbody>
-        <tr v-for="i in  invoices" :key="i.id">
+        <tr v-for="i in invoices" :key="i.id">
           <td>{{ i.Msats / 1000 }}</td>
           <td :title="i.CreatedAt">{{ ago(new Date(i.CreatedAt)) }}</td>
           <td :title="i.ExpiresAt" class="hidden-sm">{{ ago(new Date(i.ExpiresAt)) }}</td>
@@ -27,7 +27,7 @@
 import { ref } from 'vue'
 import ago from 's-ago'
 
-const classFromStatus = (status) => status === 'PAID' ? 'success' : 'error'
+const classFromStatus = (status) => status === 'PAID' ? 'success' : status === 'PENDING' ? 'info' : 'error'
 
 const invoices = ref(null)
 

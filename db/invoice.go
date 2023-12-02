@@ -80,7 +80,7 @@ func (db *DB) FetchUserInvoices(pubkey string, invoices *[]Invoice) error {
 	var (
 		query = "" +
 			"SELECT id, pubkey, msats, preimage, hash, bolt11, created_at, expires_at, confirmed_at, held_since, COALESCE(description, ''), " +
-			"CASE WHEN confirmed_at IS NOT NULL THEN 'PAID' WHEN expires_at < CURRENT_TIMESTAMP THEN 'EXPIRED' ELSE 'WAITING' END AS status " +
+			"CASE WHEN confirmed_at IS NOT NULL THEN 'PAID' WHEN expires_at < CURRENT_TIMESTAMP THEN 'EXPIRED' ELSE 'PENDING' END AS status " +
 			"FROM invoices " +
 			"WHERE pubkey = $1 " +
 			"ORDER BY created_at DESC"
