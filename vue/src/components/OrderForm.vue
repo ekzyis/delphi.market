@@ -36,6 +36,7 @@
       <button class="col-span-2" type="submit" :disabled="disabled">submit sell order</button>
     </form>
     <div v-if="err" class="red text-center">{{ err }}</div>
+    <div v-if="success" class="green text-center">{{ success }}</div>
   </div>
 </template>
 
@@ -63,8 +64,9 @@ const toggleYes = () => {
 const toggleNo = () => {
   selected.value = selected.value === 'NO' ? null : 'NO'
 }
-// show errors below form
+// show error and success below form
 const err = ref(null)
+const success = ref(null)
 // BUY or SELL?
 const side = ref(route.query.side || 'BUY')
 
@@ -156,6 +158,10 @@ const submitSellForm = async () => {
   })
   const res = await fetch(url, { method: 'POST', headers: { 'Content-type': 'application/json' }, body })
   const resBody = await res.json()
+  if (res.status === 201) {
+    success.value = 'Order created'
+    return
+  }
   if (res.status !== 402) {
     err.value = `error: server responded with HTTP ${resBody.status}`
     return
