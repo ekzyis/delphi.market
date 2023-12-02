@@ -1,12 +1,12 @@
 <template>
   <div class="flex flex-col">
-    <router-link v-if="success" :to="callbackUrl" class="label success font-mono">
-      <div>Paid</div>
-      <small v-if="redirectTimeout > 0">Redirecting in {{ redirectTimeout }} ...</small>
-    </router-link>
-    <div class="font-mono my-3">
+    <div class="font-mono my-1">
       Payment Required
     </div>
+    <router-link v-if="invoice.ConfirmedAt" :to="callbackUrl" class="label success font-mono">
+      <div>Paid</div>
+      <small v-if="redirectTimeout < 4">Redirecting in {{ redirectTimeout }} ...</small>
+    </router-link>
     <div v-if="error" class="label error font-mono">
       <div>Error</div>
       <small>{{ error }}</small>
@@ -64,35 +64,9 @@ import ago from 's-ago'
 
 const router = useRouter()
 const route = useRoute()
-// TODO validate callback url
-const callbackUrl = ref('/')
-let pollCount = 0
-const INVOICE_POLL = 2000
-const poll = async () => {
-  pollCount++
-  const url = window.origin + '/api/invoice/' + route.params.id
-  const res = await fetch(url)
-  const body = await res.json()
-  if (body.ConfirmedAt) {
-    success.value = true
-    clearInterval(interval)
-    if (pollCount > 1) {
-      // only redirect if the invoice was not immediately paid
-      setInterval(() => {
-        if (--redirectTimeout.value === 0) {
-          router.push(callbackUrl.value)
-        }
-      }, 1000)
-    } else {
-      redirectTimeout.value = -1
-    }
-  }
-}
 
-let interval
 const invoice = ref(undefined)
-const redirectTimeout = ref(3)
-const success = ref(null)
+const redirectTimeout = ref(4)
 const error = ref(null)
 const label = ref('copy')
 let copyTimeout = null
@@ -104,7 +78,12 @@ const copy = () => {
   copyTimeout = setTimeout(() => { label.value = 'copy' }, 1500)
 }
 
-await (async () => {
+const callbackUrl = ref('/')
+let pollCount = 0
+let pollTimeout
+let redirectInterval
+const INVOICE_POLL = 2000
+const fetchInvoice = async () => {
   const url = window.origin + '/api/invoice/' + route.params.id
   const res = await fetch(url)
   if (res.status === 404) {
@@ -113,6 +92,7 @@ await (async () => {
   }
   const body = await res.json()
   if (body.Description) {
+    // parse invoice description to show links
     const regexp = /\[market:(?<id>[0-9]+)\]/
     const m = body.Description.match(regexp)
     const marketId = m?.groups?.id
@@ -123,10 +103,29 @@ await (async () => {
     }
   }
   invoice.value = body
-  interval = setInterval(poll, INVOICE_POLL)
-})()
+  if (!invoice.value.ConfirmedAt) {
+    // invoice not pad (yet?)
+    pollTimeout = setTimeout(() => {
+      pollCount++
+      fetchInvoice()
+    }, INVOICE_POLL)
+  } else {
+    // invoice paid
+    // we check for pollCount > 0 to only redirect if invoice wasn't already paid when we visited the page
+    if (pollCount > 0) {
+      redirectInterval = setInterval(() => {
+        redirectTimeout.value--
+        if (redirectTimeout.value === 0) {
+          clearInterval(redirectInterval)
+          return router.push(callbackUrl.value)
+        }
+      }, 1000)
+    }
+  }
+}
+await fetchInvoice()
 
-onUnmounted(() => { clearInterval(interval) })
+onUnmounted(() => { clearTimeout(pollTimeout); clearInterval(redirectInterval) })
 
 const faucet = window.location.hostname === 'delphi.market' ? 'https://faucet.mutinynet.com' : ''
 
