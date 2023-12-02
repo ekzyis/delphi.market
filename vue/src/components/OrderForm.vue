@@ -7,9 +7,11 @@
     </div>
     <div v-if="userShares > 0 && showForm" class="flex justify-center items-center">
       <label for="side" class="m-1"><i>sell?</i></label>
-      <input v-model="side" true-value="SELL" false-value="BUY" type="checkbox" name="side" class="m-1"/>
+      <input v-model="side" true-value="SELL" false-value="BUY" type="checkbox" name="side" class="m-1" />
     </div>
     <form v-if="side === 'BUY'" v-show="showForm" @submit.prevent="submitBuyForm">
+      <label v-if="session.isAuthenticated" for="msats">you have:</label>
+      <label v-if="session.isAuthenticated" name="msats">{{ session.msats / 1000 }} sats</label>
       <label for="stake">how much?</label>
       <input name="stake" v-model="stake" type="number" min="0" placeholder="sats" required />
       <label for="certainty">how sure?</label>
