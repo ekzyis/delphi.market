@@ -204,23 +204,18 @@ func (db *DB) RunMatchmaking(orderId string) {
 		tx.Rollback()
 		return
 	}
-	if _, err = tx.ExecContext(ctx, "UPDATE orders SET order_id = $1 WHERE id = $2", o1.Id, o2.Id); err != nil {
+	if err = db.MatchOrders(tx, ctx, &o1, &o2); err != nil {
 		log.Println(err)
 		tx.Rollback()
 		return
 	}
-	if _, err = tx.ExecContext(ctx, "UPDATE orders SET order_id = $1 WHERE id = $2", o2.Id, o1.Id); err != nil {
-		log.Println(err)
-		tx.Rollback()
-		return
-	}
-	log.Printf("Matched orders: %s <> %s\n", o1.Id, o2.Id)
+
 	tx.Commit()
 }
 
 func (db *DB) FindOrderMatches(tx *sql.Tx, ctx context.Context, o1 *Order, o2 *Order) error {
 	query := "" +
-		"SELECT o.id, o.order_id FROM orders o " +
+		"SELECT o.id, o.order_id, o.side, o.quantity, o.price, o.pubkey FROM orders o " +
 		"JOIN shares s ON s.id = o.share_id " +
 		"LEFT JOIN invoices i ON i.id = o.invoice_id " +
 		// only match orders which are not soft deleted
@@ -246,7 +241,33 @@ func (db *DB) FindOrderMatches(tx *sql.Tx, ctx context.Context, o1 *Order, o2 *O
 		") " +
 		// match oldest order first
 		"ORDER BY o.created_at ASC LIMIT 1"
-	return tx.QueryRowContext(ctx, query, o1.Pubkey, o1.Quantity, o1.Share.MarketId, o1.ShareId, o1.Side, o1.Price).Scan(&o2.Id, &o2.OrderId)
+	return tx.QueryRowContext(ctx, query, o1.Pubkey, o1.Quantity, o1.Share.MarketId, o1.ShareId, o1.Side, o1.Price).Scan(&o2.Id, &o2.OrderId, &o2.Side, &o2.Quantity, &o2.Price, &o2.Pubkey)
+}
+
+func (db *DB) MatchOrders(tx *sql.Tx, ctx context.Context, o1 *Order, o2 *Order) error {
+	var err error
+	if _, err = tx.ExecContext(ctx, "UPDATE orders SET order_id = $1 WHERE id = $2", o1.Id, o2.Id); err != nil {
+		tx.Rollback()
+		return err
+	}
+	if _, err = tx.ExecContext(ctx, "UPDATE orders SET order_id = $1 WHERE id = $2", o2.Id, o1.Id); err != nil {
+		tx.Rollback()
+		return err
+	}
+	if o1.Side == "SELL" {
+		if _, err = tx.ExecContext(ctx, "UPDATE users SET msats = msats + $1 WHERE pubkey = $2", (o1.Price*o1.Quantity)*1000, o1.Pubkey); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	if o2.Side == "SELL" {
+		if _, err = tx.ExecContext(ctx, "UPDATE users SET msats = msats + $1 WHERE pubkey = $2", (o2.Price*o2.Quantity)*1000, o2.Pubkey); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	log.Printf("Matched orders: %s <> %s\n", o1.Id, o2.Id)
+	return nil
 }
 
 // [
