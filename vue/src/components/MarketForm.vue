@@ -33,7 +33,7 @@ const parseEndDate = endDate => {
 const submitForm = async () => {
   const url = window.origin + '/api/market'
   const body = JSON.stringify({ description: description.value, endDate: parseEndDate(endDate.value) })
-  const res = await fetch(url, { method: 'post', headers: { 'Content-type': 'application/json' }, body })
+  const res = await fetch(url, { method: 'POST', headers: { 'Content-type': 'application/json' }, body })
   const resBody = await res.json()
   if (res.status !== 402) {
     err.value = `error: server responded with HTTP ${resBody.status}`
