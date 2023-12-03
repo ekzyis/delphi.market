@@ -46,6 +46,7 @@ func HandleMarket(sc context.ServerContext) echo.HandlerFunc {
 			"Id":          market.Id,
 			"Pubkey":      market.Pubkey,
 			"Description": market.Description,
+			"SettledAt":   market.SettledAt,
 			"Shares":      shares,
 		}
 		if session := c.Get("session"); session != nil {
@@ -154,6 +155,7 @@ func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
 			u           db.User
 			o           db.Order
 			s           db.Share
+			m           db.Market
 			invoice     *db.Invoice
 			msats       int64
 			description string
@@ -181,12 +183,21 @@ func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
 			tx.Rollback()
 			return err
 		}
+
+		if err = sc.Db.FetchMarket(s.MarketId, &m); err == sql.ErrNoRows {
+			return c.JSON(http.StatusNotFound, nil)
+		} else if err != nil {
+			return err
+		}
+
+		if m.SettledAt.Valid {
+			return c.JSON(http.StatusBadRequest, map[string]string{"reason": "market already settled"})
+		}
+
 		description = fmt.Sprintf("%s %d %s shares @ %d sats [market:%d]", strings.ToUpper(o.Side), o.Quantity, s.Description, o.Price, s.MarketId)
 
 		if o.Side == "BUY" {
-			// === Create invoice ===
-			// We do this for BUY and SELL orders such that we can continue to use `invoice.confirmed_at IS NOT NULL`
-			// to check for confirmed orders
+			// BUY orders require payment
 			if invoice, err = sc.Lnd.CreateInvoice(tx, ctx, sc.Db, o.Pubkey, msats, description); err != nil {
 				tx.Rollback()
 				return err
@@ -345,5 +356,109 @@ func HandleMarketStats(sc context.ServerContext) echo.HandlerFunc {
 			return err
 		}
 		return c.JSON(http.StatusOK, stats)
+	}
+}
+
+func HandleMarketSettlement(sc context.ServerContext) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		var (
+			marketId int64
+			market   db.Market
+			s        db.Share
+			tx       *sql.Tx
+			u        db.User
+			err      error
+		)
+		if marketId, err = strconv.ParseInt(c.Param("id"), 10, 64); err != nil {
+			return c.JSON(http.StatusBadRequest, nil)
+		}
+
+		if err = c.Bind(&s); err != nil || s.Id == "" {
+			return c.JSON(http.StatusBadRequest, nil)
+		}
+
+		if err = sc.Db.FetchMarket(int(marketId), &market); err == sql.ErrNoRows {
+			return c.JSON(http.StatusNotFound, map[string]string{"reason": "market not found"})
+		} else if err != nil {
+			return err
+		}
+
+		u = c.Get("session").(db.User)
+
+		// only market owner can settle market
+		if market.Pubkey != u.Pubkey {
+			return c.JSON(http.StatusForbidden, map[string]string{"reason": "not your market"})
+		}
+
+		// market already settled?
+		if market.SettledAt.Valid {
+			return c.JSON(http.StatusBadRequest, map[string]string{"reason": "market already settled"})
+		}
+
+		// transaction start
+		ctx, cancel := context_.WithTimeout(c.Request().Context(), 10*time.Second)
+		defer cancel()
+		if tx, err = sc.Db.BeginTx(ctx, nil); err != nil {
+			return err
+		}
+		defer tx.Commit()
+
+		query := "" +
+			"WITH " +
+			"  pending_orders AS ( " +
+			"    SELECT o.id, o.side, o.pubkey, i.msats_received FROM orders o " +
+			"    LEFT JOIN invoices i ON i.id = o.invoice_id" +
+			"    JOIN shares s ON s.id = o.share_id " +
+			"    WHERE s.market_id = $1 " +
+			"    AND o.deleted_at IS NULL AND o.order_id IS NULL " +
+			"  ), " +
+			"  update_users_refund AS ( " +
+			"    UPDATE users u " +
+			"    SET msats = msats + po.msats_received " +
+			"    FROM ( " +
+			"      SELECT pubkey, msats_received " +
+			"      FROM pending_orders " +
+			"      WHERE msats_received IS NOT NULL" +
+			"    ) AS po " +
+			"    WHERE po.pubkey = u.pubkey " +
+			"    RETURNING u.pubkey::TEXT " +
+			"  ), " +
+			"  user_shares AS ( " +
+			"    SELECT o.pubkey, o.share_id, " +
+			"    SUM(CASE WHEN o.side = 'BUY' THEN o.quantity ELSE -o.quantity END) AS sum " +
+			"    FROM orders o " +
+			"    LEFT JOIN invoices i ON i.id = o.invoice_id " +
+			"    JOIN shares s ON s.id = o.share_id " +
+			"    WHERE s.market_id = $1 AND o.deleted_at IS NULL AND s.id = $2" +
+			"    AND ( (o.side = 'BUY' AND i.confirmed_at IS NOT NULL AND o.order_id IS NOT NULL) OR o.side = 'SELL' ) " +
+			"    GROUP BY o.pubkey, o.share_id " +
+			"  ), " +
+			"  update_users_payout AS ( " +
+			"    UPDATE users u " +
+			"    SET msats = msats + (us.sum * 100 * 1000) " +
+			"    FROM (SELECT pubkey, sum FROM user_shares) us " +
+			"    WHERE u.pubkey = us.pubkey " +
+			"    RETURNING u.pubkey::TEXT " +
+			"  ), " +
+			"  update_orders AS ( " +
+			"    UPDATE orders o " +
+			"    SET deleted_at = CURRENT_TIMESTAMP " +
+			"    WHERE id IN (SELECT id FROM pending_orders) " +
+			"    RETURNING o.id::TEXT " +
+			"  ) " +
+			"SELECT * FROM update_users_refund UNION SELECT * FROM update_users_payout UNION SELECT * FROM update_orders"
+		if _, err = tx.ExecContext(ctx, query, marketId, s.Id); err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		if _, err = tx.ExecContext(ctx, "UPDATE markets SET settled_at = CURRENT_TIMESTAMP WHERE id = $1", marketId); err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		tx.Commit()
+
+		return c.JSON(http.StatusOK, nil)
 	}
 }

@@ -14,7 +14,7 @@
         </p>
         <p class="red"><b>You cannot undo this action.</b></p>
       </div>
-      <button class="col-span-2" v-if="selected" @click.prevent="confirm">confirm</button>
+      <button class="col-span-2" v-if="selected" @click.prevent="confirm" :disabled="!!market.SettledAt">confirm</button>
     </div>
     <div v-if="err" class="red text-center">{{ err }}</div>
     <div v-if="success" class="green text-center">{{ success }}</div>
@@ -39,11 +39,19 @@ const click = (sel) => {
 }
 
 const confirm = async () => {
-  const sid = market.value.Shares.find(s => s.Description === selected.value).Id
+  success.value = null
+  err.value = null
+  const sid = market.value.Shares.find(s => s.Description === selected.value).sid
   const url = '/api/market/' + market.value.Id + '/settle'
   const body = JSON.stringify({ sid })
   try {
-    await fetch(url, { method: 'POST', headers: { 'Content-type': 'application/json' }, body })
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-type': 'application/json' }, body })
+    if (res.status === 200) {
+      success.value = 'Market settled'
+      return
+    }
+    const resBody = await res.json()
+    err.value = resBody.reason || `error: server responded with HTTP ${res.status}`
   } catch (err) {
     console.error(err)
   }

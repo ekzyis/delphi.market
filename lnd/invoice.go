@@ -115,12 +115,23 @@ func (lnd *LNDClient) CheckInvoice(d *db.DB, hash lntypes.Hash) {
 
 			// Run matchmaking if an order was paid
 			var orderId string
+			var deleted bool
 			if err = d.QueryRowContext(ctx,
-				"SELECT o.id FROM orders o WHERE invoice_id = (SELECT i.id FROM invoices i WHERE hash = $1)",
+				"SELECT o.id, o.deleted_at IS NOT NULL FROM orders o WHERE invoice_id = (SELECT i.id FROM invoices i WHERE hash = $1)",
 				hash.String(),
-			).Scan(&orderId); err != nil && err != sql.ErrNoRows {
+			).Scan(&orderId, &deleted); err != nil && err != sql.ErrNoRows {
 				handleLoopError(err)
 				continue
+			}
+			if deleted {
+				// order was canceled before it was paid. refund sats immediately.
+				// this can happen if the market was settled between creating the order and paying the corresponding invoice.
+				if _, err := tx.ExecContext(ctx, "UPDATE users SET msats = msats + $1", int64(lnInvoice.AmountPaid)); err != nil {
+					tx.Rollback()
+					break
+				}
+				log.Printf("order %s canceled. refunded sats to user.", orderId)
+				break
 			}
 			if orderId != "" {
 				go d.RunMatchmaking(orderId)

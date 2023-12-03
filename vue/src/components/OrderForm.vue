@@ -21,7 +21,7 @@
       <label>{{ format(buyCost) }} sats</label>
       <label>if you win:</label>
       <label>+{{ format(buyProfit) }} sats</label>
-      <button class="col-span-2" type="submit">submit buy order</button>
+      <button class="col-span-2" type="submit" :disabled="!!market.SettledAt">submit buy order</button>
     </form>
     <form v-else v-show="showForm" @submit.prevent="submitSellForm">
       <label v-if="session.isAuthenticated">you have:</label>
@@ -37,7 +37,9 @@
       <label>{{ sellShares }} {{ selected }} shares @ {{ format(sellPrice) }} sats</label>
       <label>you make:</label>
       <label>+{{ format(sellProfit) }} sats</label>
-      <button class="col-span-2" type="submit" :disabled="userShares === 0">submit sell order</button>
+      <button class="col-span-2" type="submit" :disabled="userShares === 0 || !!market.SettledAt">
+        submit sell order
+      </button>
     </form>
     <div v-if="err" class="red text-center">{{ err }}</div>
     <div v-if="success" class="green text-center">{{ success }}</div>
@@ -46,13 +48,14 @@
 
 <script setup>
 import { useSession } from '@/stores/session'
-import { ref, computed } from 'vue'
+import { ref, computed, defineProps } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+const props = defineProps(['market'])
+const market = ref(props.market)
 const session = useSession()
 const router = useRouter()
 const route = useRoute()
-const marketId = route.params.id
 
 // YES NO button logic
 // -- which button was pressed?
@@ -108,23 +111,13 @@ const sold = ref(0)
 
 const format = (x, i = 3) => x === null ? null : x >= 1 ? Math.round(x) : x === 0 ? x : x.toFixed(i)
 
-// Fetch market data
-const market = ref(null)
-const url = '/api/market/' + marketId
-await fetch(url)
-  .then(r => r.json())
-  .then(body => {
-    market.value = body
-  })
-  .catch(console.error)
-
 // Currently, we only support binary markets.
 // (only events which can be answered with YES and NO)
 const yesShareId = computed(() => {
-  return market?.value.Shares.find(s => s.Description === 'YES').Id
+  return market?.value.Shares.find(s => s.Description === 'YES').sid
 })
 const noShareId = computed(() => {
-  return market?.value.Shares.find(s => s.Description === 'NO').Id
+  return market?.value.Shares.find(s => s.Description === 'NO').sid
 })
 const shareId = computed(() => {
   return selected.value === 'YES' ? yesShareId.value : noShareId.value
@@ -143,7 +136,7 @@ const submitBuyForm = async () => {
   const res = await fetch(url, { method: 'POST', headers: { 'Content-type': 'application/json' }, body })
   const resBody = await res.json()
   if (res.status !== 402) {
-    err.value = `error: server responded with HTTP ${resBody.status}`
+    err.value = `error: server responded with HTTP ${res.status}`
     return
   }
   const invoiceId = resBody.id

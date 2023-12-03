@@ -9,6 +9,9 @@
 |_| |_| |_|\__,_|_|  |_|\_\___|\__|</pre>
   </div>
   <div class="font-mono">{{ market.Description }}</div>
+  <div v-if="!!market.SettledAt" class="label error font-mono m-auto my-3">
+    <div>Settled</div>
+  </div>
   <!-- eslint-enable -->
   <header class="flex flex-row text-center justify-center pt-1">
     <nav>

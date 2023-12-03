@@ -29,11 +29,12 @@ type (
 		Id          Serial    `json:"id"`
 		Description string    `json:"description"`
 		EndDate     time.Time `json:"endDate"`
+		SettledAt   null.Time `json:"settledAt"`
 		Pubkey      string    `json:"pubkey"`
 		InvoiceId   UUID
 	}
 	Share struct {
-		Id          UUID
+		Id          UUID `json:"sid"`
 		MarketId    int
 		Description string
 	}

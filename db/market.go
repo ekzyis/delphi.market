@@ -28,7 +28,7 @@ func (db *DB) CreateMarket(tx *sql.Tx, ctx context.Context, market *Market) erro
 }
 
 func (db *DB) FetchMarket(marketId int, market *Market) error {
-	if err := db.QueryRow("SELECT id, description, end_date, pubkey FROM markets WHERE id = $1", marketId).Scan(&market.Id, &market.Description, &market.EndDate, &market.Pubkey); err != nil {
+	if err := db.QueryRow("SELECT id, description, end_date, pubkey, settled_at FROM markets WHERE id = $1", marketId).Scan(&market.Id, &market.Description, &market.EndDate, &market.Pubkey, &market.SettledAt); err != nil {
 		return err
 	}
 	return nil
@@ -324,6 +324,8 @@ func (db *DB) FetchUserBalance(tx *sql.Tx, ctx context.Context, marketId int, pu
 		"LEFT JOIN invoices i ON i.id = o.invoice_id " +
 		"JOIN shares s ON s.id = o.share_id " +
 		"WHERE o.pubkey = $1 AND s.market_id = $2 AND o.deleted_at IS NULL " +
+		// TODO: is there a bug here? shouldn't i also check that SELL orders have no order_id set?
+		//   (also see user payout query during market settlement)
 		"AND ( (o.side = 'BUY' AND i.confirmed_at IS NOT NULL AND o.order_id IS NOT NULL) OR o.side = 'SELL' ) " +
 		"GROUP BY o.pubkey, s.description"
 	rows, err := tx.QueryContext(ctx, query, pubkey, marketId)

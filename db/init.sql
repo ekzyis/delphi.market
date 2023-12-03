@@ -31,6 +31,7 @@ CREATE TABLE markets(
     id SERIAL PRIMARY KEY,
     description TEXT NOT NULL,
     end_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    settled_at TIMESTAMP WITH TIME ZONE,
     pubkey TEXT NOT NULL REFERENCES users(pubkey),
     invoice_id UUID NOT NULL UNIQUE REFERENCES invoices(id)
 );
