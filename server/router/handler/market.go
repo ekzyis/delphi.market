@@ -272,7 +272,7 @@ func HandleDeleteOrder(sc context.ServerContext) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusForbidden)
 		}
 
-		if o.OrderId != "" {
+		if o.OrderId.Valid {
 			// order already settled
 			tx.Rollback()
 			return echo.NewHTTPError(http.StatusBadRequest)

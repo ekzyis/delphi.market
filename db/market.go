@@ -116,12 +116,12 @@ func (db *DB) CreateOrder(tx *sql.Tx, ctx context.Context, order *Order) error {
 
 func (db *DB) FetchOrder(tx *sql.Tx, ctx context.Context, orderId string, order *Order) error {
 	query := "" +
-		"SELECT o.id, o.share_id, o.pubkey, o.side, o.quantity, o.price, o.created_at, o.deleted_at, s.description, s.market_id, i.confirmed_at, o.invoice_id, COALESCE(i.msats_received, 0) " +
+		"SELECT o.id, o.share_id, o.pubkey, o.side, o.quantity, o.price, o.created_at, o.deleted_at, o.order_id, s.description, s.market_id, i.confirmed_at, o.invoice_id, COALESCE(i.msats_received, 0) " +
 		"FROM orders o " +
 		"LEFT JOIN invoices i ON o.invoice_id = i.id " +
 		"JOIN shares s ON o.share_id = s.id " +
 		"WHERE o.id = $1"
-	return tx.QueryRowContext(ctx, query, orderId).Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.CreatedAt, &order.DeletedAt, &order.Share.Description, &order.MarketId, &order.Invoice.ConfirmedAt, &order.InvoiceId, &order.Invoice.MsatsReceived)
+	return tx.QueryRowContext(ctx, query, orderId).Scan(&order.Id, &order.ShareId, &order.Pubkey, &order.Side, &order.Quantity, &order.Price, &order.CreatedAt, &order.DeletedAt, &order.OrderId, &order.Share.Description, &order.MarketId, &order.Invoice.ConfirmedAt, &order.InvoiceId, &order.Invoice.MsatsReceived)
 }
 
 func (db *DB) FetchUserOrders(pubkey string, orders *[]Order) error {
@@ -153,7 +153,7 @@ func (db *DB) FetchMarketOrders(marketId int64, orders *[]Order) error {
 		"FROM orders o " +
 		"JOIN shares s ON o.share_id = s.id " +
 		"LEFT JOIN invoices i ON o.invoice_id = i.id " +
-		"WHERE s.market_id = $1 AND ( (o.side = 'BUY' AND i.confirmed_at IS NOT NULL) OR o.side = 'SELL' ) AND o.deleted_at IS NULL " +
+		"WHERE s.market_id = $1 AND o.deleted_at IS NULL " +
 		"ORDER BY o.created_at DESC"
 	rows, err := db.Query(query, marketId)
 	if err != nil {
@@ -194,6 +194,16 @@ func (db *DB) RunMatchmaking(orderId string) {
 		tx.Rollback()
 		return
 	}
+	if o2.OrderId.Valid {
+		log.Printf("assertion failed: order %s matched order %s but order_id already set to %s\n", o1.Id, o2.Id, o2.OrderId.String)
+		tx.Rollback()
+		return
+	}
+	if o1.Id == o2.Id {
+		log.Printf("assertion failed: order %s matched itself", o1.Id)
+		tx.Rollback()
+		return
+	}
 	if _, err = tx.ExecContext(ctx, "UPDATE orders SET order_id = $1 WHERE id = $2", o1.Id, o2.Id); err != nil {
 		log.Println(err)
 		tx.Rollback()
@@ -210,14 +220,33 @@ func (db *DB) RunMatchmaking(orderId string) {
 
 func (db *DB) FindOrderMatches(tx *sql.Tx, ctx context.Context, o1 *Order, o2 *Order) error {
 	query := "" +
-		"SELECT o.id FROM orders o " +
+		"SELECT o.id, o.order_id FROM orders o " +
 		"JOIN shares s ON s.id = o.share_id " +
-		"JOIN invoices i ON i.id = o.invoice_id " +
-		"WHERE i.confirmed_at IS NOT NULL " +
-		"AND o.order_id IS NULL AND o.pubkey <> $1 AND o.quantity = $2 AND s.market_id = $3 AND " +
-		"( (o.share_id <> $4 AND o.side = $5::ORDER_SIDE AND o.price = (100 - $6)) OR (o.share_id = $4 AND o.side <> $5::ORDER_SIDE AND o.price = $6)) " +
+		"LEFT JOIN invoices i ON i.id = o.invoice_id " +
+		// only match orders which are not soft deleted
+		"WHERE o.deleted_at IS NULL " +
+		// only match orders which are not already settled
+		"AND o.order_id IS NULL " +
+		// only match orders from other users
+		"AND o.pubkey <> $1 " +
+		// orders must always be for same market and have same quantity
+		"AND o.quantity = $2 AND s.market_id = $3 " +
+		// BUY orders must have been confirmed by paying the invoice
+		"AND CASE WHEN o.side = 'BUY' THEN i.confirmed_at IS NOT NULL ELSE 1=1 END " +
+		"AND (" +
+		// -- BUY orders match if they are for different shares and the sum of their prices equal 100
+		// -- example: BUY 5 YES @ 60 <> BUY 5 NO @ 40
+		"  ( $5 = 'BUY' AND o.side = 'BUY' AND o.price = (100-$6) AND o.share_id <> $4 ) " +
+		// -- BUY orders match SELL orders if they are for the same share and have same price
+		// -- example: BUY 5 YES @ 60 <> SELL 5 YES @ 60
+		"  OR ( $5 = 'BUY' AND o.side = 'SELL' AND o.price = $6 AND o.share_id = $4 ) " +
+		// -- SELL orders match BUY orders if they are for the same share and have same price
+		// -- example: SELL 5 YES @ 60 <> BUY 5 YES @ 60
+		"  OR ( $5 = 'SELL' AND o.side = 'BUY' AND o.price = $6 AND o.share_id = $4 ) " +
+		") " +
+		// match oldest order first
 		"ORDER BY o.created_at ASC LIMIT 1"
-	return tx.QueryRowContext(ctx, query, o1.Pubkey, o1.Quantity, o1.Share.MarketId, o1.ShareId, o1.Side, o1.Price).Scan(&o2.Id)
+	return tx.QueryRowContext(ctx, query, o1.Pubkey, o1.Quantity, o1.Share.MarketId, o1.ShareId, o1.Side, o1.Price).Scan(&o2.Id, &o2.OrderId)
 }
 
 // [

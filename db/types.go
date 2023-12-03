@@ -64,6 +64,6 @@ type (
 		Price     int64  `json:"price"`
 		InvoiceId null.String
 		Invoice
-		OrderId UUID
+		OrderId null.String
 	}
 )
