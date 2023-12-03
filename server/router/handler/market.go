@@ -44,6 +44,7 @@ func HandleMarket(sc context.ServerContext) echo.HandlerFunc {
 		}
 		data = map[string]any{
 			"Id":          market.Id,
+			"Pubkey":      market.Pubkey,
 			"Description": market.Description,
 			"Shares":      shares,
 		}

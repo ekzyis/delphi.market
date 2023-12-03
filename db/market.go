@@ -28,7 +28,7 @@ func (db *DB) CreateMarket(tx *sql.Tx, ctx context.Context, market *Market) erro
 }
 
 func (db *DB) FetchMarket(marketId int, market *Market) error {
-	if err := db.QueryRow("SELECT id, description, end_date FROM markets WHERE id = $1", marketId).Scan(&market.Id, &market.Description, &market.EndDate); err != nil {
+	if err := db.QueryRow("SELECT id, description, end_date, pubkey FROM markets WHERE id = $1", marketId).Scan(&market.Id, &market.Description, &market.EndDate, &market.Pubkey); err != nil {
 		return err
 	}
 	return nil

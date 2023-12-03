@@ -15,27 +15,32 @@
       <StyledLink :to="'/market/' + marketId + '/form'">form</StyledLink>
       <StyledLink :to="'/market/' + marketId + '/orders'">orders</StyledLink>
       <StyledLink :to="'/market/' + marketId + '/stats'">stats</StyledLink>
+      <StyledLink v-if="mine" :to="'/market/' + marketId + '/settings'"><i>settings</i></StyledLink>
     </nav>
   </header>
   <Suspense>
-    <router-view />
+    <router-view :market="market" />
   </Suspense>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { useSession } from '@/stores/session'
 import StyledLink from '@/components/StyledLink'
 
+const session = useSession()
 const route = useRoute()
 const marketId = route.params.id
 
 const market = ref(null)
+const mine = ref(false)
 const url = '/api/market/' + marketId
 await fetch(url)
   .then(r => r.json())
   .then(body => {
     market.value = body
+    mine.value = market.value.Pubkey === session.pubkey
   })
   .catch(console.error)
 

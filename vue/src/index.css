@@ -21,6 +21,9 @@ button:disabled {
 input {
   color: #000;
 }
+textarea {
+  color: #000;
+}
 
 a {
   color: #8787a4;
