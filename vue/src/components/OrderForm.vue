@@ -7,12 +7,10 @@
     </div>
     <form v-if="side === 'BUY'" v-show="showForm" @submit.prevent="submitBuyForm">
       <label v-if="session.isAuthenticated">you have:</label>
-      <label v-if="session.isAuthenticated">
-        {{ session.msats / 1000 }} sats and {{ userShares }} shares
-        (<label class="m-1"><i>sell?</i></label>
-        <input v-model="side" true-value="SELL" false-value="BUY" type="checkbox" class="m-1"
-          :disabled="userShares === 0" />)
-      </label>
+      <label v-if="session.isAuthenticated">{{ session.msats / 1000 }} sats and {{ userShares }} shares</label>
+      <label v-if="session.isAuthenticated">sell?</label>
+      <input v-if="session.isAuthenticated" v-model="side" true-value="SELL" false-value="BUY" type="checkbox" class="m-1"
+        :disabled="userShares === 0" />
       <label for="stake">how much?</label>
       <input id="stake" v-model="stake" type="number" min="0" placeholder="sats" required />
       <label for="certainty">how sure?</label>
@@ -26,12 +24,11 @@
       <button class="col-span-2" type="submit">submit buy order</button>
     </form>
     <form v-else v-show="showForm" @submit.prevent="submitSellForm">
-      <label v-if="session.isAuthenticated" for="balance">you have:</label>
-      <label v-if="session.isAuthenticated" id="balance">
-        {{ session.msats / 1000 }} sats and {{ userShares }} shares
-        (<label class="m-1"><i>sell?</i></label>
-        <input v-model="side" true-value="SELL" false-value="BUY" type="checkbox" class="m-1" />)
-      </label>
+      <label v-if="session.isAuthenticated">you have:</label>
+      <label v-if="session.isAuthenticated">{{ session.msats / 1000 }} sats and {{ userShares }} shares</label>
+      <label v-if="session.isAuthenticated">sell?</label>
+      <input v-if="session.isAuthenticated" v-model="side" true-value="SELL" false-value="BUY" type="checkbox" class="m-1"
+        :disabled="userShares === 0" />
       <label for="shares">how many?</label>
       <input id="shares" v-model="sellShares" type="number" min="1" :max="userShares" placeholder="shares" required />
       <label for="price">price?</label>
