@@ -93,6 +93,7 @@ func HandleCreateMarket(sc context.ServerContext) echo.HandlerFunc {
 		defer tx.Commit()
 
 		u = c.Get("session").(db.User)
+		m.Pubkey = u.Pubkey
 		msats = 1000
 		// TODO: add [market:<id>] for redirect after payment
 		invDescription = fmt.Sprintf("create market \"%s\"", m.Description)

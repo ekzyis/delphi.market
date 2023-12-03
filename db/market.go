@@ -15,9 +15,9 @@ type FetchOrdersWhere struct {
 
 func (db *DB) CreateMarket(tx *sql.Tx, ctx context.Context, market *Market) error {
 	if err := tx.QueryRowContext(ctx, ""+
-		"INSERT INTO markets(description, end_date, invoice_id) "+
-		"VALUES($1, $2, $3) "+
-		"RETURNING id", market.Description, market.EndDate, market.InvoiceId).Scan(&market.Id); err != nil {
+		"INSERT INTO markets(description, end_date, pubkey, invoice_id) "+
+		"VALUES($1, $2, $3, $4) "+
+		"RETURNING id", market.Description, market.EndDate, market.Pubkey, market.InvoiceId).Scan(&market.Id); err != nil {
 		return err
 	}
 	// For now, we only support binary markets.
