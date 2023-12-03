@@ -199,4 +199,10 @@ form {
 form>* {
   margin: 0.5em 1em;
 }
+
+label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 </style>
