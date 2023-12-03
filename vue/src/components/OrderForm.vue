@@ -14,9 +14,9 @@
           :disabled="userShares === 0" />)
       </label>
       <label for="stake">how much?</label>
-      <input name="stake" v-model="stake" type="number" min="0" placeholder="sats" required />
+      <input id="stake" v-model="stake" type="number" min="0" placeholder="sats" required />
       <label for="certainty">how sure?</label>
-      <input name="certainty" v-model="certainty" type="number" min="0.01" max="0.99" step="0.01" required />
+      <input id="certainty" v-model="certainty" type="number" min="0.01" max="0.99" step="0.01" required />
       <label>you receive:</label>
       <label>{{ format(buyShares) }} {{ selected }} shares @ {{ format(buyPrice) }} sats</label>
       <label>you pay:</label>
@@ -26,16 +26,16 @@
       <button class="col-span-2" type="submit">submit buy order</button>
     </form>
     <form v-else v-show="showForm" @submit.prevent="submitSellForm">
-      <label v-if="session.isAuthenticated">you have:</label>
-      <label v-if="session.isAuthenticated">
+      <label v-if="session.isAuthenticated" for="balance">you have:</label>
+      <label v-if="session.isAuthenticated" id="balance">
         {{ session.msats / 1000 }} sats and {{ userShares }} shares
         (<label class="m-1"><i>sell?</i></label>
         <input v-model="side" true-value="SELL" false-value="BUY" type="checkbox" class="m-1" />)
       </label>
       <label for="shares">how many?</label>
-      <input name="shares" v-model="sellShares" type="number" min="1" :max="userShares" placeholder="shares" required />
+      <input id="shares" v-model="sellShares" type="number" min="1" :max="userShares" placeholder="shares" required />
       <label for="price">price?</label>
-      <input name="price" v-model="sellPrice" type="number" min="1" max="99" step="1" required />
+      <input id="price" v-model="sellPrice" type="number" min="1" max="99" step="1" required />
       <label>you sell:</label>
       <label>{{ sellShares }} {{ selected }} shares @ {{ format(sellPrice) }} sats</label>
       <label>you make:</label>
