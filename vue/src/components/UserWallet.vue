@@ -4,9 +4,10 @@
       <div>authenticated as {{ session.pubkey.slice(0, 8) }}</div>
       <button class="ms-2 my-3" @click="logout">logout</button>
       <div>you have {{ session.msats / 1000 }} sats</div>
-      <button class="ms-2 my-3" @click="toggleWithdrawalForm">
+      <button class="ms-2 my-3" @click="toggleWithdrawalForm" :disabled="session.msats === 0">
         <span v-if="showWithdrawalForm">cancel</span>
-        <span v-else>withdraw</span></button>
+        <span v-else>withdraw</span>
+      </button>
     </div>
     <form v-show="showWithdrawalForm" @submit.prevent="submitWithdrawal">
       <label for="bolt11">bolt11</label>
