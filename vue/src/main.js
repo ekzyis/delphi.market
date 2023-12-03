@@ -6,6 +6,7 @@ import './registerServiceWorker'
 import './index.css'
 
 import HomeView from '@/views/HomeView'
+import AboutView from '@/views/AboutView'
 import LoginView from '@/views/LoginView'
 import UserView from '@/views/UserView'
 import MarketView from '@/views/MarketView'
@@ -16,9 +17,13 @@ import UserOrders from '@/components/UserOrders'
 import OrderForm from '@/components/OrderForm'
 import MarketOrders from '@/components/MarketOrders'
 import MarketStats from '@/components/MarketStats'
+
 const routes = [
   {
     path: '/', component: HomeView
+  },
+  {
+    path: '/about', component: AboutView
   },
   {
     path: '/login', component: LoginView

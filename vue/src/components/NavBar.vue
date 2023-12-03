@@ -5,6 +5,7 @@
       <router-link to="/user" v-if="session.isAuthenticated">user</router-link>
       <router-link to="/login" v-else-if="session.isAuthenticated === false" href="/login">login</router-link>
       <router-link disabled to="/" v-else>...</router-link>
+      <router-link to="/about">about</router-link>
     </nav>
   </header>
 </template>
