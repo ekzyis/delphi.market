@@ -56,6 +56,8 @@ const cancelOrder = async () => {
   const url = '/api/order/' + order.value.Id
   await fetch(url, { method: 'DELETE' }).then(() => {
     order.value.Status = 'CANCELED'
+    // update session since we might have more msats now
+    return session.checkSession()
   }).catch(console.error)
 }
 
