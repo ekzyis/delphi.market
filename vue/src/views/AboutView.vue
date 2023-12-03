@@ -8,7 +8,7 @@
   | (_| | |_) | (_) | |_| | |_ 
    \__,_|_.__/ \___/ \__,_|\__|</pre>
   </div>
-  <div class="text-left mx-3">
+  <div id="container2" class="text-left mx-3">
     <h1>What is this?</h1>
     <div class="mx-1">
       delphi.market is a prediction market based on the bitcoin lightning network.
@@ -37,5 +37,27 @@ h1 {
   font-family: monospace;
   margin-top: 0.75em;
   margin-bottom: 0.25em;
+}
+
+#container2 {
+  max-width: 33vw;
+}
+
+@media only screen and (max-width: 1024px) {
+  #container2 {
+    max-width: 80vw;
+  }
+}
+
+@media only screen and (max-width: 768px) {
+  #container2 {
+    max-width: 90vw;
+  }
+}
+
+@media only screen and (max-width: 640px) {
+  #container2 {
+    max-width: 100vw;
+  }
 }
 </style>
