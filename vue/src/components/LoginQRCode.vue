@@ -24,7 +24,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSession } from '@/stores/session'
 
@@ -54,7 +54,7 @@ const poll = async () => {
     if (session.isAuthenticated) {
       success.value = true
       clearInterval(interval)
-      setInterval(() => {
+      interval = setInterval(() => {
         if (--redirectTimeout.value === 0) {
           router.push('/')
         }
@@ -92,6 +92,8 @@ await (async () => {
     }
   })
 })()
+
+onUnmounted(() => { clearInterval(interval) })
 
 </script>
 
