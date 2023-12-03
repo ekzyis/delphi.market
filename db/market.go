@@ -153,7 +153,7 @@ func (db *DB) FetchMarketOrders(marketId int64, orders *[]Order) error {
 		"FROM orders o " +
 		"JOIN shares s ON o.share_id = s.id " +
 		"LEFT JOIN invoices i ON o.invoice_id = i.id " +
-		"WHERE s.market_id = $1 AND o.deleted_at IS NULL " +
+		"WHERE s.market_id = $1 AND o.deleted_at IS NULL AND ( (o.side = 'BUY' AND i.confirmed_at IS NOT NULL) OR o.side = 'SELL' ) " +
 		"ORDER BY o.created_at DESC"
 	rows, err := db.Query(query, marketId)
 	if err != nil {
