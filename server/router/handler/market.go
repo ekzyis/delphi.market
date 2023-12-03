@@ -286,6 +286,7 @@ func HandleDeleteOrder(sc context.ServerContext) echo.HandlerFunc {
 
 		if o.Invoice.ConfirmedAt.Valid {
 			// order already paid: we need to move paid sats to user balance before deleting the order
+			// TODO update order and session on client
 			msats = o.Invoice.MsatsReceived
 			if res, err := tx.ExecContext(ctx, "UPDATE users SET msats = msats + $1 WHERE pubkey = $2", msats, u.Pubkey); err != nil {
 				tx.Rollback()
