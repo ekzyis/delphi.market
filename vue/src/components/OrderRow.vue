@@ -54,7 +54,9 @@ const mouseleave = () => {
 
 const cancelOrder = async () => {
   const url = '/api/order/' + order.value.Id
-  await fetch(url, { method: 'DELETE' }).catch(console.error)
+  await fetch(url, { method: 'DELETE' }).then(() => {
+    order.value.Status = 'CANCELED'
+  }).catch(console.error)
 }
 
 </script>
