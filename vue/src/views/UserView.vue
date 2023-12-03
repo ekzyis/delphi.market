@@ -11,7 +11,7 @@
   <!-- eslint-enable -->
   <header class="flex flex-row text-center justify-center pt-1">
     <nav>
-      <StyledLink to="/user/settings">settings</StyledLink>
+      <StyledLink to="/user/wallet">wallet</StyledLink>
       <StyledLink to="/user/invoices">invoices</StyledLink>
       <StyledLink to="/user/orders">orders</StyledLink>
     </nav>

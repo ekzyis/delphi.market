@@ -54,3 +54,11 @@ CREATE TABLE orders(
 );
 ALTER TABLE orders ADD CONSTRAINT order_price CHECK(price > 0 AND price < 100);
 ALTER TABLE orders ADD CONSTRAINT order_quantity CHECK(quantity > 0);
+CREATE TABLE withdrawals(
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP WITH TIME ZONE,
+    pubkey TEXT NOT NULL REFERENCES users(pubkey),
+    bolt11 TEXT NOT NULL UNIQUE,
+    paid_at TIMESTAMP WITH TIME ZONE
+);

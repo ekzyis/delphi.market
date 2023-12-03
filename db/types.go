@@ -66,4 +66,12 @@ type (
 		Invoice
 		OrderId null.String
 	}
+	Withdrawal struct {
+		Id        UUID
+		CreatedAt time.Time
+		DeletedAt null.Time
+		Pubkey    string
+		Bolt11    string `json:"bolt11"`
+		PaidAt    null.Time
+	}
 )
