@@ -24,8 +24,17 @@
       Currently, the market is running on
       <a target="_blank" href="https://blog.mutinywallet.com/mutinynet/">mutinynet</a> since it's still WIP.
       This means that sats traded on here don't have any real value yet and you need to use the
-      <a target="_blank" href="https://faucet.mutinywallet.com/">mutiny faucet</a> to pay invoices. When I am confident
-      that there are no (serious) bugs, I will use a lightning node connected to mainnet. However, no ETA yet.
+      <a target="_blank" href="https://faucet.mutinywallet.com/">mutiny faucet</a> to pay invoices and
+      <a target="_blank" href="https://signet-app.mutinywallet.com/">mutiny wallet</a> for withdrawals.
+      When I am confident that there are no (serious) bugs, I will use a lightning node connected to mainnet.
+      However, no ETA yet.
+    </div>
+    <h1>FOSS?</h1>
+    <div class="mx-1">
+      Yes! The code is mirrored from
+      <a target="_blank" href="https://git.ekzyis.com/ekzyis/delphi.market">git.ekzyis.com</a> to
+      <a target="_blank" href="https://github.com/ekzyis/delphi.market">Github</a>
+      and is licensed under the terms of the MIT license.
     </div>
   </div>
 </template>
