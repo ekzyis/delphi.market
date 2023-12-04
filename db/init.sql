@@ -38,7 +38,7 @@ CREATE TABLE markets(
 CREATE EXTENSION "uuid-ossp";
 CREATE TABLE shares(
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    market_id INTEGER REFERENCES markets(id),
+    market_id INTEGER NOT NULL REFERENCES markets(id),
     win BOOLEAN,
     description TEXT NOT NULL
 );
