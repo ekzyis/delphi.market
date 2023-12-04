@@ -8,7 +8,7 @@
 | | | | | | (_| | |  |   ( __/ |_  
 |_| |_| |_|\__,_|_|  |_|\_\___|\__|</pre>
   </div>
-  <div class="font-mono">{{ market.Description }}</div>
+  <div class="font-mono mx-1">{{ market.Description }}</div>
   <div v-if="!!market.SettledAt" class="label info font-mono m-auto my-3">
     <div>Settled: {{ winShareDescription }}</div>
   </div>
