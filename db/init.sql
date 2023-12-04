@@ -39,6 +39,7 @@ CREATE EXTENSION "uuid-ossp";
 CREATE TABLE shares(
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     market_id INTEGER REFERENCES markets(id),
+    win BOOLEAN,
     description TEXT NOT NULL
 );
 CREATE TYPE order_side AS ENUM ('BUY', 'SELL');

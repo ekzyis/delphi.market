@@ -37,6 +37,7 @@ type (
 		Id          UUID `json:"sid"`
 		MarketId    int
 		Description string
+		Win         bool
 	}
 	Invoice struct {
 		Id             UUID

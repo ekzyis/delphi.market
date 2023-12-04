@@ -457,6 +457,11 @@ func HandleMarketSettlement(sc context.ServerContext) echo.HandlerFunc {
 			return err
 		}
 
+		if _, err = tx.ExecContext(ctx, "UPDATE shares SET win = (id = $1) WHERE market_id = $2", s.Id, marketId); err != nil {
+			tx.Rollback()
+			return err
+		}
+
 		tx.Commit()
 
 		return c.JSON(http.StatusOK, nil)

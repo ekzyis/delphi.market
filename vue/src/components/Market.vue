@@ -9,8 +9,8 @@
 |_| |_| |_|\__,_|_|  |_|\_\___|\__|</pre>
   </div>
   <div class="font-mono">{{ market.Description }}</div>
-  <div v-if="!!market.SettledAt" class="label error font-mono m-auto my-3">
-    <div>Settled</div>
+  <div v-if="!!market.SettledAt" class="label info font-mono m-auto my-3">
+    <div>Settled: {{ winShareDescription }}</div>
   </div>
   <!-- eslint-enable -->
   <header class="flex flex-row text-center justify-center pt-1">
@@ -38,12 +38,18 @@ const marketId = route.params.id
 
 const market = ref(null)
 const mine = ref(false)
+const winShareDescription = ref(null)
 const url = '/api/market/' + marketId
 await fetch(url)
   .then(r => r.json())
   .then(body => {
     market.value = body
     mine.value = market.value.Pubkey === session.pubkey
+  })
+  .then(() => {
+    if (market.value.SettledAt) {
+      winShareDescription.value = market.value.Shares.find(({ Win }) => Win).Description
+    }
   })
   .catch(console.error)
 

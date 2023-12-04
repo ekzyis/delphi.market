@@ -54,14 +54,14 @@ func (db *DB) FetchActiveMarkets(markets *[]Market) error {
 }
 
 func (db *DB) FetchShares(marketId int, shares *[]Share) error {
-	rows, err := db.Query("SELECT id, market_id, description FROM shares WHERE market_id = $1 ORDER BY description DESC", marketId)
+	rows, err := db.Query("SELECT id, market_id, description, win FROM shares WHERE market_id = $1 ORDER BY description DESC", marketId)
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var share Share
-		rows.Scan(&share.Id, &share.MarketId, &share.Description)
+		rows.Scan(&share.Id, &share.MarketId, &share.Description, &share.Win)
 		*shares = append(*shares, share)
 	}
 	return nil
