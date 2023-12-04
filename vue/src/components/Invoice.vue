@@ -45,7 +45,7 @@
           <span v-if="invoice.DescriptionMarketId">
             <span v-if="invoice.Description">
               <span>{{ invoice.Description }}</span>
-              <router-link :to="'/market/' + invoice.DescriptionMarketId">[market]</router-link>
+              <router-link :to="'/market/' + invoice.DescriptionMarketId + '/orders'">[market]</router-link>
             </span>
             <span v-else>&lt;empty&gt;</span>
           </span>
@@ -101,7 +101,7 @@ const fetchInvoice = async () => {
     if (marketId) {
       body.DescriptionMarketId = marketId
       body.Description = body.Description.replace(regexp, '')
-      callbackUrl.value = '/market/' + marketId
+      callbackUrl.value = '/market/' + marketId + '/orders'
     }
   }
   invoice.value = body
