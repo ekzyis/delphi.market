@@ -323,10 +323,15 @@ func (db *DB) FetchUserBalance(tx *sql.Tx, ctx context.Context, marketId int, pu
 		"FROM orders o " +
 		"LEFT JOIN invoices i ON i.id = o.invoice_id " +
 		"JOIN shares s ON s.id = o.share_id " +
-		"WHERE o.pubkey = $1 AND s.market_id = $2 AND o.deleted_at IS NULL " +
-		// TODO: is there a bug here? shouldn't i also check that SELL orders have no order_id set?
-		//   (also see user payout query during market settlement)
-		"AND ( (o.side = 'BUY' AND i.confirmed_at IS NOT NULL AND o.order_id IS NOT NULL) OR o.side = 'SELL' ) " +
+		"WHERE o.pubkey = $1 AND s.market_id = $2 " +
+		// ignore canceled orders
+		"AND o.deleted_at IS NULL " +
+		"AND ( " +
+		// shares from BUY orders are received if they were paid (necessary precondition for matchmaking) and found a matching order
+		"  (o.side = 'BUY' AND i.confirmed_at IS NOT NULL AND o.order_id IS NOT NULL) " +
+		// shares from SELL orders are deducted immediately to prevent double-spends
+		"  OR o.side = 'SELL' " +
+		") " +
 		"GROUP BY o.pubkey, s.description"
 	rows, err := tx.QueryContext(ctx, query, pubkey, marketId)
 	if err != nil {

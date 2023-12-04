@@ -367,6 +367,7 @@ func HandleMarketSettlement(sc context.ServerContext) echo.HandlerFunc {
 			s        db.Share
 			tx       *sql.Tx
 			u        db.User
+			query    string
 			err      error
 		)
 		if marketId, err = strconv.ParseInt(c.Param("id"), 10, 64); err != nil {
@@ -403,50 +404,55 @@ func HandleMarketSettlement(sc context.ServerContext) echo.HandlerFunc {
 		}
 		defer tx.Commit()
 
-		query := "" +
-			"WITH " +
-			"  pending_orders AS ( " +
-			"    SELECT o.id, o.side, o.pubkey, i.msats_received FROM orders o " +
-			"    LEFT JOIN invoices i ON i.id = o.invoice_id" +
-			"    JOIN shares s ON s.id = o.share_id " +
-			"    WHERE s.market_id = $1 " +
-			"    AND o.deleted_at IS NULL AND o.order_id IS NULL " +
-			"  ), " +
-			"  update_users_refund AS ( " +
-			"    UPDATE users u " +
-			"    SET msats = msats + po.msats_received " +
-			"    FROM ( " +
-			"      SELECT pubkey, msats_received " +
-			"      FROM pending_orders " +
-			"      WHERE msats_received IS NOT NULL" +
-			"    ) AS po " +
-			"    WHERE po.pubkey = u.pubkey " +
-			"    RETURNING u.pubkey::TEXT " +
-			"  ), " +
-			"  user_shares AS ( " +
+		// refund users for pending BUY orders
+		query = "" +
+			"UPDATE users u SET msats = msats + pending_orders.msats_received FROM ( " +
+			"	SELECT o.pubkey, i.msats_received " +
+			"   FROM orders o " +
+			"	LEFT JOIN invoices i ON i.id = o.invoice_id " +
+			"	JOIN shares s ON s.id = o.share_id " +
+			"	WHERE s.market_id = $1 " +
+			// an order is pending if it wasn't canceled and wasn't matched yet
+			// (the o.side = 'BUY' shouldn't be necessary since i.msats_received will be NULL for SELL orders anyway
+			//  but added here for clarification anyway)
+			"	AND o.side = 'BUY' AND o.deleted_at IS NULL AND o.order_id IS NULL " +
+			") AS pending_orders WHERE pending_orders.pubkey = u.pubkey"
+		if _, err = tx.ExecContext(ctx, query, marketId); err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		// now cancel pending orders
+		query = "" +
+			"UPDATE orders o SET deleted_at = CURRENT_TIMESTAMP WHERE id IN ( " +
+			// basically same subquery as above
+			"  SELECT o.id FROM orders o " +
+			"  JOIN shares s ON s.id = o.share_id " +
+			// again, orders are pending if they weren't canceled and weren't matched yet
+			"  WHERE s.market_id = $1 AND o.deleted_at IS NULL and o.order_id IS NULL " +
+			")"
+		if _, err = tx.ExecContext(ctx, query, marketId); err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		// payout
+		query = "" +
+			// * 100 since winning shares expire at 100 sats per share
+			// * 1000 to convert sats to msats
+			"UPDATE users u SET msats = msats + (user_shares.quantity * 100 * 1000) " +
+			"FROM ( " +
 			"    SELECT o.pubkey, o.share_id, " +
-			"    SUM(CASE WHEN o.side = 'BUY' THEN o.quantity ELSE -o.quantity END) AS sum " +
+			"    SUM(CASE WHEN o.side = 'BUY' THEN o.quantity ELSE -o.quantity END) AS quantity " +
 			"    FROM orders o " +
 			"    LEFT JOIN invoices i ON i.id = o.invoice_id " +
 			"    JOIN shares s ON s.id = o.share_id " +
-			"    WHERE s.market_id = $1 AND o.deleted_at IS NULL AND s.id = $2" +
+			// only consider uncanceled orders for winning shares
+			"    WHERE s.market_id = $1 AND o.deleted_at IS NULL AND s.id = $2 " +
+			// BUY orders must be paid and be matched. SELL orders must simply not be canceled to be considered.
 			"    AND ( (o.side = 'BUY' AND i.confirmed_at IS NOT NULL AND o.order_id IS NOT NULL) OR o.side = 'SELL' ) " +
 			"    GROUP BY o.pubkey, o.share_id " +
-			"  ), " +
-			"  update_users_payout AS ( " +
-			"    UPDATE users u " +
-			"    SET msats = msats + (us.sum * 100 * 1000) " +
-			"    FROM (SELECT pubkey, sum FROM user_shares) us " +
-			"    WHERE u.pubkey = us.pubkey " +
-			"    RETURNING u.pubkey::TEXT " +
-			"  ), " +
-			"  update_orders AS ( " +
-			"    UPDATE orders o " +
-			"    SET deleted_at = CURRENT_TIMESTAMP " +
-			"    WHERE id IN (SELECT id FROM pending_orders) " +
-			"    RETURNING o.id::TEXT " +
-			"  ) " +
-			"SELECT * FROM update_users_refund UNION SELECT * FROM update_users_payout UNION SELECT * FROM update_orders"
+			") AS user_shares WHERE user_shares.pubkey = u.pubkey"
 		if _, err = tx.ExecContext(ctx, query, marketId, s.Id); err != nil {
 			tx.Rollback()
 			return err
