@@ -12,7 +12,7 @@ services:
       - 127.0.0.1:5432:5432
     volumes:
       - delphi:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./postgresql.conf:/var/lib/postgresql/data/postgresql.conf # for some reason this can't be mounted on first run
 
 volumes:
