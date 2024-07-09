@@ -12,7 +12,7 @@ import (
 	"github.com/lightningnetwork/lnd/lntypes"
 )
 
-func HandleInvoiceStatus(sc context.ServerContext) echo.HandlerFunc {
+func HandleInvoiceStatus(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			invoiceId string
@@ -51,7 +51,7 @@ func HandleInvoiceStatus(sc context.ServerContext) echo.HandlerFunc {
 	}
 }
 
-func HandleInvoice(sc context.ServerContext) echo.HandlerFunc {
+func HandleInvoice(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			invoiceId string
@@ -90,11 +90,11 @@ func HandleInvoice(sc context.ServerContext) echo.HandlerFunc {
 			"lnurl":   invoice.PaymentRequest,
 			"qr":      qr,
 		}
-		return sc.Render(c, http.StatusOK, "invoice.html", data)
+		return c.Render(http.StatusOK, "invoice.html", data)
 	}
 }
 
-func HandleInvoices(sc context.ServerContext) echo.HandlerFunc {
+func HandleInvoices(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			u        db.User

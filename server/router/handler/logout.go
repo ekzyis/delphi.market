@@ -9,7 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func HandleLogout(sc context.ServerContext) echo.HandlerFunc {
+func HandleLogout(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			cookie    *http.Cookie

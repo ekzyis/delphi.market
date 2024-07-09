@@ -1,12 +1,15 @@
 package context
 
 import (
+	"context"
+
 	"git.ekzyis.com/ekzyis/delphi.market/db"
 	"git.ekzyis.com/ekzyis/delphi.market/lnd"
 	"github.com/labstack/echo/v4"
 )
 
-type ServerContext struct {
+type Context struct {
+	context.Context
 	Environment    string
 	PublicURL      string
 	CommitShortSha string
@@ -16,19 +19,18 @@ type ServerContext struct {
 	Lnd            *lnd.LNDClient
 }
 
-func (sc *ServerContext) Render(c echo.Context, code int, name string, data map[string]any) error {
-	envVars := map[string]any{
-		"PUBLIC_URL":       sc.PublicURL,
-		"COMMIT_SHORT_SHA": sc.CommitShortSha,
-		"COMMIT_LONG_SHA":  sc.CommitLongSha,
-		"VERSION":          sc.Version,
-	}
-	merge(&data, &envVars)
-	return c.Render(code, name, data)
-}
+type RenderContextKey string
 
-func merge[T comparable](target *map[T]any, src *map[T]any) {
-	for k, v := range *src {
-		(*target)[k] = v
-	}
+var (
+	EnvContextKey     RenderContextKey = "env"
+	SessionContextKey RenderContextKey = "session"
+	CommitContextKey  RenderContextKey = "commit"
+)
+
+func RenderContext(sc Context, c echo.Context) context.Context {
+	ctx := c.Request().Context()
+	ctx = context.WithValue(ctx, EnvContextKey, sc.Environment)
+	ctx = context.WithValue(ctx, SessionContextKey, c.Get("session"))
+	ctx = context.WithValue(ctx, CommitContextKey, sc.CommitShortSha)
+	return ctx
 }

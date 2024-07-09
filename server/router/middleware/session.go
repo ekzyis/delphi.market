@@ -10,7 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func Session(sc context.ServerContext) echo.MiddlewareFunc {
+func Session(sc context.Context) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			var (
@@ -39,7 +39,7 @@ func Session(sc context.ServerContext) echo.MiddlewareFunc {
 	}
 }
 
-func SessionGuard(sc context.ServerContext) echo.MiddlewareFunc {
+func SessionGuard(sc context.Context) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			session := c.Get("session")

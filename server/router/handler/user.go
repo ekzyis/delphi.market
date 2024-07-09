@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func HandleUser(sc context.ServerContext) echo.HandlerFunc {
+func HandleUser(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			u      db.User
@@ -25,6 +25,6 @@ func HandleUser(sc context.ServerContext) echo.HandlerFunc {
 			"user":    u,
 			"Orders":  orders,
 		}
-		return sc.Render(c, http.StatusOK, "user.html", data)
+		return c.Render(http.StatusOK, "user.html", data)
 	}
 }

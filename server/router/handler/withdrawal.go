@@ -13,7 +13,7 @@ import (
 	"github.com/lightningnetwork/lnd/zpay32"
 )
 
-func HandleWithdrawal(sc context.ServerContext) echo.HandlerFunc {
+func HandleWithdrawal(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			w   db.Withdrawal

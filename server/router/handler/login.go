@@ -12,7 +12,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func HandleLogin(sc context.ServerContext) echo.HandlerFunc {
+func HandleLogin(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			lnAuth   *auth.LNAuth
@@ -41,7 +41,7 @@ func HandleLogin(sc context.ServerContext) echo.HandlerFunc {
 	}
 }
 
-func HandleLoginCallback(sc context.ServerContext) echo.HandlerFunc {
+func HandleLoginCallback(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			query     auth.LNAuthResponse

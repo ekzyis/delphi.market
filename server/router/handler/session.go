@@ -9,7 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func HandleCheckSession(sc context.ServerContext) echo.HandlerFunc {
+func HandleCheckSession(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			cookie *http.Cookie

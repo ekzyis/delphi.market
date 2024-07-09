@@ -16,7 +16,7 @@ import (
 	"github.com/lightningnetwork/lnd/lntypes"
 )
 
-func HandleMarket(sc context.ServerContext) echo.HandlerFunc {
+func HandleMarket(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			marketId int64
@@ -68,7 +68,7 @@ func HandleMarket(sc context.ServerContext) echo.HandlerFunc {
 	}
 }
 
-func HandleCreateMarket(sc context.ServerContext) echo.HandlerFunc {
+func HandleCreateMarket(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			tx             *sql.Tx
@@ -131,7 +131,7 @@ func HandleCreateMarket(sc context.ServerContext) echo.HandlerFunc {
 	}
 }
 
-func HandleMarketOrders(sc context.ServerContext) echo.HandlerFunc {
+func HandleMarketOrders(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			marketId int64
@@ -148,7 +148,7 @@ func HandleMarketOrders(sc context.ServerContext) echo.HandlerFunc {
 	}
 }
 
-func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
+func HandleOrder(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			tx          *sql.Tx
@@ -250,7 +250,7 @@ func HandleOrder(sc context.ServerContext) echo.HandlerFunc {
 	}
 }
 
-func HandleDeleteOrder(sc context.ServerContext) echo.HandlerFunc {
+func HandleDeleteOrder(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			orderId string
@@ -327,7 +327,7 @@ func HandleDeleteOrder(sc context.ServerContext) echo.HandlerFunc {
 	}
 }
 
-func HandleOrders(sc context.ServerContext) echo.HandlerFunc {
+func HandleOrders(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			u      db.User
@@ -342,7 +342,7 @@ func HandleOrders(sc context.ServerContext) echo.HandlerFunc {
 	}
 }
 
-func HandleMarketStats(sc context.ServerContext) echo.HandlerFunc {
+func HandleMarketStats(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			marketId int64
@@ -359,7 +359,7 @@ func HandleMarketStats(sc context.ServerContext) echo.HandlerFunc {
 	}
 }
 
-func HandleMarketSettlement(sc context.ServerContext) echo.HandlerFunc {
+func HandleMarketSettlement(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			marketId int64

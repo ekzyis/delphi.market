@@ -26,7 +26,7 @@ func TestLogout(t *testing.T) {
 		assert = assert.New(t)
 		e      *echo.Echo
 		c      echo.Context
-		sc     context.ServerContext
+		sc     context.Context
 		req    *http.Request
 		rec    *httptest.ResponseRecorder
 		pk     *secp256k1.PublicKey
@@ -34,7 +34,7 @@ func TestLogout(t *testing.T) {
 		key    string
 		err    error
 	)
-	sc = context.ServerContext{Db: db}
+	sc = context.Context{Db: db}
 	e, req, rec = test.HTTPMocks("POST", "/logout", nil)
 
 	_, pk, err = test.GenerateKeyPair()

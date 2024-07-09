@@ -27,7 +27,7 @@ func init() {
 		lndNetwork     string
 		db_            *db.DB
 		lnd_           *lnd.LNDClient
-		ctx            router.ServerContext
+		ctx            router.Context
 		err            error
 	)
 
@@ -64,7 +64,8 @@ func init() {
 		lnd_.CheckInvoices(db_)
 	}
 
-	ctx = server.ServerContext{
+	ctx = server.Context{
+		Environment:    env.Env,
 		PublicURL:      env.PublicURL,
 		CommitShortSha: env.CommitShortSha,
 		CommitLongSha:  env.CommitLongSha,

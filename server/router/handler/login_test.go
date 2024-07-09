@@ -27,7 +27,7 @@ func TestLogin(t *testing.T) {
 		assert      = assert.New(t)
 		e           *echo.Echo
 		c           echo.Context
-		sc          context.ServerContext
+		sc          context.Context
 		req         *http.Request
 		rec         *httptest.ResponseRecorder
 		cookies     []*http.Cookie
@@ -35,7 +35,7 @@ func TestLogin(t *testing.T) {
 		dbSessionId string
 		err         error
 	)
-	sc = context.ServerContext{Db: db}
+	sc = context.Context{Db: db}
 	e, req, rec = test.HTTPMocks("GET", "/login", nil)
 	c = e.NewContext(req, rec)
 
@@ -63,7 +63,7 @@ func TestLoginCallback(t *testing.T) {
 		assert   = assert.New(t)
 		e        *echo.Echo
 		c        echo.Context
-		sc       context.ServerContext
+		sc       context.Context
 		req      *http.Request
 		rec      *httptest.ResponseRecorder
 		sk       *secp256k1.PrivateKey
@@ -96,7 +96,7 @@ func TestLoginCallback(t *testing.T) {
 	}
 	key = hex.EncodeToString(pk.SerializeCompressed())
 
-	sc = context.ServerContext{Db: db}
+	sc = context.Context{Db: db}
 	e, req, rec = test.HTTPMocks("GET", fmt.Sprintf("/api/login?k1=%s&key=%s&sig=%s", lnAuth.K1, key, sig), nil)
 	c = e.NewContext(req, rec)
 
