@@ -53,7 +53,7 @@ func (db *DB) Reset(dbName string) error {
 
 func (db *DB) Clear(dbName string) error {
 	var (
-		tables = []string{"lnauth", "users", "sessions", "markets", "shares", "invoices", "order_side", "orders", "matches"}
+		tables = []string{"lnauth", "users", "sessions", "invoices", "markets", "shares", "invoices", "order_side", "orders", "withdrawals"}
 		sql    []string
 		err    error
 	)

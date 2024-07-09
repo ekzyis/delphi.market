@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 CREATE TABLE lnauth(
     k1 VARCHAR(64) NOT NULL PRIMARY KEY,
     lnurl TEXT NOT NULL,
@@ -35,7 +37,6 @@ CREATE TABLE markets(
     pubkey TEXT NOT NULL REFERENCES users(pubkey),
     invoice_id UUID NOT NULL UNIQUE REFERENCES invoices(id)
 );
-CREATE EXTENSION "uuid-ossp";
 CREATE TABLE shares(
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     market_id INTEGER NOT NULL REFERENCES markets(id),
