@@ -30,16 +30,20 @@ func init() {
 		ctx            router.ServerContext
 		err            error
 	)
+
 	if err = env.Load(); err != nil {
 		log.Fatalf("error loading env vars: %v", err)
 	}
+
 	flag.StringVar(&dbUrl, "DATABASE_URL", "delphi.market", "Public URL of website")
 	flag.StringVar(&lndAddress, "LND_ADDRESS", "localhost:10001", "LND gRPC server address")
 	flag.StringVar(&lndCert, "LND_CERT", "", "Path to LND TLS certificate")
 	flag.StringVar(&lndMacaroonDir, "LND_MACAROON_DIR", "", "LND macaroon directory")
 	flag.StringVar(&lndNetwork, "LND_NETWORK", "regtest", "LND network")
 	env.Parse()
+
 	figlet()
+
 	log.Printf("Commit:      %s", env.CommitShortSha)
 	log.Printf("Public URL:  %s", env.PublicURL)
 	log.Printf("Environment: %s", env.Env)
