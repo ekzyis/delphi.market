@@ -3,14 +3,18 @@ package components
 import c "git.ekzyis.com/ekzyis/delphi.market/server/router/context"
 
 templ Header() {
-	<header class="flex flex-row text-center justify-center mt-3">
-		<nav>
-			<a href="/">home</a>
-			if ctx.Value(c.SessionContextKey) != nil {
-				<a href="/user">user</a>
-			} else {
-				<a href="/login">login</a>
-			}
+	<header class="mt-3">
+		<nav class="flex flex-row">
+			<div>
+				<a href="/">home</a>
+			</div>
+			<div class="ms-auto">
+				if ctx.Value(c.SessionContextKey) != nil {
+					<a href="/user">user</a>
+				} else {
+					<a href="/login">login</a>
+				}
+			</div>
 		</nav>
 	</header>
 }
