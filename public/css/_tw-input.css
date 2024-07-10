@@ -6,6 +6,10 @@
   --background-color: #191d21;
   --color: #d3d3d3;
   --muted-color: #6c757d;
+  --lightning-color: #fada5e;
+  --nostr-color: #8d45dd;
+  --black: #000;
+  --white: #fff;
 }
 
 @layer base {
@@ -48,11 +52,41 @@
     aspect-ratio: 560/315;
   }
 
+  .text-muted {
+    color: var(--muted-color);
+  }
+
   .figlet {
     display: flex;
     align-items: center;
     justify-content: center;
     height: 144px;
     @apply my-3
+  }
+
+  .login {
+    width: fit-content;
+    margin: 0 auto;
+    padding: 0.25em 1em;
+    border-radius: 5px;
+    font-weight: bold;
+  }
+
+  .lightning {
+    background-color: var(--lightning-color);
+    color: var(--black);
+  }
+
+  .lightning:hover {
+    filter: brightness(125%) drop-shadow(0 0 0.33rem var(--lightning-color));
+  }
+
+  .nostr {
+    background-color: var(--nostr-color);
+    color: var(--white);
+  }
+
+  .nostr:hover {
+    filter: brightness(125%) drop-shadow(0 0 0.33rem var(--nostr-color));
   }
 }

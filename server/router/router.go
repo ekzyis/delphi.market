@@ -15,4 +15,5 @@ func Init(e *echo.Echo, sc Context) {
 
 	e.GET("/", handler.HandleIndex(sc))
 	e.GET("/about", handler.HandleAbout(sc))
+	e.GET("/login", handler.HandleLogin(sc))
 }
