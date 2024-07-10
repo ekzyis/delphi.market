@@ -14,7 +14,7 @@ templ Index() {
 			<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"/>
 			<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"/>
 			<link rel="manifest" href="/site.webmanifest"/>
-			<link rel="stylesheet" href="/css/index.css"/>
+			<link rel="stylesheet" href="/css/tailwind.css"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
 			<meta name="theme-color" content="#091833"/>
 			<script src="/js/htmx.js" integrity="sha384-Xh+GLLi0SMFPwtHQjT72aPG19QvKB8grnyRbYBNIdHWc2NkCrz65jlU7YrzO6qRp" crossorigin="anonymous"></script>
@@ -22,8 +22,8 @@ templ Index() {
 				<script defer src="/js/hotreload.js"></script>
 			}
 		</head>
-		<body>
-			<header class="flex flex-row text-center justify-center pt-1">
+		<body class="container">
+			<header class="flex flex-row text-center justify-center mt-1">
 				<nav>
 					<a href="/">home</a>
 					if ctx.Value(c.SessionContextKey) != nil {
@@ -33,8 +33,8 @@ templ Index() {
 					}
 				</nav>
 			</header>
-			<div class="container flex flex-column text-center">
-				<code>
+			<div class="flex flex-col text-center">
+				<code class="my-3">
 					<strong>
 						<!-- need to escape backslashes or backtick here ... -->
 						<pre>
@@ -48,9 +48,9 @@ templ Index() {
 						</pre>
 					</strong>
 				</code>
-				<div class="font-mono mb-1">A prediction market using the lightning network [WIP]</div>
+				<div class="font-mono my-3">A prediction market using the lightning network</div>
 			</div>
-			<footer class="flex justify-center">
+			<footer class="flex justify-center px-1 pt-3">
 				<div>
 					<hr/>
 					<small>

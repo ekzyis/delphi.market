@@ -10,3 +10,6 @@ public/hotreload
 
 # templ
 *_templ.go
+
+# tailwindcss
+public/css/tailwind.css
