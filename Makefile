@@ -12,5 +12,8 @@ run:
 	templ generate -path server/router/pages
 	go run .
 
+dev:
+	bash hotreload.sh
+
 test:
 	go test -v -count=1 ./server/router/handler/...
