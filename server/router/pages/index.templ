@@ -1,7 +1,7 @@
 package pages
 
 import (
-	"fmt"
+	"git.ekzyis.com/ekzyis/delphi.market/lib"
 	"git.ekzyis.com/ekzyis/delphi.market/server/router/pages/components"
 )
 
@@ -15,13 +15,7 @@ templ Index() {
 					<strong>
 						<!-- need to escape backslashes or backtick here ... -->
 						<pre>
-							{ fmt.Sprintf(""+
-"     _      _       _     _ \n"+
-"  __| | ___| |_ __ | |__ (_)\n"+
-" / _` |/ _ \\ | '_ \\| '_ \\| |\n"+
-"| (_| |  __/ | |_) | | | | |\n"+
-" \\__,_|\\___|_| .__/|_| |_|_|\n"+
-"             |_|            \n") }
+							{ lib.Figlet("random", "delphi") }
 						</pre>
 					</strong>
 				</code>

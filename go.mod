@@ -17,6 +17,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/lightninglabs/lndclient v0.16.0-11
 	github.com/lightningnetwork/lnd v0.16.0-beta
+	github.com/lukesampson/figlet v0.0.0-20190211215653-8a3ef4a6ac42
 	github.com/namsral/flag v1.7.4-pre
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/stretchr/testify v1.8.4
