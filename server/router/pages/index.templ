@@ -2,37 +2,14 @@ package pages
 
 import (
 	"fmt"
-	c "git.ekzyis.com/ekzyis/delphi.market/server/router/context"
+	"git.ekzyis.com/ekzyis/delphi.market/server/router/pages/components"
 )
 
 templ Index() {
 	<html>
-		<head>
-			<title>delphi.market</title>
-			<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
-			<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
-			<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"/>
-			<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"/>
-			<link rel="manifest" href="/site.webmanifest"/>
-			<link rel="stylesheet" href="/css/tailwind.css"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1"/>
-			<meta name="theme-color" content="#091833"/>
-			<script src="/js/htmx.js" integrity="sha384-Xh+GLLi0SMFPwtHQjT72aPG19QvKB8grnyRbYBNIdHWc2NkCrz65jlU7YrzO6qRp" crossorigin="anonymous"></script>
-			if ctx.Value(c.EnvContextKey) == "development" {
-				<script defer src="/js/hotreload.js"></script>
-			}
-		</head>
+		@components.Head()
 		<body class="container">
-			<header class="flex flex-row text-center justify-center mt-1">
-				<nav>
-					<a href="/">home</a>
-					if ctx.Value(c.SessionContextKey) != nil {
-						<a href="/user">user</a>
-					} else {
-						<a href="/login">login</a>
-					}
-				</nav>
-			</header>
+			@components.Header()
 			<div class="flex flex-col text-center">
 				<code class="my-3">
 					<strong>
@@ -50,21 +27,7 @@ templ Index() {
 				</code>
 				<div class="font-mono my-3">A prediction market using the lightning network</div>
 			</div>
-			<footer class="flex justify-center px-1 pt-3">
-				<div>
-					<hr/>
-					<small>
-						<code>
-							running
-							<a
-								href={ templ.SafeURL("https://github.com/ekzyis/delphi.market/commit/" + ctx.Value(c.CommitContextKey).(string)) }
-								target="_blank"
-								rel="noopener noreferrer"
-							>{ ctx.Value(c.CommitContextKey).(string) }</a>
-						</code>
-					</small>
-				</div>
-			</footer>
+			@components.Footer()
 		</body>
 	</html>
 }

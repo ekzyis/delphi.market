@@ -1,0 +1,21 @@
+package components
+
+import c "git.ekzyis.com/ekzyis/delphi.market/server/router/context"
+
+templ Footer() {
+	<footer class="flex justify-center px-1 pt-3">
+		<div>
+			<hr/>
+			<small>
+				<code>
+					running
+					<a
+						href={ templ.SafeURL("https://github.com/ekzyis/delphi.market/commit/" + ctx.Value(c.CommitContextKey).(string)) }
+						target="_blank"
+						rel="noopener noreferrer"
+					>{ ctx.Value(c.CommitContextKey).(string) }</a>
+				</code>
+			</small>
+		</div>
+	</footer>
+}

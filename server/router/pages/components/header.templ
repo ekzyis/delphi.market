@@ -1,0 +1,16 @@
+package components
+
+import c "git.ekzyis.com/ekzyis/delphi.market/server/router/context"
+
+templ Header() {
+	<header class="flex flex-row text-center justify-center mt-3">
+		<nav>
+			<a href="/">home</a>
+			if ctx.Value(c.SessionContextKey) != nil {
+				<a href="/user">user</a>
+			} else {
+				<a href="/login">login</a>
+			}
+		</nav>
+	</header>
+}

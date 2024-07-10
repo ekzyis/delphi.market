@@ -1,0 +1,21 @@
+package components
+
+import c "git.ekzyis.com/ekzyis/delphi.market/server/router/context"
+
+templ Head() {
+	<head>
+		<title>delphi.market</title>
+		<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
+		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
+		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"/>
+		<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"/>
+		<link rel="manifest" href="/site.webmanifest"/>
+		<link rel="stylesheet" href="/css/tailwind.css"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<meta name="theme-color" content="#091833"/>
+		<script src="/js/htmx.js" integrity="sha384-Xh+GLLi0SMFPwtHQjT72aPG19QvKB8grnyRbYBNIdHWc2NkCrz65jlU7YrzO6qRp" crossorigin="anonymous"></script>
+		if ctx.Value(c.EnvContextKey) == "development" {
+			<script defer src="/js/hotreload.js"></script>
+		}
+	</head>
+}
