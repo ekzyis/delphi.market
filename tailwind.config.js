@@ -8,5 +8,18 @@ module.exports = {
     },
     extend: {},
   },
-  plugins: [],
+  plugins: [
+    function ({ addComponents }) {
+      addComponents({
+        '.container': {
+          '@screen lg': {
+            maxWidth: '768px',
+          },
+          '@screen xl': {
+            maxWidth: '768px',
+          },
+        }
+      })
+    }
+  ],
 }
