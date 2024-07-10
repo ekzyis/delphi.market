@@ -1,9 +1,6 @@
 package pages
 
-import (
-	"git.ekzyis.com/ekzyis/delphi.market/lib"
-	"git.ekzyis.com/ekzyis/delphi.market/server/router/pages/components"
-)
+import "git.ekzyis.com/ekzyis/delphi.market/server/router/pages/components"
 
 templ Index() {
 	<html>
@@ -11,14 +8,7 @@ templ Index() {
 		<body class="container">
 			@components.Header()
 			<div class="flex flex-col text-center">
-				<code class="figlet">
-					<strong>
-						<!-- need to escape backslashes or backtick here ... -->
-						<pre>
-							{ lib.Figlet("random", "delphi") }
-						</pre>
-					</strong>
-				</code>
+				@components.Figlet("random", "delphi")
 				<div class="font-mono my-3">A prediction market using the lightning network</div>
 			</div>
 			@components.Footer()
