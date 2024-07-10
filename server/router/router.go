@@ -14,4 +14,5 @@ func Init(e *echo.Echo, sc Context) {
 	e.Use(middleware.Session(sc))
 
 	e.GET("/", handler.HandleIndex(sc))
+	e.GET("/about", handler.HandleAbout(sc))
 }

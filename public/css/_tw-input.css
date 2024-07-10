@@ -38,4 +38,13 @@
   nav a {
     padding: 0 0.25em;
   }
+
+  h1 {
+    font-size: 24px
+  }
+
+  iframe {
+    width: 300px;
+    aspect-ratio: 560/315;
+  }
 }
