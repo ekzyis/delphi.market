@@ -32,7 +32,7 @@ func New(ctx Context) *Server {
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 	}))
 
-	e.HTTPErrorHandler = httpErrorHandler
+	e.HTTPErrorHandler = httpErrorHandler(ctx)
 
 	s = &Server{e}
 

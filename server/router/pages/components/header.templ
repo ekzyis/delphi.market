@@ -9,6 +9,7 @@ templ Header() {
 				<a href="/">home</a>
 			</div>
 			<div class="ms-auto">
+				<a href="/about">about</a>
 				if ctx.Value(c.SessionContextKey) != nil {
 					<a href="/user">user</a>
 				} else {
