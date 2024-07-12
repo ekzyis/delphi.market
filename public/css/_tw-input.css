@@ -29,14 +29,14 @@
     @apply pb-1;
   }
 
-  a,
+  a:not(.no-link),
   button[hx-get],
   button[hx-post] {
     text-decoration: underline;
     transition: background-color 150ms ease-in, color 150ms ease-in;
   }
 
-  a:hover,
+  a:not(.no-link):hover,
   button[hx-get]:hover,
   button[hx-post]:hover {
     background-color: var(--color);
@@ -70,10 +70,12 @@
     @apply my-3
   }
 
-  .login {
+  .login, .signup {
+    text-decoration: none !important;
+    transition: none !important;
+    padding: 0.25em 1em !important;
     width: fit-content;
     margin: 0 auto;
-    padding: 0.25em 1em;
     border-radius: 5px;
     font-weight: bold;
   }

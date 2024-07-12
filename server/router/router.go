@@ -14,5 +14,11 @@ func Init(e *echo.Echo, sc Context) {
 
 	e.GET("/", handler.HandleIndex(sc))
 	e.GET("/about", handler.HandleAbout(sc))
-	e.GET("/login", handler.HandleLogin(sc))
+
+	e.GET("/login", handler.HandleAuth(sc, "login"))
+	e.GET("/login/:method", handler.HandleAuth(sc, "login"))
+	e.GET("/signup", handler.HandleAuth(sc, "register"))
+	e.GET("/signup/:method", handler.HandleAuth(sc, "register"))
+	e.GET("/api/lnauth/callback", handler.HandleLnAuthCallback(sc))
+	e.GET("/session", handler.HandleSessionCheck(sc))
 }

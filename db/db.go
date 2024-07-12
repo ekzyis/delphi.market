@@ -13,7 +13,7 @@ type DB struct {
 }
 
 var (
-	initSqlPath = "./db/init.sql"
+	schemaPath = "./db/schema.sql"
 )
 
 func New(dbUrl string) (*DB, error) {
@@ -42,7 +42,7 @@ func (db *DB) Reset(dbName string) error {
 	if err = db.Clear(dbName); err != nil {
 		return err
 	}
-	if f, err = ioutil.ReadFile(initSqlPath); err != nil {
+	if f, err = ioutil.ReadFile(schemaPath); err != nil {
 		return err
 	}
 	if _, err = db.Exec(string(f)); err != nil {
