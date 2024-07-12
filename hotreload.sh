@@ -31,6 +31,6 @@ trap cleanup EXIT
 restart
 tail -f server.log &
 
-while inotifywait -r -e modify db/ env/ lib/ lnd/ pages/ public/ server/; do
+while inotifywait -r -e modify db/ env/ lib/ lnd/ public/ server/; do
   restart
 done
