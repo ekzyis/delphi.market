@@ -39,8 +39,8 @@ func TestLnAuthSignup(t *testing.T) {
 	c.SetParamNames("method")
 	c.SetParamValues("lightning")
 
-	err = handler.HandleAuth(sc, "register")(c)
-	assert.NoError(err, "handler returned error")
+	handler.HandleAuth(sc, "register")(c)
+	assert.Equal(http.StatusOK, rec.Code, "wrong status code")
 
 	// Set-Cookie header present
 	cookies = rec.Result().Cookies()
@@ -96,8 +96,8 @@ func TestLnAuthSignupCallbackUserNotExists(t *testing.T) {
 		nil)
 	c = e.NewContext(req, rec)
 
-	err = handler.HandleLnAuthCallback(sc)(c)
-	assert.NoError(err, "handler returned error")
+	handler.HandleLnAuthCallback(sc)(c)
+	assert.Equal(http.StatusOK, rec.Code, "wrong status code")
 
 	// user created
 	err = db.QueryRow("SELECT id FROM users WHERE ln_pubkey = $1", key).Scan(&userId)
@@ -289,8 +289,8 @@ func TestLnAuthLoginCallbackUserExists(t *testing.T) {
 		nil)
 	c = e.NewContext(req, rec)
 
-	err = handler.HandleLnAuthCallback(sc)(c)
-	assert.NoError(err, "handler returned error")
+	handler.HandleLnAuthCallback(sc)(c)
+	assert.Equal(http.StatusOK, rec.Code, "wrong status code")
 
 	// session created
 	err = db.QueryRow("SELECT COUNT(1) FROM sessions WHERE id = $1 AND user_id = $2", sessionId, userId).Scan(&count)
