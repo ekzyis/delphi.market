@@ -155,8 +155,9 @@ func TestLnAuthSignupCallbackUserExists(t *testing.T) {
 	c = e.NewContext(req, rec)
 
 	// must throw error because user already exists
-	err = handler.HandleLnAuthCallback(sc)(c)
-	assert.ErrorContains(err, "user already exists", "user check failed")
+	handler.HandleLnAuthCallback(sc)(c)
+	assert.Equalf(http.StatusBadRequest, rec.Code, "wrong status code")
+	assert.Contains(rec.Body.String(), "\"reason\":\"user already exists\"", "user check failed")
 }
 
 func TestLnAuthLogin(t *testing.T) {
@@ -232,8 +233,9 @@ func TestLnAuthLoginCallbackUserNotExists(t *testing.T) {
 	c = e.NewContext(req, rec)
 
 	// must throw error because user does not exist
-	err = handler.HandleLnAuthCallback(sc)(c)
-	assert.ErrorContains(err, "user not found", "user check failed")
+	handler.HandleLnAuthCallback(sc)(c)
+	assert.Equalf(http.StatusNotFound, rec.Code, "wrong status code")
+	assert.Contains(rec.Body.String(), "\"reason\":\"user not found\"", "user check failed")
 }
 
 func TestLnAuthLoginCallbackUserExists(t *testing.T) {
