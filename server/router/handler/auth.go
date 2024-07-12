@@ -111,7 +111,10 @@ func HandleLnAuthCallback(sc context.Context) echo.HandlerFunc {
 		}
 
 		if query.Action == "register" {
-			err = tx.QueryRow("INSERT INTO users(ln_pubkey) VALUES ($1) RETURNING id", query.Key).Scan(&userId)
+			err = tx.QueryRow(""+
+				"INSERT INTO users(ln_pubkey) VALUES ($1) "+
+				"ON CONFLICT(ln_pubkey) DO UPDATE SET ln_pubkey = $1 "+
+				"RETURNING id", query.Key).Scan(&userId)
 			if err != nil {
 				tx.Rollback()
 				pqErr, ok = err.(*pq.Error)

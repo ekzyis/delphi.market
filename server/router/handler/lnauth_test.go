@@ -147,7 +147,7 @@ func TestLnAuthSignupCallbackUserExists(t *testing.T) {
 
 	key = hex.EncodeToString(pk.SerializeCompressed())
 
-	// create user such that signup must fail
+	// create user before signup
 	_, err = db.Exec("INSERT INTO users(ln_pubkey) VALUES($1) RETURNING id", key)
 	assert.NoError(err, "error creating user")
 
@@ -158,10 +158,9 @@ func TestLnAuthSignupCallbackUserExists(t *testing.T) {
 		nil)
 	c = e.NewContext(req, rec)
 
-	// must throw error because user already exists
+	// does not throw an error for UX reasons
 	handler.HandleLnAuthCallback(sc)(c)
-	assert.Equal(http.StatusBadRequest, rec.Code, "wrong status code")
-	assert.Contains(rec.Body.String(), "\"reason\":\"user already exists\"", "user check failed")
+	assert.Equal(http.StatusOK, rec.Code, "wrong status code")
 }
 
 func TestLnAuthLogin(t *testing.T) {
