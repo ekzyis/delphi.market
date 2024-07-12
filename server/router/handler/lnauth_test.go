@@ -40,18 +40,18 @@ func TestLnAuthSignup(t *testing.T) {
 	c.SetParamValues("lightning")
 
 	err = handler.HandleAuth(sc, "register")(c)
-	assert.NoErrorf(err, "handler returned error")
+	assert.NoError(err, "handler returned error")
 
 	// Set-Cookie header present
 	cookies = rec.Result().Cookies()
-	assert.Equalf(1, len(cookies), "wrong number of Set-Cookie headers")
-	assert.Equalf("session", cookies[0].Name, "wrong cookie name")
+	assert.Equal(1, len(cookies), "wrong number of Set-Cookie headers")
+	assert.Equal("session", cookies[0].Name, "wrong cookie name")
 
 	// new challenge inserted which matches cookie value
 	sessionId = cookies[0].Value
 	err = db.QueryRow("SELECT session_id FROM lnauth WHERE session_id = $1", sessionId).Scan(&dbSessionId)
 	assert.NoError(err)
-	assert.Equalf(sessionId, dbSessionId, "wrong session id")
+	assert.Equal(sessionId, dbSessionId, "wrong session id")
 }
 
 func TestLnAuthSignupCallbackUserNotExists(t *testing.T) {
@@ -79,37 +79,39 @@ func TestLnAuthSignupCallbackUserNotExists(t *testing.T) {
 	err = db.QueryRow(
 		"INSERT INTO lnauth(k1, lnurl) VALUES($1, $2) RETURNING session_id",
 		lnAuth.K1, lnAuth.LNURL).Scan(&sessionId)
-	assert.NoErrorf(err, "error creating challenge")
+	assert.NoError(err, "error creating challenge")
 
 	sk, pk, err = test.GenerateKeyPair()
-	assert.NoErrorf(err, "error generating keypair")
+	assert.NoError(err, "error generating keypair")
 
 	sig, err = test.Sign(sk, lnAuth.K1)
-	assert.NoErrorf(err, "error signing k1")
+	assert.NoError(err, "error signing k1")
 
 	key = hex.EncodeToString(pk.SerializeCompressed())
 
 	sc = context.Context{Db: db}
-	e, req, rec = test.HTTPMocks("GET",
-		fmt.Sprintf("/api/login?tag=login&k1=%s&key=%s&sig=%s&action=%s", lnAuth.K1, key, sig, "register"), nil)
+	e, req, rec = test.HTTPMocks(
+		"GET",
+		fmt.Sprintf("/api/login?tag=login&k1=%s&key=%s&sig=%s&action=%s", lnAuth.K1, key, sig, "register"),
+		nil)
 	c = e.NewContext(req, rec)
 
 	err = handler.HandleLnAuthCallback(sc)(c)
-	assert.NoErrorf(err, "handler returned error")
+	assert.NoError(err, "handler returned error")
 
 	// user created
 	err = db.QueryRow("SELECT id FROM users WHERE ln_pubkey = $1", key).Scan(&userId)
-	assert.NoErrorf(err, "error fetching user")
+	assert.NoError(err, "error fetching user")
 
 	// session created
 	err = db.QueryRow("SELECT COUNT(1) FROM sessions WHERE id = $1 AND user_id = $2", sessionId, userId).Scan(&count)
-	assert.NoErrorf(err, "error fetching session")
-	assert.Equalf(1, count, "invalid session count")
+	assert.NoError(err, "error fetching session")
+	assert.Equal(1, count, "invalid session count")
 
 	// challenge deleted
 	err = db.QueryRow("SELECT COUNT(1) FROM lnauth WHERE k1 = $1", lnAuth.K1).Scan(&count)
-	assert.NoErrorf(err, "error fetching challenge")
-	assert.Equalf(count, 0, "challenge not deleted")
+	assert.NoError(err, "error fetching challenge")
+	assert.Equal(count, 0, "challenge not deleted")
 }
 
 func TestLnAuthSignupCallbackUserExists(t *testing.T) {
@@ -135,28 +137,30 @@ func TestLnAuthSignupCallbackUserExists(t *testing.T) {
 	err = db.QueryRow(
 		"INSERT INTO lnauth(k1, lnurl) VALUES($1, $2) RETURNING session_id",
 		lnAuth.K1, lnAuth.LNURL).Scan(&sessionId)
-	assert.NoErrorf(err, "error creating challenge")
+	assert.NoError(err, "error creating challenge")
 
 	sk, pk, err = test.GenerateKeyPair()
-	assert.NoErrorf(err, "error generating keypair")
+	assert.NoError(err, "error generating keypair")
 
 	sig, err = test.Sign(sk, lnAuth.K1)
-	assert.NoErrorf(err, "error signing k1")
+	assert.NoError(err, "error signing k1")
 
 	key = hex.EncodeToString(pk.SerializeCompressed())
 
 	// create user such that signup must fail
 	_, err = db.Exec("INSERT INTO users(ln_pubkey) VALUES($1) RETURNING id", key)
-	assert.NoErrorf(err, "error creating user")
+	assert.NoError(err, "error creating user")
 
 	sc = context.Context{Db: db}
-	e, req, rec = test.HTTPMocks("GET",
-		fmt.Sprintf("/api/login?tag=login&k1=%s&key=%s&sig=%s&action=%s", lnAuth.K1, key, sig, "register"), nil)
+	e, req, rec = test.HTTPMocks(
+		"GET",
+		fmt.Sprintf("/api/login?tag=login&k1=%s&key=%s&sig=%s&action=%s", lnAuth.K1, key, sig, "register"),
+		nil)
 	c = e.NewContext(req, rec)
 
 	// must throw error because user already exists
 	handler.HandleLnAuthCallback(sc)(c)
-	assert.Equalf(http.StatusBadRequest, rec.Code, "wrong status code")
+	assert.Equal(http.StatusBadRequest, rec.Code, "wrong status code")
 	assert.Contains(rec.Body.String(), "\"reason\":\"user already exists\"", "user check failed")
 }
 
@@ -180,18 +184,18 @@ func TestLnAuthLogin(t *testing.T) {
 	c.SetParamValues("lightning")
 
 	err = handler.HandleAuth(sc, "login")(c)
-	assert.NoErrorf(err, "handler returned error")
+	assert.NoError(err, "handler returned error")
 
 	// Set-Cookie header present
 	cookies = rec.Result().Cookies()
-	assert.Equalf(len(cookies), 1, "wrong number of Set-Cookie headers")
-	assert.Equalf("session", cookies[0].Name, "wrong cookie name")
+	assert.Equal(len(cookies), 1, "wrong number of Set-Cookie headers")
+	assert.Equal("session", cookies[0].Name, "wrong cookie name")
 
 	// new challenge inserted which matches cookie value
 	sessionId = cookies[0].Value
 	err = db.QueryRow("SELECT session_id FROM lnauth WHERE session_id = $1", sessionId).Scan(&dbSessionId)
 	assert.NoError(err)
-	assert.Equalf(sessionId, dbSessionId, "wrong session id")
+	assert.Equal(sessionId, dbSessionId, "wrong session id")
 }
 
 func TestLnAuthLoginCallbackUserNotExists(t *testing.T) {
@@ -217,24 +221,26 @@ func TestLnAuthLoginCallbackUserNotExists(t *testing.T) {
 	err = db.QueryRow(
 		"INSERT INTO lnauth(k1, lnurl) VALUES($1, $2) RETURNING session_id",
 		lnAuth.K1, lnAuth.LNURL).Scan(&sessionId)
-	assert.NoErrorf(err, "error creating challenge")
+	assert.NoError(err, "error creating challenge")
 
 	sk, pk, err = test.GenerateKeyPair()
-	assert.NoErrorf(err, "error generating keypair")
+	assert.NoError(err, "error generating keypair")
 
 	sig, err = test.Sign(sk, lnAuth.K1)
-	assert.NoErrorf(err, "error signing k1")
+	assert.NoError(err, "error signing k1")
 
 	key = hex.EncodeToString(pk.SerializeCompressed())
 
 	sc = context.Context{Db: db}
-	e, req, rec = test.HTTPMocks("GET",
-		fmt.Sprintf("/api/login?tag=login&k1=%s&key=%s&sig=%s&action=%s", lnAuth.K1, key, sig, "login"), nil)
+	e, req, rec = test.HTTPMocks(
+		"GET",
+		fmt.Sprintf("/api/login?tag=login&k1=%s&key=%s&sig=%s&action=%s", lnAuth.K1, key, sig, "login"),
+		nil)
 	c = e.NewContext(req, rec)
 
 	// must throw error because user does not exist
 	handler.HandleLnAuthCallback(sc)(c)
-	assert.Equalf(http.StatusNotFound, rec.Code, "wrong status code")
+	assert.Equal(http.StatusNotFound, rec.Code, "wrong status code")
 	assert.Contains(rec.Body.String(), "\"reason\":\"user not found\"", "user check failed")
 }
 
@@ -263,35 +269,37 @@ func TestLnAuthLoginCallbackUserExists(t *testing.T) {
 	err = db.QueryRow(
 		"INSERT INTO lnauth(k1, lnurl) VALUES($1, $2) RETURNING session_id",
 		lnAuth.K1, lnAuth.LNURL).Scan(&sessionId)
-	assert.NoErrorf(err, "error creating challenge")
+	assert.NoError(err, "error creating challenge")
 
 	sk, pk, err = test.GenerateKeyPair()
-	assert.NoErrorf(err, "error generating keypair")
+	assert.NoError(err, "error generating keypair")
 
 	sig, err = test.Sign(sk, lnAuth.K1)
-	assert.NoErrorf(err, "error signing k1")
+	assert.NoError(err, "error signing k1")
 
 	key = hex.EncodeToString(pk.SerializeCompressed())
 
 	// create user such that login does not fail
 	err = db.QueryRow("INSERT INTO users(ln_pubkey) VALUES($1) RETURNING id", key).Scan(&userId)
-	assert.NoErrorf(err, "error creating user")
+	assert.NoError(err, "error creating user")
 
 	sc = context.Context{Db: db}
-	e, req, rec = test.HTTPMocks("GET",
-		fmt.Sprintf("/api/login?tag=login&k1=%s&key=%s&sig=%s&action=%s", lnAuth.K1, key, sig, "login"), nil)
+	e, req, rec = test.HTTPMocks(
+		"GET",
+		fmt.Sprintf("/api/login?tag=login&k1=%s&key=%s&sig=%s&action=%s", lnAuth.K1, key, sig, "login"),
+		nil)
 	c = e.NewContext(req, rec)
 
 	err = handler.HandleLnAuthCallback(sc)(c)
-	assert.NoErrorf(err, "handler returned error")
+	assert.NoError(err, "handler returned error")
 
 	// session created
 	err = db.QueryRow("SELECT COUNT(1) FROM sessions WHERE id = $1 AND user_id = $2", sessionId, userId).Scan(&count)
-	assert.NoErrorf(err, "error fetching session")
-	assert.Equalf(1, count, "invalid session count")
+	assert.NoError(err, "error fetching session")
+	assert.Equal(1, count, "invalid session count")
 
 	// challenge deleted
 	err = db.QueryRow("SELECT COUNT(1) FROM lnauth WHERE k1 = $1", lnAuth.K1).Scan(&count)
-	assert.NoErrorf(err, "error fetching challenge")
-	assert.Equalf(count, 0, "challenge not deleted")
+	assert.NoError(err, "error fetching challenge")
+	assert.Equal(count, 0, "challenge not deleted")
 }
