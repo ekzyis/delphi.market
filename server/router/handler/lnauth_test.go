@@ -92,7 +92,7 @@ func TestLnAuthSignupCallbackUserNotExists(t *testing.T) {
 	sc = context.Context{Db: db}
 	e, req, rec = test.HTTPMocks(
 		"GET",
-		fmt.Sprintf("/api/login?tag=login&k1=%s&key=%s&sig=%s&action=%s", lnAuth.K1, key, sig, "register"),
+		fmt.Sprintf("/api/lnauth?tag=login&k1=%s&key=%s&sig=%s&action=%s", lnAuth.K1, key, sig, "register"),
 		nil)
 	c = e.NewContext(req, rec)
 
@@ -154,7 +154,7 @@ func TestLnAuthSignupCallbackUserExists(t *testing.T) {
 	sc = context.Context{Db: db}
 	e, req, rec = test.HTTPMocks(
 		"GET",
-		fmt.Sprintf("/api/login?tag=login&k1=%s&key=%s&sig=%s&action=%s", lnAuth.K1, key, sig, "register"),
+		fmt.Sprintf("/api/lnauth?tag=login&k1=%s&key=%s&sig=%s&action=%s", lnAuth.K1, key, sig, "register"),
 		nil)
 	c = e.NewContext(req, rec)
 
@@ -233,7 +233,7 @@ func TestLnAuthLoginCallbackUserNotExists(t *testing.T) {
 	sc = context.Context{Db: db}
 	e, req, rec = test.HTTPMocks(
 		"GET",
-		fmt.Sprintf("/api/login?tag=login&k1=%s&key=%s&sig=%s&action=%s", lnAuth.K1, key, sig, "login"),
+		fmt.Sprintf("/api/lnauth?tag=login&k1=%s&key=%s&sig=%s&action=%s", lnAuth.K1, key, sig, "login"),
 		nil)
 	c = e.NewContext(req, rec)
 
@@ -285,7 +285,7 @@ func TestLnAuthLoginCallbackUserExists(t *testing.T) {
 	sc = context.Context{Db: db}
 	e, req, rec = test.HTTPMocks(
 		"GET",
-		fmt.Sprintf("/api/login?tag=login&k1=%s&key=%s&sig=%s&action=%s", lnAuth.K1, key, sig, "login"),
+		fmt.Sprintf("/api/lnauth?tag=login&k1=%s&key=%s&sig=%s&action=%s", lnAuth.K1, key, sig, "login"),
 		nil)
 	c = e.NewContext(req, rec)
 
