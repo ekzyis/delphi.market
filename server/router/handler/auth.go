@@ -78,8 +78,7 @@ func HandleLnAuthCallback(sc context.Context) echo.HandlerFunc {
 		)
 
 		bail := func(code int, reason string) error {
-			c.JSON(code, map[string]string{"status": "ERROR", "reason": reason})
-			return nil
+			return c.JSON(code, map[string]string{"status": "ERROR", "reason": reason})
 		}
 
 		if err = c.Bind(&query); err != nil {
