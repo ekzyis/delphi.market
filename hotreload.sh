@@ -12,7 +12,7 @@ function restart_server() {
   tailwindcss -i public/css/_tw-input.css -o public/css/tailwind.css
   templ generate -path server/router/pages
   go build -o delphi.market .
-  ./delphi.market >> server.log 2>&1 &
+  ./delphi.market 2>&1 &
   templ generate -path server/router/pages
   PID=$(pidof delphi.market)
 }
@@ -29,7 +29,6 @@ function cleanup() {
 trap cleanup EXIT
 
 restart
-tail -f server.log &
 
 while inotifywait -r -e modify db/ env/ lib/ lnd/ public/ server/; do
   restart
