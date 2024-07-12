@@ -4,16 +4,16 @@ import c "git.ekzyis.com/ekzyis/delphi.market/server/router/context"
 
 templ Header() {
 	<header class="mt-3">
-		<nav class="flex flex-row">
+		<nav class="flex flex-row" hx-target="#content" hx-swap="outerHTML" hx-select="#content" hx-push-url="true">
 			<div>
-				<a href="/">home</a>
+				<button hx-get="/">home</button>
 			</div>
 			<div class="ms-auto">
-				<a href="/about">about</a>
+				<button hx-get="/about">about</button>
 				if ctx.Value(c.SessionContextKey) != nil {
-					<a href="/user">user</a>
+					<button hx-get="/user">user</button>
 				} else {
-					<a href="/login">login</a>
+					<button hx-get="/login">login</button>
 				}
 			</div>
 		</nav>

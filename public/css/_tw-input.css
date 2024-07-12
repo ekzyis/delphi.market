@@ -29,17 +29,23 @@
     @apply pb-1;
   }
 
-  a {
+  a,
+  button[hx-get],
+  button[hx-post] {
     text-decoration: underline;
     transition: background-color 150ms ease-in, color 150ms ease-in;
   }
 
-  a:hover {
+  a:hover,
+  button[hx-get]:hover,
+  button[hx-post]:hover {
     background-color: var(--color);
     color: var(--background-color);
   }
 
-  nav a {
+  nav a,
+  button[hx-get],
+  button[hx-post] {
     padding: 0 0.25em;
   }
 

@@ -7,15 +7,15 @@ templ Login() {
 		@components.Head()
 		<body class="container">
 			@components.Header()
-			<div class="flex flex-col text-center">
+			<div id="content" class="flex flex-col text-center">
 				@components.Figlet("random", "login")
-			</div>
-			<div class="flex flex-col mb-3 text-center">
-				<button class="login lightning my-3">login with lightning</button>
-				<button class="login nostr my-3">login with nostr</button>
-			</div>
-			<div class="flex flex-col mb-3 text-center">
-				<small><a class="text-muted" href="/signup">new here?</a></small>
+				<div class="flex flex-col mb-3 text-center">
+					<button class="login lightning my-3">login with lightning</button>
+					<button class="login nostr my-3">login with nostr</button>
+				</div>
+				<div class="flex flex-col mb-3 text-center">
+					<small><a class="text-muted" href="/signup">new here?</a></small>
+				</div>
 			</div>
 			@components.Footer()
 		</body>
