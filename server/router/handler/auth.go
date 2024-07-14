@@ -177,7 +177,7 @@ func HandleSessionCheck(sc context.Context) echo.HandlerFunc {
 		c.Response().Header().Set("HX-Location", "/")
 		// htmx requires a 200 response to follow redirects
 		// see https://github.com/bigskysoftware/htmx/issues/2052
-		return c.HTML(http.StatusOK, "/")
+		return c.JSON(http.StatusOK, nil)
 	}
 }
 
