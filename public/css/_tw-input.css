@@ -3,28 +3,28 @@
 @tailwind utilities;
 
 :root {
-  --background-color: #191d21;
+  --background: #191d21;
   --color: #d3d3d3;
-  --muted-color: #6c757d;
-  --lightning-color: #fada5e;
-  --nostr-color: #8d45dd;
+  --muted: #6c757d;
+  --lightning: #fada5e;
+  --nostr: #8d45dd;
   --black: #000;
   --white: #fff;
 }
 
 @layer base {
   body {
-    background-color: var(--background-color);
+    background-color: var(--background);
     color: var(--color);
     transition: background-color 150ms ease-in;
   }
 
   footer {
-    color: var(--muted-color);
+    color: var(--muted);
   }
 
   hr {
-    border-color: var(--muted-color);
+    border-color: var(--muted);
     border-style: dashed;
     @apply pb-1;
   }
@@ -39,7 +39,7 @@
   button[hx-get]:hover,
   button[hx-post]:hover {
     background-color: var(--color);
-    color: var(--background-color);
+    color: var(--background);
   }
 
   a:not(.no-link),
@@ -67,7 +67,7 @@
   }
 
   .text-muted {
-    color: var(--muted-color);
+    color: var(--muted);
   }
 
   .figlet {
@@ -89,20 +89,20 @@
   }
 
   .lightning {
-    background-color: var(--lightning-color) !important;
+    background-color: var(--lightning) !important;
     color: var(--black) !important;
   }
 
   .lightning:hover {
-    filter: brightness(125%) drop-shadow(0 0 0.33rem var(--lightning-color));
+    filter: brightness(125%) drop-shadow(0 0 0.33rem var(--lightning));
   }
 
   .nostr {
-    background-color: var(--nostr-color) !important;
+    background-color: var(--nostr) !important;
     color: var(--white) !important;
   }
 
   .nostr:hover {
-    filter: brightness(125%) drop-shadow(0 0 0.33rem var(--nostr-color));
+    filter: brightness(125%) drop-shadow(0 0 0.33rem var(--nostr));
   }
 }
