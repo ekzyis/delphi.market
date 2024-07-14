@@ -168,9 +168,10 @@ func HandleSessionCheck(sc context.Context) echo.HandlerFunc {
 			return c.JSON(http.StatusNotFound, "session not found")
 		}
 
-		c.Response().Header().Set("HX-Location", "/")
-		// htmx requires a 200 response to follow redirects
+		// HTMX can't follow 302 redirects with a Location header
+		// it requires a HX-Location header and 200 response instead
 		// see https://github.com/bigskysoftware/htmx/issues/2052
+		c.Response().Header().Set("HX-Location", "/")
 		return c.JSON(http.StatusOK, nil)
 	}
 }
