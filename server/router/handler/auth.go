@@ -186,3 +186,33 @@ func mapAction(action string) string {
 		return action
 	}
 }
+
+func HandleLogout(sc context.Context) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		var (
+			db        = sc.Db
+			ctx       = c.Request().Context()
+			cookie    *http.Cookie
+			sessionId string
+			err       error
+		)
+
+		if cookie, err = c.Cookie("session"); err != nil {
+			// cookie not found
+			return c.JSON(http.StatusNotFound, "session not found")
+		}
+
+		sessionId = cookie.Value
+		if _, err = db.ExecContext(ctx,
+			"DELETE FROM sessions WHERE id = $1", sessionId); err != nil {
+			return err
+		}
+
+		// tell browser that cookie is expired and thus can be deleted
+		c.SetCookie(&http.Cookie{Name: "session", HttpOnly: true, Path: "/", Value: sessionId, Secure: true, Expires: time.Now()})
+
+		return c.Redirect(http.StatusSeeOther, "/")
+		// c.Response().Header().Set("HX-Location", "/")
+		// return c.JSON(http.StatusOK, nil)
+	}
+}

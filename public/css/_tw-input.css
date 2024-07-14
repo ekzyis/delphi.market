@@ -32,7 +32,6 @@
   a:not(.no-link),
   button[hx-get],
   button[hx-post] {
-    text-decoration: underline;
     transition: background-color 150ms ease-in, color 150ms ease-in;
   }
 
@@ -41,6 +40,15 @@
   button[hx-post]:hover {
     background-color: var(--color);
     color: var(--background-color);
+  }
+
+  a:not(.no-link),
+  button[hx-get] {
+    text-decoration: underline;
+  }
+
+  button[hx-post] {
+    border-width: 1px;
   }
 
   nav a,
@@ -81,8 +89,8 @@
   }
 
   .lightning {
-    background-color: var(--lightning-color);
-    color: var(--black);
+    background-color: var(--lightning-color) !important;
+    color: var(--black) !important;
   }
 
   .lightning:hover {
@@ -90,8 +98,8 @@
   }
 
   .nostr {
-    background-color: var(--nostr-color);
-    color: var(--white);
+    background-color: var(--nostr-color) !important;
+    color: var(--white) !important;
   }
 
   .nostr:hover {

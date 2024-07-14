@@ -22,4 +22,7 @@ func Init(e *echo.Echo, sc Context) {
 	e.GET("/signup/:method", handler.HandleAuth(sc, "register"))
 	e.GET("/api/lnauth/callback", handler.HandleLnAuthCallback(sc))
 	e.GET("/session", handler.HandleSessionCheck(sc))
+
+	e.GET("/user", handler.HandleUser(sc), middleware.SessionGuard(sc))
+	e.POST("/logout", handler.HandleLogout(sc), middleware.SessionGuard(sc))
 }
