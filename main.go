@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"log"
 	"net/http"
@@ -20,15 +21,16 @@ var (
 
 func init() {
 	var (
-		dbUrl          string
-		lndAddress     string
-		lndCert        string
-		lndMacaroonDir string
-		lndNetwork     string
-		db_            *db.DB
-		lnd_           *lnd.LNDClient
-		ctx            router.Context
-		err            error
+		dbUrl       string
+		lndAddress  string
+		lndCert     string
+		tlsData     []byte
+		lndMacaroon string
+		lndNetwork  string
+		db_         *db.DB
+		lnd_        *lnd.LNDClient
+		ctx         router.Context
+		err         error
 	)
 
 	if err = env.Load(); err != nil {
@@ -37,8 +39,8 @@ func init() {
 
 	flag.StringVar(&dbUrl, "DATABASE_URL", "delphi.market", "Public URL of website")
 	flag.StringVar(&lndAddress, "LND_ADDRESS", "localhost:10001", "LND gRPC server address")
-	flag.StringVar(&lndCert, "LND_CERT", "", "Path to LND TLS certificate")
-	flag.StringVar(&lndMacaroonDir, "LND_MACAROON_DIR", "", "LND macaroon directory")
+	flag.StringVar(&lndCert, "LND_CERT", "", "LND TLS certificate in hex")
+	flag.StringVar(&lndMacaroon, "LND_MACAROON", "", "LND macaroon in hex")
 	flag.StringVar(&lndNetwork, "LND_NETWORK", "regtest", "LND network")
 	env.Parse()
 
@@ -52,11 +54,16 @@ func init() {
 		log.Fatalf("error connecting to database: %v", err)
 	}
 
+	if tlsData, err = hex.DecodeString(lndCert); err != nil {
+		log.Printf("[warn] error decoding LND TLS certificate: %v\n", err)
+	}
+
 	if lnd_, err = lnd.New(&lnd.LNDConfig{
-		LndAddress:  lndAddress,
-		TLSPath:     lndCert,
-		MacaroonDir: lndMacaroonDir,
-		Network:     lndclient.Network(lndNetwork),
+		LndAddress:        lndAddress,
+		CustomMacaroonHex: lndMacaroon,
+		TLSData:           string(tlsData),
+		Network:           lndclient.Network(lndNetwork),
+		Insecure:          false,
 	}); err != nil {
 		log.Printf("[warn] error connecting to LND: %v\n", err)
 		lnd_ = nil
