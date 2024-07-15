@@ -20,6 +20,10 @@ func HandleAuth(sc context.Context, action string) echo.HandlerFunc {
 			return LnAuth(sc, c, action)
 		}
 
+		if c.Param("method") == "nostr" {
+			return NostrAuth(sc, c, action)
+		}
+
 		// on session guard redirects to /login,
 		// we need to make sure that HTMX selects and targets correct element
 		c.Response().Header().Add("HX-Retarget", "#content")
@@ -151,6 +155,10 @@ func HandleLnAuthCallback(sc context.Context) echo.HandlerFunc {
 
 		return c.JSON(http.StatusOK, map[string]string{"status": "OK"})
 	}
+}
+
+func NostrAuth(sc context.Context, c echo.Context, action string) error {
+	return echo.NewHTTPError(http.StatusNotImplemented, nil)
 }
 
 func HandleSessionCheck(sc context.Context) echo.HandlerFunc {

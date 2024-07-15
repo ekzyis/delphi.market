@@ -34,7 +34,10 @@ templ Auth(action string) {
 						</svg>
 						{ action } with lightning
 					</button>
-					<button class="flex signup nostr my-3 items-center">
+					<button
+						class="flex signup nostr my-3 items-center"
+						hx-get={ string(templ.SafeURL(fmt.Sprintf("/%s/nostr", action))) }
+					>
 						<svg
 							class="me-1"
 							width="16"
