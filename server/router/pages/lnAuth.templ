@@ -2,7 +2,7 @@ package pages
 
 import "git.ekzyis.com/ekzyis/delphi.market/server/router/pages/components"
 
-templ LnAuth(qr string, lnurl string, action string) {
+templ LnAuth(lnurl string, action string) {
 	<html>
 		@components.Head()
 		<body class="container">
@@ -17,12 +17,7 @@ templ LnAuth(qr string, lnurl string, action string) {
 					hx-select="#content"
 					hx-push-url="true"
 				>
-					<a
-						class="mx-auto no-link"
-						href={ templ.SafeURL("lightning:" + lnurl) }
-					>
-						<img src={ "data:image/jpeg;base64," + qr }/>
-					</a>
+					@components.Qr(lnurl, "lightning:"+lnurl)
 					<small class="mx-auto w-[256px] my-1 break-words">{ lnurl }</small>
 				</div>
 				<div hx-get="/session" hx-trigger="every 1s" hx-swap="none"></div>

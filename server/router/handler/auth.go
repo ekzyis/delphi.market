@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"git.ekzyis.com/ekzyis/delphi.market/lib"
 	"git.ekzyis.com/ekzyis/delphi.market/server/auth"
 	"git.ekzyis.com/ekzyis/delphi.market/server/router/context"
 	"git.ekzyis.com/ekzyis/delphi.market/server/router/pages"
@@ -41,7 +40,6 @@ func LnAuth(sc context.Context, c echo.Context, action string) error {
 		sessionId string
 		// sessions expire in 30 days. TODO: refresh sessions
 		expires = time.Now().Add(60 * 60 * 24 * 30 * time.Second)
-		qr      string
 		err     error
 	)
 
@@ -56,10 +54,6 @@ func LnAuth(sc context.Context, c echo.Context, action string) error {
 		return err
 	}
 
-	if qr, err = lib.ToQR(lnAuth.LNURL); err != nil {
-		return err
-	}
-
 	c.SetCookie(&http.Cookie{
 		Name:     "session",
 		HttpOnly: true,
@@ -69,7 +63,7 @@ func LnAuth(sc context.Context, c echo.Context, action string) error {
 		Expires:  expires,
 	})
 
-	return pages.LnAuth(qr, lnAuth.LNURL, mapAction(action)).Render(context.RenderContext(sc, c), c.Response().Writer)
+	return pages.LnAuth(lnAuth.LNURL, mapAction(action)).Render(context.RenderContext(sc, c), c.Response().Writer)
 }
 
 func HandleLnAuthCallback(sc context.Context) echo.HandlerFunc {
