@@ -38,6 +38,10 @@ func httpErrorHandler(sc context.Context) echo.HTTPErrorHandler {
 			code = http.StatusInternalServerError
 		}
 
+		// make sure that HTMX selects and targets correct element
+		c.Response().Header().Add("HX-Retarget", "#content")
+		c.Response().Header().Add("HX-Reselect", "#content")
+
 		if err = c.HTML(code, buf.String()); err != nil {
 			c.Logger().Error(err)
 		}
