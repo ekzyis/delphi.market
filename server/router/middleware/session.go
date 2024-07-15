@@ -47,7 +47,7 @@ func SessionGuard(sc context.Context) echo.MiddlewareFunc {
 			session := c.Get("session")
 			if session == nil {
 				// this seems to work for non-interactive and htmx requests
-				return c.Redirect(http.StatusTemporaryRedirect, "/login")
+				return c.Redirect(http.StatusSeeOther, "/login")
 			}
 			return next(c)
 		}

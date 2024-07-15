@@ -20,6 +20,11 @@ func HandleAuth(sc context.Context, action string) echo.HandlerFunc {
 			return LnAuth(sc, c, action)
 		}
 
+		// on session guard redirects to /login,
+		// we need to make sure that HTMX selects and targets correct element
+		c.Response().Header().Add("HX-Retarget", "#content")
+		c.Response().Header().Add("HX-Reselect", "#content")
+
 		return pages.Auth(mapAction(action)).Render(context.RenderContext(sc, c), c.Response().Writer)
 	}
 }
