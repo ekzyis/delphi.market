@@ -1,17 +1,95 @@
 package pages
 
-import "git.ekzyis.com/ekzyis/delphi.market/server/router/pages/components"
+import (
+	c "git.ekzyis.com/ekzyis/delphi.market/server/router/context"
+	"git.ekzyis.com/ekzyis/delphi.market/server/router/pages/components"
+	"git.ekzyis.com/ekzyis/delphi.market/types"
+	"fmt"
+	"github.com/dustin/go-humanize"
+)
 
-templ Index() {
+templ Index(markets []types.Market) {
 	<html>
 		@components.Head()
 		<body class="container">
 			@components.Nav()
 			<div id="content" class="flex flex-col text-center">
 				@components.Figlet("random", "delphi")
-				<div class="font-mono my-3">A prediction market using the lightning network</div>
+				<div class="font-mono my-3"><small>A prediction market using the lightning network</small></div>
+				<div
+					id="grid-container"
+					class="border border-muted text-start"
+					hx-target="#grid-container"
+					hx-swap="outerHTML"
+					hx-select="#grid-container"
+					hx-push-url="true"
+				>
+					<div class="border border-muted">
+						<button hx-get="/" class={ tabStyle(ctx.Value(c.ReqPathContextKey).(string), "/") }>markets</button>
+						<button hx-get="/create" class={ tabStyle(ctx.Value(c.ReqPathContextKey).(string), "/create") }>create</button>
+					</div>
+					if ctx.Value(c.ReqPathContextKey).(string) == "/" {
+						<div class="grid grid-cols-[auto_fit-content(10%)_fit-content(10%)]">
+						for _, m := range markets {
+							<span class="ps-3 border-b border-muted pb-3 mt-3">
+							<a href={ templ.SafeURL(fmt.Sprintf("/market/%d", m.Id)) }>{ m.Question }</a>
+							<div class="text-small text-muted">{m.User.Name} / {humanize.Time(m.CreatedAt)} / {humanize.Time(m.EndDate)}</div>
+							</span>
+							<span class="px-3 border-b border-muted pb-3 mt-3 flex"><div class="self-center">51%</div></span>
+							<span class="pe-3 border-b border-muted pb-3 mt-3 flex"><div class="self-center">0</div></span>
+						}
+						</div>
+					} else {
+						<form
+							hx-post="/create"
+							hx-target="#modal"
+							hx-swap="outerHTML"
+							hx-select="#modal"
+							class="flex flex-col mx-3"
+						>
+							<label class="my-1" for="question">question</label>
+							<input
+								id="question"
+								name="question"
+								type="text"
+								class="my-1 p-1 text-black"
+								autocomplete="off"
+								required
+							/>
+							<div class="mt-3 mb-1">
+								<label for="description">description</label>
+								<span class="px-1 text-small text-muted">optional</span>
+							</div>
+							<textarea
+								id="description"
+								name="description"
+								type="text"
+								class="my-1 p-1 text-black"
+							></textarea>
+							<label class="mt-3" for="end_date">end date</label>
+							<input
+								id="end_date"
+								name="end_date"
+								type="date"
+								class="my-1 p-1 text-black"
+								autocomplete="off"
+								required
+							/>
+							<button type="submit" class="mt-3">submit</button>
+						</form>
+					}
+				</div>
 			</div>
+			@components.Modal(nil)
 			@components.Footer()
 		</body>
 	</html>
+}
+
+func tabStyle(path string, tab string) string {
+	class := "!no-underline"
+	if path == tab {
+		class += " font-bold border-b-none"
+	}
+	return class
 }

@@ -18,7 +18,6 @@ templ LnAuth(lnurl string, action string) {
 					hx-push-url="true"
 				>
 					@components.Qr(lnurl, "lightning:"+lnurl)
-					<small class="mx-auto w-[256px] my-1 break-words">{ lnurl }</small>
 				</div>
 				<div hx-get="/session" hx-trigger="every 1s" hx-swap="none"></div>
 			</div>

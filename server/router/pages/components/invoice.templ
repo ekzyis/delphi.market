@@ -1,0 +1,84 @@
+package components
+
+import (
+    "fmt"
+)
+
+templ Invoice(hash string, bolt11 string, msats int, expiresIn int, paid bool, redirectUrl templ.SafeURL) {
+    <div class="p-5 border border-muted bg-background text-center font-mono">
+        <div id="close" class="flex justify-end"><button class="w-fit text-muted hitbox hover:text-reset">X</button></div>
+        <div>Payment Required</div>
+        <div class="my-1">@Qr(bolt11, "lightning:"+bolt11)</div>
+        <div class="my-1">{ format(msats) }</div>
+        @InvoiceStatus(hash, expiresIn, paid, redirectUrl)
+        <div class="none" id="bolt11-data" bolt11-data={ templ.JSONString(bolt11) } hx-preserve></div>
+        <script type="text/javascript" id="bolt11-js" hx-preserve>
+            var $ = selector => document.querySelector(selector)
+            $("#close").addEventListener("click", function () {
+                // abort in-flight polls and prevent new polls
+                htmx.trigger("#poll", "htmx:abort")
+                $("#poll").addEventListener("htmx:beforeRequest", e => e.preventDefault())
+            })
+        </script>
+    </div>
+}
+
+templ InvoiceStatus(hash string, expiresIn int, paid bool, redirectUrl templ.SafeURL) {
+    if paid {
+        <div class="font-mono neon success my-1">PAID</div>
+        <div
+            id="poll"
+            hx-get={ string(redirectUrl) }
+            hx-trigger="load delay:3s"
+            hx-target="#content"
+            hx-swap="outerHTML"
+            hx-select="#content"
+            hx-push-url="true"
+            hx-select-oob="#modal" />
+    }
+    else if expiresIn <= 0 {
+        <div class="font-mono neon error my-1">EXPIRED</div>
+    } else {
+        <!-- invoice is pending -->
+        <div class="font-mono my-1" id="countdown" countdown-data={ templ.JSONString(expiresIn) } hx-preserve></div>
+        <script type="text/javascript" id="countdown-js" hx-preserve>
+            var $ = selector => document.querySelector(selector)
+            var expiresIn = JSON.parse($("#countdown").getAttribute("countdown-data"))
+
+            function pad(num, places) {
+                return String(num).padStart(places, "0")
+            }
+
+            function _countdown() {
+                var minutes = Math.floor(expiresIn / 60)
+                var seconds = expiresIn % 60
+                var text = `${pad(minutes, 2)}:${pad(seconds, 2)}`
+                try {
+                    $("#countdown").innerText = text
+                    expiresIn--
+                } catch {
+                    // countdown element disappeared
+                    clearInterval(interval)
+                }
+            }
+
+            _countdown()
+            var interval = setInterval(_countdown, 1000)
+        </script>
+        <div
+            id="poll"
+            hx-get={ string(templ.SafeURL("/invoice/" + hash)) }
+            hx-trigger="load delay:1s"
+            hx-target="#modal"
+            hx-swap="outerHTML"
+            hx-select="#modal" />
+    }
+}
+
+func format(msats int) string {
+    sats := msats / 1000
+    if sats == 1 {
+        return fmt.Sprintf("%d sat", sats)
+    }
+    return fmt.Sprintf("%d sats", sats)
+}

@@ -6,7 +6,12 @@ module.exports = {
       center: true,
       padding: '1rem'
     },
-    extend: {},
+    extend: {
+      colors: {
+        'background': '191d21',
+        'muted': '#6c757d',
+      },
+    },
   },
   plugins: [
     function ({ addComponents }) {

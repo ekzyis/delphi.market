@@ -68,7 +68,7 @@ func init() {
 		log.Printf("[warn] error connecting to LND: %v\n", err)
 		lnd_ = nil
 	} else {
-		// lnd_.CheckInvoices(db_)
+		go lnd_.CheckInvoices(db_)
 	}
 
 	ctx = server.Context{

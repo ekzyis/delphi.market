@@ -10,6 +10,10 @@
   --nostr: #8d45dd;
   --black: #000;
   --white: #fff;
+  --bg-success: #149e613d;
+  --fg-success:  #35df8d;
+  --bg-error: #f5395e3d;
+  --fg-error: #ff7386;
 }
 
 @layer base {
@@ -41,13 +45,17 @@
 
   a:not(.no-link),
   button[hx-get],
-  button[hx-post] {
+  button[hx-post],
+  button[type="submit"],
+  .button {
     transition: background-color 150ms ease-in, color 150ms ease-in;
   }
 
   a:not(.no-link):hover,
   button[hx-get]:hover,
-  button[hx-post]:hover {
+  button[hx-post]:hover,
+  button[type="submit"]:hover,
+  .button:hover {
     background-color: var(--color);
     color: var(--background);
   }
@@ -57,13 +65,16 @@
     text-decoration: underline;
   }
 
-  button[hx-post] {
+  button[hx-post],
+  button[type="submit"],
+  .button {
     border-width: 1px;
   }
 
   nav a,
   button[hx-get],
-  button[hx-post] {
+  button[hx-post],
+  button[type="submit"] {
     padding: 0 0.25em;
   }
 
@@ -78,6 +89,41 @@
 
   .text-muted {
     color: var(--muted);
+  }
+
+  .text-reset {
+    color: var(--color);
+  }
+
+  .hitbox {
+    padding: 15px;
+    margin: -15px;
+  }
+
+  .neon {
+    border: none;
+    padding: 0.5em 3em;
+    transition: background-color 150ms ease-in, color 150ms ease-in;
+  }
+
+  .neon.success {
+    background-color: var(--bg-success);
+    color: var(--fg-success);
+  }
+
+  .neon.success:hover {
+    background-color: var(--fg-success);
+    color: var(--white);
+  }
+
+  .neon.error {
+    background-color: var(--bg-error);
+    color: var(--fg-error);
+  }
+
+  .neon.error:hover {
+    background-color: var(--fg-error);
+    color: var(--white);
   }
 
   .figlet {
@@ -114,5 +160,9 @@
 
   .nostr:hover {
     filter: brightness(125%) drop-shadow(0 0 0.33rem var(--nostr));
+  }
+
+  #modal {
+    backdrop-filter: blur(10px);
   }
 }

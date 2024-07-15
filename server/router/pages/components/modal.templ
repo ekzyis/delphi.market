@@ -1,0 +1,28 @@
+package components
+
+templ Modal(component templ.Component) {
+	if component != nil {
+		<div
+			id="modal"
+			class="fixed left-0 top-0 w-screen h-screen"
+		>
+			<div
+				class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+			>
+				<div class="flex justify-center p-3 w-screen">
+					@component
+				</div>
+				<script type="text/javascript">
+					var $ = selector => document.querySelector(selector)
+					$("#close").addEventListener("click", function () {
+						$("#modal").removeAttribute("class")
+						$("#modal").setAttribute("class", "hidden")
+						$("#modal").innerHTML = ""
+					})
+				</script>
+			</div>
+		</div>
+	} else {
+		<div id="modal" class="hidden"></div>
+	}
+}

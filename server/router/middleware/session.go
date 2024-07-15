@@ -26,11 +26,11 @@ func Session(sc context.Context) echo.MiddlewareFunc {
 			if err = db.QueryRowContext(
 				ctx,
 				""+
-					"SELECT u.id, u.created_at, COALESCE(u.ln_pubkey, ''), COALESCE(u.nostr_pubkey, ''), u.msats "+
+					"SELECT u.id, u.name, u.created_at, COALESCE(u.ln_pubkey, ''), COALESCE(u.nostr_pubkey, ''), u.msats "+
 					"FROM sessions s LEFT JOIN users u ON u.id = s.user_id "+
 					"WHERE s.id = $1",
 				cookie.Value).
-				Scan(&u.Id, &u.CreatedAt, &u.LnPubkey, &u.NostrPubkey, &u.Msats); err == nil {
+				Scan(&u.Id, &u.Name, &u.CreatedAt, &u.LnPubkey, &u.NostrPubkey, &u.Msats); err == nil {
 				// session found
 				c.Set("session", u)
 			} else if err != sql.ErrNoRows {

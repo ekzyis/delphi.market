@@ -23,7 +23,9 @@ templ User(user *types.User) {
 					hx-select-oob="#nav"
 				>
 					<div class="font-bold">id</div>
-					<div>{  strconv.Itoa(user.Id) }</div>
+					<div>{ strconv.Itoa(user.Id) }</div>
+					<div class="font-bold">name</div>
+					<div>{ user.Name }</div>
 					<div class="font-bold">joined</div>
 					<div>{ user.CreatedAt.Format(time.DateOnly) }</div>
 					<div class="font-bold">sats</div>

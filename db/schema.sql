@@ -1,5 +1,6 @@
 CREATE TABLE users(
     id SERIAL PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL DEFAULT LEFT(md5(random()::text), 8),
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     ln_pubkey TEXT UNIQUE,
     nostr_pubkey TEXT UNIQUE,
@@ -24,10 +25,9 @@ CREATE TABLE invoices(
     user_id INTEGER NOT NULL REFERENCES users(id),
     msats BIGINT NOT NULL,
     msats_received BIGINT,
-    preimage TEXT NOT NULL UNIQUE,
     hash TEXT NOT NULL UNIQUE,
     bolt11 TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
     confirmed_at TIMESTAMP WITH TIME ZONE,
     held_since TIMESTAMP WITH TIME ZONE,
@@ -37,7 +37,8 @@ CREATE TABLE invoices(
 CREATE TABLE markets(
     id SERIAL PRIMARY KEY,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    description TEXT NOT NULL,
+    question TEXT NOT NULL,
+    description TEXT,
     end_date TIMESTAMP WITH TIME ZONE NOT NULL,
     settled_at TIMESTAMP WITH TIME ZONE,
     user_id INTEGER NOT NULL REFERENCES users(id),
