@@ -152,7 +152,7 @@ func HandleLnAuthCallback(sc context.Context) echo.HandlerFunc {
 }
 
 func NostrAuth(sc context.Context, c echo.Context, action string) error {
-	return echo.NewHTTPError(http.StatusNotImplemented, nil)
+	return echo.NewHTTPError(http.StatusNotImplemented)
 }
 
 func HandleSessionCheck(sc context.Context) echo.HandlerFunc {
