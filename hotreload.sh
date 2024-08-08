@@ -13,11 +13,7 @@ function restart_server() {
   [[ -z "$PID" ]] || kill -15 $PID
   ENV=development make build -B
   set -e
-  tailwindcss -i public/css/_tw-input.css -o public/css/tailwind.css
-  templ generate -path server/router/pages
-  go build -o delphi.market .
   ./delphi.market 2>&1 &
-  templ generate -path server/router/pages
   PID=$(pidof delphi.market)
 }
 
