@@ -4,6 +4,10 @@ PID=$(pidof delphi.market)
 
 set -e
 
+echo ":: remote port forwarding for dev1.delphi.market ::"
+ssh -fnNR 4322:localhost:4321 dev1.delphi.market
+echo
+
 function restart_server() {
   set +e
   [[ -z "$PID" ]] || kill -15 $PID
