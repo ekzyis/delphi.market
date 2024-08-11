@@ -19,6 +19,16 @@
     transition: background-color 150ms ease-in;
   }
 
+  #content {
+    min-height: 85svh;
+  }
+
+  @media (min-width: 768px) {
+    #content {
+      min-height: 90svh;
+    }
+  }
+
   footer {
     color: var(--muted);
   }
