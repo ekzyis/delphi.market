@@ -4,11 +4,13 @@ import (
     "git.ekzyis.com/ekzyis/delphi.market/server/router/pages/components"
 	"git.ekzyis.com/ekzyis/delphi.market/types"
 	"github.com/dustin/go-humanize"
+	"strconv"
+	"fmt"
 )
 
 // TODO: Add countdown? Use or at least show somewhere precise timestamps?
 
-templ Market(m types.Market) {
+templ Market(m types.Market, p types.MarketP) {
     <html>
 		@components.Head()
 		<body class="container">
@@ -33,4 +35,13 @@ templ Market(m types.Market) {
 			@components.Footer()
 		</body>
 	</html>
+}
+
+func formatPrice(p float64) string {
+	return fmt.Sprintf("%v msats", strconv.FormatInt(pToPrice(p), 10))
+}
+
+func pToPrice(p float64) int64 {
+	// 0.513 means 513 msats
+	return int64(p * 1e3)
 }

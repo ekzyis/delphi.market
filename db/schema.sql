@@ -42,33 +42,18 @@ CREATE TABLE markets(
     end_date TIMESTAMP WITH TIME ZONE NOT NULL,
     settled_at TIMESTAMP WITH TIME ZONE,
     user_id INTEGER NOT NULL REFERENCES users(id),
-    invoice_id INTEGER NOT NULL UNIQUE REFERENCES invoices(id)
+    invoice_id INTEGER NOT NULL UNIQUE REFERENCES invoices(id),
+    lmsr_b FLOAT NOT NULL
 );
-
-CREATE TABLE shares(
-    id SERIAL PRIMARY KEY,
-    market_id INTEGER NOT NULL REFERENCES markets(id),
-    description TEXT NOT NULL,
-    win BOOLEAN
-);
-
-CREATE TYPE order_side AS ENUM ('BUY', 'SELL');
 
 CREATE TABLE orders(
     id SERIAL PRIMARY KEY,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP WITH TIME ZONE,
-    share_id INTEGER NOT NULL REFERENCES shares(id),
+    market_id INTEGER NOT NULL REFERENCES markets(id),
     user_id INTEGER NOT NULL REFERENCES users(id),
-    side ORDER_SIDE NOT NULL,
     quantity BIGINT NOT NULL,
-    price BIGINT NOT NULL,
-    invoice_id INTEGER REFERENCES invoices(id),
-    order_id INTEGER REFERENCES orders(id)
+    outcome INTEGER NOT NULL,
+    invoice_id INTEGER REFERENCES invoices(id)
 );
-
-ALTER TABLE orders ADD CONSTRAINT order_price CHECK(price > 0 AND price < 100);
-ALTER TABLE orders ADD CONSTRAINT order_quantity CHECK(quantity > 0);
 
 CREATE TABLE withdrawals(
     id SERIAL PRIMARY KEY,
