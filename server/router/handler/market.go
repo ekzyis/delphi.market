@@ -99,9 +99,11 @@ func HandleMarket(sc context.Context) echo.HandlerFunc {
 
 		if err = db.QueryRowContext(ctx, ""+
 			"SELECT m.id, m.question, m.description, m.created_at, m.end_date, "+
-			"u.id, u.name, u.created_at, u.ln_pubkey, u.nostr_pubkey, msats "+
-			"FROM markets m JOIN users u ON m.user_id = u.id "+
-			"WHERE m.id = $1", id).Scan(
+			"u.id, u.name, u.created_at, u.ln_pubkey, u.nostr_pubkey, u.msats "+
+			"FROM markets m "+
+			"JOIN users u ON m.user_id = u.id "+
+			"JOIN invoices i ON m.invoice_id = i.id "+
+			"WHERE m.id = $1 AND i.confirmed_at IS NOT NULL", id).Scan(
 			&m.Id, &m.Question, &m.Description, &m.CreatedAt, &m.EndDate,
 			&u.Id, &u.Name, &u.CreatedAt, &u.LnPubkey, &u.NostrPubkey, &u.Msats); err != nil {
 			if err == sql.ErrNoRows {
