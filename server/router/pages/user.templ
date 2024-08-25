@@ -1,0 +1,39 @@
+package pages
+
+import (
+	"git.ekzyis.com/ekzyis/delphi.market/server/router/pages/components"
+	"git.ekzyis.com/ekzyis/delphi.market/types"
+	"strconv"
+	"time"
+)
+
+templ User(user *types.User) {
+	<html>
+		@components.Head()
+		<body class="container">
+			@components.Nav()
+			<div id="content" class="flex flex-col">
+				@components.Figlet("random", "user")
+				<div
+					class="grid grid-cols-2 gap-4 my-3 mx-auto"
+					hx-target="#content"
+					hx-swap="outerHTML"
+					hx-select="#content"
+					hx-push-url="true"
+					hx-select-oob="#nav"
+				>
+					<div class="font-bold">id</div>
+					<div>{ strconv.Itoa(user.Id) }</div>
+					<div class="font-bold">name</div>
+					<div>{ user.Name }</div>
+					<div class="font-bold">joined</div>
+					<div>{ user.CreatedAt.Format(time.DateOnly) }</div>
+					<div class="font-bold">sats</div>
+					<div>{ strconv.Itoa(int(user.Msats) / 1000) }</div>
+					<button hx-post="/logout" class="col-span-2">logout</button>
+				</div>
+			</div>
+			@components.Footer()
+		</body>
+	</html>
+}

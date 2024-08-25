@@ -7,3 +7,9 @@ delphi.market
 # required for hot reload
 public/hotreload
 *.log
+
+# templ
+*_templ.go
+
+# tailwindcss
+public/css/tailwind.css

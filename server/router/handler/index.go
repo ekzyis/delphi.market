@@ -1,41 +1,46 @@
 package handler
 
 import (
-	"net/http"
+	"database/sql"
 
-	"git.ekzyis.com/ekzyis/delphi.market/db"
 	"git.ekzyis.com/ekzyis/delphi.market/server/router/context"
+	"git.ekzyis.com/ekzyis/delphi.market/server/router/pages"
+	"git.ekzyis.com/ekzyis/delphi.market/types"
 	"github.com/labstack/echo/v4"
 )
 
-func HandleIndex(sc context.ServerContext) echo.HandlerFunc {
+func HandleIndex(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
-			markets []db.Market
+			db      = sc.Db
+			ctx     = c.Request().Context()
+			rows    *sql.Rows
 			err     error
-			data    map[string]any
+			markets []types.Market
 		)
-		if err = sc.Db.FetchActiveMarkets(&markets); err != nil {
+
+		if rows, err = db.QueryContext(ctx, ""+
+			"SELECT m.id, m.question, m.description, m.created_at, m.end_date, "+
+			"u.id, u.name, u.created_at, u.ln_pubkey, u.nostr_pubkey, u.msats "+
+			"FROM markets m "+
+			"JOIN users u ON m.user_id = u.id "+
+			"JOIN invoices i ON m.invoice_id = i.id "+
+			"WHERE i.confirmed_at IS NOT NULL"); err != nil {
 			return err
 		}
-		data = map[string]any{
-			"session": c.Get("session"),
-			"markets": markets,
+
+		for rows.Next() {
+			var m types.Market
+			var u types.User
+			if err = rows.Scan(
+				&m.Id, &m.Question, &m.Description, &m.CreatedAt, &m.EndDate,
+				&u.Id, &u.Name, &u.CreatedAt, &u.LnPubkey, &u.NostrPubkey, &u.Msats); err != nil {
+				return err
+			}
+			m.User = u
+			markets = append(markets, m)
 		}
 
-		return sc.Render(c, http.StatusOK, "index.html", data)
-	}
-}
-
-func HandleMarkets(sc context.ServerContext) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		var (
-			markets []db.Market
-			err     error
-		)
-		if err = sc.Db.FetchActiveMarkets(&markets); err != nil {
-			return err
-		}
-		return c.JSON(http.StatusOK, markets)
+		return pages.Index(markets).Render(context.RenderContext(sc, c), c.Response().Writer)
 	}
 }

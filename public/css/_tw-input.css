@@ -1,0 +1,168 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #191d21;
+  --color: #d3d3d3;
+  --muted: #6c757d;
+  --lightning: #fada5e;
+  --nostr: #8d45dd;
+  --black: #000;
+  --white: #fff;
+  --bg-success: #149e613d;
+  --fg-success:  #35df8d;
+  --bg-error: #f5395e3d;
+  --fg-error: #ff7386;
+}
+
+@layer base {
+  body {
+    background-color: var(--background);
+    color: var(--color);
+    transition: background-color 150ms ease-in;
+  }
+
+  #content {
+    min-height: 85svh;
+  }
+
+  @media (min-width: 768px) {
+    #content {
+      min-height: 90svh;
+    }
+  }
+
+  footer {
+    color: var(--muted);
+  }
+
+  hr {
+    border-color: var(--muted);
+    border-style: dashed;
+    @apply pb-1;
+  }
+
+  a:not(.no-link),
+  button[hx-get],
+  button[hx-post],
+  button[type="submit"],
+  .button {
+    transition: background-color 150ms ease-in, color 150ms ease-in;
+  }
+
+  a:not(.no-link):hover,
+  button[hx-get]:hover,
+  button[hx-post]:hover,
+  button[type="submit"]:hover,
+  .button:hover {
+    background-color: var(--color);
+    color: var(--background);
+  }
+
+  a:not(.no-link),
+  button[hx-get] {
+    text-decoration: underline;
+  }
+
+  button[hx-post],
+  button[type="submit"],
+  .button {
+    border-width: 1px;
+  }
+
+  nav a,
+  button[hx-get],
+  button[hx-post],
+  button[type="submit"] {
+    padding: 0 0.25em;
+  }
+
+  h1 {
+    font-size: 24px
+  }
+
+  iframe {
+    width: 300px;
+    aspect-ratio: 560/315;
+  }
+
+  .text-muted {
+    color: var(--muted);
+  }
+
+  .text-reset {
+    color: var(--color);
+  }
+
+  .hitbox {
+    padding: 15px;
+    margin: -15px;
+  }
+
+  .neon {
+    border: none;
+    padding: 0.5em 3em;
+    transition: background-color 150ms ease-in, color 150ms ease-in;
+  }
+
+  .neon.success {
+    background-color: var(--bg-success);
+    color: var(--fg-success);
+  }
+
+  .neon.success:hover {
+    background-color: var(--fg-success);
+    color: var(--white);
+  }
+
+  .neon.error {
+    background-color: var(--bg-error);
+    color: var(--fg-error);
+  }
+
+  .neon.error:hover {
+    background-color: var(--fg-error);
+    color: var(--white);
+  }
+
+  .figlet {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 144px;
+    @apply my-3
+  }
+
+  .login, .signup {
+    text-decoration: none !important;
+    transition: none !important;
+    padding: 0.25em 1em !important;
+    width: fit-content;
+    margin: 0 auto;
+    border-radius: 5px;
+    font-weight: bold;
+  }
+
+  .lightning {
+    background-color: var(--lightning) !important;
+    color: var(--black) !important;
+  }
+
+  .lightning:hover {
+    filter: brightness(125%) drop-shadow(0 0 0.33rem var(--lightning));
+  }
+
+  .nostr {
+    background-color: var(--nostr) !important;
+    color: var(--white) !important;
+  }
+
+  .nostr:hover {
+    filter: brightness(125%) drop-shadow(0 0 0.33rem var(--nostr));
+  }
+
+  #modal {
+    backdrop-filter: blur(10px);
+  }
+}

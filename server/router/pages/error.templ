@@ -1,0 +1,21 @@
+package pages
+
+import (
+	"git.ekzyis.com/ekzyis/delphi.market/server/router/pages/components"
+	"net/http"
+	"strconv"
+)
+
+templ Error(code int) {
+	<html>
+		@components.Head()
+		<body class="container">
+			@components.Nav()
+			<div id="content" class="flex flex-col text-center">
+				@components.Figlet("random", strconv.Itoa(code))
+				<div class="font-mono mb-3">{ http.StatusText(code) }</div>
+			</div>
+			@components.Footer()
+		</body>
+	</html>
+}

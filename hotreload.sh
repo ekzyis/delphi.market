@@ -4,12 +4,16 @@ PID=$(pidof delphi.market)
 
 set -e
 
+echo ":: remote port forwarding for dev1.delphi.market ::"
+ssh -fnNR 4322:localhost:4321 dev1.delphi.market
+echo
+
 function restart_server() {
   set +e
   [[ -z "$PID" ]] || kill -15 $PID
   ENV=development make build -B
   set -e
-  ./delphi.market >> server.log 2>&1 &
+  ./delphi.market 2>&1 &
   PID=$(pidof delphi.market)
 }
 
@@ -25,8 +29,7 @@ function cleanup() {
 trap cleanup EXIT
 
 restart
-tail -f server.log &
 
-while inotifywait -r -e modify db/ env/ lib/ lnd/ pages/ public/ server/; do
+while inotifywait -r -e modify db/ env/ lib/ lnd/ public/ server/; do
   restart
 done

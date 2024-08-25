@@ -2,109 +2,68 @@ package handler
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
+	"regexp"
 	"time"
 
-	"git.ekzyis.com/ekzyis/delphi.market/db"
-	"git.ekzyis.com/ekzyis/delphi.market/lib"
 	"git.ekzyis.com/ekzyis/delphi.market/server/router/context"
+	"git.ekzyis.com/ekzyis/delphi.market/server/router/pages/components"
+	"git.ekzyis.com/ekzyis/delphi.market/types"
+	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"
-	"github.com/lightningnetwork/lnd/lntypes"
 )
 
-func HandleInvoiceStatus(sc context.ServerContext) echo.HandlerFunc {
+func HandleInvoice(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
-			invoiceId string
-			invoice   db.Invoice
-			u         db.User
-			qr        string
-			err       error
+			db          = sc.Db
+			ctx         = c.Request().Context()
+			hash        = c.Param("hash")
+			u           = c.Get("session").(types.User)
+			inv         = types.Invoice{}
+			expiresIn   int
+			paid        bool
+			redirectUrl templ.SafeURL
+			qr          templ.Component
+			err         error
 		)
-		invoiceId = c.Param("id")
-		if err = sc.Db.FetchInvoice(&db.FetchInvoiceWhere{Id: invoiceId}, &invoice); err == sql.ErrNoRows {
+
+		if err = db.QueryRowContext(ctx, ""+
+			"SELECT user_id, msats, COALESCE(msats_received, 0), expires_at, confirmed_at, bolt11, COALESCE(description, '') "+
+			"FROM invoices "+
+			"WHERE hash = $1", hash).
+			Scan(&inv.UserId, &inv.Msats, &inv.MsatsReceived, &inv.ExpiresAt, &inv.ConfirmedAt, &inv.Bolt11, &inv.Description); err != nil {
+			if err == sql.ErrNoRows {
+				return echo.NewHTTPError(http.StatusNotFound)
+			}
+			c.Logger().Error(err)
+			return echo.NewHTTPError(http.StatusInternalServerError)
+		}
+
+		if u.Id != inv.UserId {
 			return echo.NewHTTPError(http.StatusNotFound)
-		} else if err != nil {
-			return err
 		}
-		if u = c.Get("session").(db.User); invoice.Pubkey != u.Pubkey {
-			return echo.NewHTTPError(http.StatusUnauthorized)
-		}
-		if qr, err = lib.ToQR(invoice.PaymentRequest); err != nil {
-			return err
-		}
-		invoice.Preimage = ""
-		data := map[string]any{
-			"Id":             invoice.Id,
-			"Msats":          invoice.Msats,
-			"MsatsReceived":  invoice.MsatsReceived,
-			"Hash":           invoice.Hash,
-			"PaymentRequest": invoice.PaymentRequest,
-			"CreatedAt":      invoice.CreatedAt,
-			"ExpiresAt":      invoice.ExpiresAt,
-			"ConfirmedAt":    invoice.ConfirmedAt,
-			"HeldSince":      invoice.HeldSince,
-			"Description":    invoice.Description,
-			"Qr":             qr,
-		}
-		return c.JSON(http.StatusOK, data)
+
+		expiresIn = int(time.Until(inv.ExpiresAt).Seconds())
+		paid = inv.MsatsReceived >= inv.Msats
+		redirectUrl = toRedirectUrl(inv.Description)
+
+		qr = components.Invoice(hash, inv.Bolt11, int(inv.Msats), expiresIn, paid, redirectUrl)
+
+		return components.Modal(qr).Render(context.RenderContext(sc, c), c.Response().Writer)
 	}
 }
 
-func HandleInvoice(sc context.ServerContext) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		var (
-			invoiceId string
-			invoice   db.Invoice
-			u         db.User
-			hash      lntypes.Hash
-			qr        string
-			status    string
-			err       error
-		)
-		invoiceId = c.Param("id")
-		if err = sc.Db.FetchInvoice(&db.FetchInvoiceWhere{Id: invoiceId}, &invoice); err == sql.ErrNoRows {
-			return echo.NewHTTPError(http.StatusNotFound)
-		} else if err != nil {
-			return err
-		}
-		if u = c.Get("session").(db.User); invoice.Pubkey != u.Pubkey {
-			return echo.NewHTTPError(http.StatusUnauthorized)
-		}
-		if hash, err = lntypes.MakeHashFromStr(invoice.Hash); err != nil {
-			return err
-		}
-		go sc.Lnd.CheckInvoice(sc.Db, hash)
-		if qr, err = lib.ToQR(invoice.PaymentRequest); err != nil {
-			return err
-		}
-		if invoice.ConfirmedAt.Valid {
-			status = "Paid"
-		} else if time.Now().After(invoice.ExpiresAt) {
-			status = "Expired"
-		}
-		data := map[string]any{
-			"session": c.Get("session"),
-			"invoice": invoice,
-			"status":  status,
-			"lnurl":   invoice.PaymentRequest,
-			"qr":      qr,
-		}
-		return sc.Render(c, http.StatusOK, "invoice.html", data)
-	}
-}
+var (
+	marketRegexp = regexp.MustCompile("^create market (?P<id>[0-9]+)$")
+)
 
-func HandleInvoices(sc context.ServerContext) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		var (
-			u        db.User
-			invoices []db.Invoice
-			err      error
-		)
-		u = c.Get("session").(db.User)
-		if err = sc.Db.FetchUserInvoices(u.Pubkey, &invoices); err != nil {
-			return err
-		}
-		return c.JSON(http.StatusOK, invoices)
+func toRedirectUrl(description string) templ.SafeURL {
+	var m []string
+	if m = marketRegexp.FindStringSubmatch(description); m != nil {
+		marketId := m[marketRegexp.SubexpIndex("id")]
+		return templ.SafeURL(fmt.Sprintf("/market/%s", marketId))
 	}
+	return "/"
 }
