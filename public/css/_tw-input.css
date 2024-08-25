@@ -78,6 +78,15 @@
     padding: 0 0.25em;
   }
 
+  button:disabled {
+    color: var(--muted);
+    border-color: var(--muted);
+  }
+
+  .htmx-request {
+    color: var(--muted);
+  }
+
   h1 {
     font-size: 24px
   }
@@ -85,6 +94,10 @@
   iframe {
     width: 300px;
     aspect-ratio: 560/315;
+  }
+
+  input {
+    color: var(--black);
   }
 
   .text-muted {
@@ -111,7 +124,7 @@
     color: var(--fg-success);
   }
 
-  .neon.success:hover {
+  .neon.success:hover, .neon.success.active {
     background-color: var(--fg-success);
     color: var(--white);
   }
@@ -121,7 +134,7 @@
     color: var(--fg-error);
   }
 
-  .neon.error:hover {
+  .neon.error:hover, .neon.error.active {
     background-color: var(--fg-error);
     color: var(--white);
   }

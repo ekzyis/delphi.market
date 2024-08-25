@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"strconv"
 	"time"
 
 	"git.ekzyis.com/ekzyis/delphi.market/lib/lmsr"
@@ -98,14 +99,25 @@ func HandleCreate(sc context.Context) echo.HandlerFunc {
 func HandleMarket(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
-			db  = sc.Db
-			ctx = c.Request().Context()
-			id  = c.Param("id")
-			m   = types.Market{}
-			u   = types.User{}
-			l   = types.LSMR{}
-			err error
+			db       = sc.Db
+			ctx      = c.Request().Context()
+			id       = c.Param("id")
+			quantity = c.QueryParam("q")
+			q        int64
+			m        = types.Market{}
+			u        = types.User{}
+			l        = types.LMSR{}
+			total    float64
+			quote0   = types.MarketQuote{}
+			quote1   = types.MarketQuote{}
+			err      error
 		)
+
+		if quantity == "" {
+			q = 1
+		} else if q, err = strconv.ParseInt(quantity, 10, 64); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "q must be integer")
+		}
 
 		if err = db.QueryRowContext(ctx, ""+
 			"SELECT m.id, m.question, m.description, m.created_at, m.end_date, m.lmsr_b, "+
@@ -149,41 +161,151 @@ func HandleMarket(sc context.Context) echo.HandlerFunc {
 			return err
 		}
 
-		return pages.Market(m, types.MarketP{
-			Pyes: lmsr.Price(l.B, l.Q2, l.Q1),
-			Pno:  lmsr.Price(l.B, l.Q1, l.Q2), // prices
+		total = lmsr.Quote(l.B, l.Q1, l.Q2, int(q))
+		quote0 = types.MarketQuote{
+			Outcome:    0,
+			AvgPrice:   total / float64(q),
+			TotalPrice: total,
+			Reward:     float64(q) - total,
+		}
 
-		}).Render(context.RenderContext(sc, c), c.Response().Writer)
+		total = lmsr.Quote(l.B, l.Q2, l.Q1, int(q))
+		quote1 = types.MarketQuote{
+			Outcome:    1,
+			AvgPrice:   total / float64(q),
+			TotalPrice: total,
+			Reward:     float64(q) - total,
+		}
+
+		return pages.Market(m, quote0, quote1).Render(context.RenderContext(sc, c), c.Response().Writer)
 	}
 }
 
-func GetPrice(sc context.Context) echo.HandlerFunc {
+func HandleOrder(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
-
 		var (
-			db  = sc.Db
-			ctx = c.Request().Context()
-			id  = c.Param("id")
-			m   = types.Market{}
-			u   = types.User{}
-			err error
+			db             = sc.Db
+			lnd            = sc.Lnd
+			tx             *sql.Tx
+			ctx            = c.Request().Context()
+			u              = c.Get("session").(types.User)
+			id             = c.Param("id")
+			quantity       = c.FormValue("q")
+			outcome        = c.FormValue("o")
+			q              int64
+			o              int64
+			m              = types.Market{}
+			mU             = types.User{}
+			l              = types.LMSR{}
+			totalF         float64
+			total          int
+			hash           lntypes.Hash
+			paymentRequest string
+			expiry         = int64(60)
+			expiresAt      = time.Now().Add(time.Second * time.Duration(expiry))
+			invoiceId      int
+			invDescription string
+			orderId        int
+			qr             templ.Component
+			err            error
 		)
 
+		if quantity == "" {
+			return echo.NewHTTPError(http.StatusBadRequest, "q must be given")
+		} else if q, err = strconv.ParseInt(quantity, 10, 64); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "q must be integer")
+		}
+
+		if outcome == "" {
+			return echo.NewHTTPError(http.StatusBadRequest, "o must be given")
+		} else if o, err = strconv.ParseInt(outcome, 10, 64); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "o must be integer")
+		}
+		if o < 0 && o > 1 {
+			return echo.NewHTTPError(http.StatusBadRequest, "o must be 0 or 1")
+		}
+
+		// TODO: refactor since this uses same queries as function above
 		if err = db.QueryRowContext(ctx, ""+
-			"SELECT m.id, m.question, m.description, m.created_at, m.end_date, "+
-			"u.id, u.name, u.created_at, u.ln_pubkey, u.nostr_pubkey, msats "+
-			"FROM markets m JOIN users u ON m.user_id = u.id "+
-			"WHERE m.id = $1", id).Scan(
-			&m.Id, &m.Question, &m.Description, &m.CreatedAt, &m.EndDate,
-			&u.Id, &u.Name, &u.CreatedAt, &u.LnPubkey, &u.NostrPubkey, &u.Msats); err != nil {
+			"SELECT m.id, m.question, m.description, m.created_at, m.end_date, m.lmsr_b, "+
+			"u.id, u.name, u.created_at, u.ln_pubkey, u.nostr_pubkey, u.msats "+
+			"FROM markets m "+
+			"JOIN users u ON m.user_id = u.id "+
+			"JOIN invoices i ON m.invoice_id = i.id "+
+			"WHERE m.id = $1 AND i.confirmed_at IS NOT NULL", id).Scan(
+			&m.Id, &m.Question, &m.Description, &m.CreatedAt, &m.EndDate, &l.B,
+			&mU.Id, &mU.Name, &mU.CreatedAt, &mU.LnPubkey, &mU.NostrPubkey, &mU.Msats); err != nil {
+			if err == sql.ErrNoRows {
+				return echo.NewHTTPError(http.StatusNotFound)
+			}
+			return err
+		}
+		m.User = mU
+
+		if err = db.QueryRowContext(ctx, ""+
+			"SELECT "+
+			"COUNT(o.quantity) FILTER(WHERE o.outcome = 0) AS q1, "+
+			"COUNT(o.quantity) FILTER(WHERE o.outcome = 1) AS q2 "+
+			"FROM orders o "+
+			"JOIN markets m ON o.market_id = m.id "+
+			"JOIN invoices i ON o.invoice_id = i.id "+
+			"WHERE o.market_id = $1 AND i.confirmed_at IS NOT NULL", id).Scan(
+			&l.Q1, &l.Q2); err != nil {
 			if err == sql.ErrNoRows {
 				return echo.NewHTTPError(http.StatusNotFound)
 			}
 			return err
 		}
 
-		m.User = u
+		if o == 0 {
+			totalF = lmsr.Quote(l.B, l.Q1, l.Q2, int(q))
+		} else if o == 1 {
+			totalF = lmsr.Quote(l.B, l.Q2, l.Q1, int(q))
+		}
 
-		return nil
+		total = int(math.Round(totalF * 1000))
+
+		if tx, err = db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelReadCommitted}); err != nil {
+			return err
+		}
+
+		if hash, paymentRequest, err = lnd.Client.AddInvoice(ctx,
+			&invoicesrpc.AddInvoiceData{
+				Value:  lnwire.MilliSatoshi(total),
+				Expiry: expiry,
+			}); err != nil {
+			return err
+		}
+
+		if err = tx.QueryRowContext(ctx, ""+
+			"INSERT INTO invoices (user_id, msats, hash, bolt11, expires_at) "+
+			"VALUES ($1, $2, $3, $4, $5) "+
+			"RETURNING id",
+			u.Id, total, hash.String(), paymentRequest, expiresAt).Scan(&invoiceId); err != nil {
+			return err
+		}
+
+		if err = tx.QueryRowContext(ctx, ""+
+			"INSERT INTO orders (market_id, user_id, quantity, outcome, invoice_id) "+
+			"VALUES ($1, $2, $3, $4, $5) "+
+			"RETURNING id",
+			id, u.Id, q, o, invoiceId).Scan(&orderId); err != nil {
+			return err
+		}
+
+		invDescription = fmt.Sprintf("create order %d for market %s", orderId, id)
+		if _, err = tx.ExecContext(ctx, ""+
+			"UPDATE invoices SET description = $1 WHERE id = $2",
+			invDescription, invoiceId); err != nil {
+			return err
+		}
+
+		if err = tx.Commit(); err != nil {
+			return err
+		}
+
+		qr = components.Invoice(hash.String(), paymentRequest, total, int(expiry), false, toRedirectUrl(invDescription))
+
+		return components.Modal(qr).Render(context.RenderContext(sc, c), c.Response().Writer)
 	}
 }

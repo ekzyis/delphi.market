@@ -57,11 +57,16 @@ func HandleInvoice(sc context.Context) echo.HandlerFunc {
 
 var (
 	marketRegexp = regexp.MustCompile("^create market (?P<id>[0-9]+)$")
+	orderRegexp  = regexp.MustCompile("^create order [0-9]+ for market (?P<id>[0-9]+)$")
 )
 
 func toRedirectUrl(description string) templ.SafeURL {
 	var m []string
 	if m = marketRegexp.FindStringSubmatch(description); m != nil {
+		marketId := m[marketRegexp.SubexpIndex("id")]
+		return templ.SafeURL(fmt.Sprintf("/market/%s", marketId))
+	}
+	if m = orderRegexp.FindStringSubmatch(description); m != nil {
 		marketId := m[marketRegexp.SubexpIndex("id")]
 		return templ.SafeURL(fmt.Sprintf("/market/%s", marketId))
 	}

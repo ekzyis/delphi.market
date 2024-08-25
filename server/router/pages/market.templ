@@ -4,16 +4,17 @@ import (
     "git.ekzyis.com/ekzyis/delphi.market/server/router/pages/components"
 	"git.ekzyis.com/ekzyis/delphi.market/types"
 	"github.com/dustin/go-humanize"
-	"strconv"
-	"fmt"
 )
 
 // TODO: Add countdown? Use or at least show somewhere precise timestamps?
 
-templ Market(m types.Market, p types.MarketP) {
+templ Market(m types.Market, q0 types.MarketQuote, q1 types.MarketQuote) {
     <html>
 		@components.Head()
-		<body class="container">
+		<body
+			x-data="{ outcome: undefined }"
+			class="container"
+			hx-preserve>
 			@components.Nav()
 			<div id="content" class="flex flex-col">
 				<small>
@@ -23,13 +24,38 @@ templ Market(m types.Market, p types.MarketP) {
 				<div class="text-center text-muted my-1">{humanize.Time(m.EndDate)}</div>
 				<div class="text-center text-muted my-1"></div>
 				<blockquote cite="ekzyis" class="p-4 mb-4 border-s-4 border-muted">
-					{ m.Description }
+					if m.Description != "" {
+						m.Description
+					} else {
+						&lt;empty&gt;
+					}
 					<div class="text-muted text-right pt-4">― {m.User.Name}, { humanize.Time(m.CreatedAt) }</div>
 				</blockquote>
-				<div class="flex justify-center my-1">
-					<button class="neon success mx-1">BET YES</button>
-					<button class="neon error mx-1">BET NO</button>
+				<div class="flex flex-col justify-center my-1">
+					<div class="flex flex-row justify-center">
+						<button
+							class="neon success mx-1"
+							x-on:click="outcome = outcome === 1 ? undefined : 1"
+							:class="{ 'active' : outcome === 1 }"
+						>
+							BET YES
+						</button>
+						<button
+							class="neon error mx-1"
+							x-on:click="outcome = outcome === 0 ? undefined : 0"
+							:class="{ 'active' : outcome === 0 }"
+						>
+							BET NO
+						</button>
+					</div>
+					<div class="mx-auto my-5" x-show="outcome === 1">
+						@components.MarketForm(m, 1, q1)
+					</div>
+					<div class="mx-auto my-5" x-show="outcome === 0">
+						@components.MarketForm(m, 0, q0)
+					</div>
 				</div>
+				
             </div>
 			@components.Modal(nil)
 			@components.Footer()
@@ -37,11 +63,3 @@ templ Market(m types.Market, p types.MarketP) {
 	</html>
 }
 
-func formatPrice(p float64) string {
-	return fmt.Sprintf("%v msats", strconv.FormatInt(pToPrice(p), 10))
-}
-
-func pToPrice(p float64) int64 {
-	// 0.513 means 513 msats
-	return int64(p * 1e3)
-}

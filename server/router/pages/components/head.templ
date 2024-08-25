@@ -24,6 +24,7 @@ templ Head() {
 			}'
 		/>
 		<script src="/js/htmx.js" integrity="sha384-Xh+GLLi0SMFPwtHQjT72aPG19QvKB8grnyRbYBNIdHWc2NkCrz65jlU7YrzO6qRp" crossorigin="anonymous"></script>
+		<script defer src="/js/alpine.js" crossorigin="anonymous"></script>
 		if ctx.Value(c.EnvContextKey) == "development" {
 			<script defer src="/js/hotreload.js"></script>
 		}

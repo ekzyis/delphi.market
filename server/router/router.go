@@ -17,6 +17,7 @@ func Init(e *echo.Echo, sc Context) {
 	e.GET("/create", handler.HandleIndex(sc))
 	e.POST("/create", handler.HandleCreate(sc), middleware.SessionGuard(sc))
 	e.GET("/market/:id", handler.HandleMarket(sc))
+	e.POST("/market/:id/order", handler.HandleOrder(sc), middleware.SessionGuard(sc))
 	e.GET("/about", handler.HandleAbout(sc))
 
 	e.GET("/login", handler.HandleAuth(sc, "login"))

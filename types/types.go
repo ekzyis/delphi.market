@@ -38,14 +38,15 @@ type Market struct {
 	EndDate     time.Time
 }
 
-type LSMR struct {
+type LMSR struct {
 	B  float64
 	Q1 int
 	Q2 int
 }
 
-type MarketP struct {
-	// probability of outcomes
-	Pyes float64
-	Pno  float64
+type MarketQuote struct {
+	Outcome    int
+	AvgPrice   float64
+	TotalPrice float64
+	Reward     float64
 }
