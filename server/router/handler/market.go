@@ -39,7 +39,7 @@ func HandleCreate(sc context.Context) echo.HandlerFunc {
 			// Maximum possible amount of money the market maker can lose is b*ln2.
 			// This means if we can only payout as many sats as we paid for the market,
 			// we need to solve for b: b = cost / ln2
-			b = float64(cost) / math.Log(2)
+			b = (float64(cost) / 1000) / math.Log(2)
 
 			expiry         = int64(600)
 			expiresAt      = time.Now().Add(time.Second * time.Duration(expiry))
