@@ -64,3 +64,17 @@ CREATE TABLE withdrawals(
     bolt11 TEXT NOT NULL UNIQUE,
     paid_at TIMESTAMP WITH TIME ZONE
 );
+
+CREATE FUNCTION lmsr(b FLOAT, q1 FLOAT, q2 FLOAT)
+RETURNS FLOAT AS $$
+BEGIN
+    RETURN b * LN(EXP(q1 / b) + EXP(q2 / b));
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE FUNCTION quote(b FLOAT, q1 FLOAT, q2 FLOAT, dq1 FLOAT)
+RETURNS FLOAT AS $$
+BEGIN
+    RETURN lmsr(b, q1+dq1, q2) - lmsr(b, q1, q2);
+END;
+$$ LANGUAGE plpgsql;
