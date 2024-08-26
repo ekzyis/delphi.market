@@ -8,7 +8,7 @@ import (
 
 // TODO: Add countdown? Use or at least show somewhere precise timestamps?
 
-templ Market(m types.Market, q0 types.MarketQuote, q1 types.MarketQuote) {
+templ Market(m types.Market, q0 types.MarketQuote, q1 types.MarketQuote, uQ0 int, uQ1 int) {
     <html>
 		@components.Head()
 		<body
@@ -49,10 +49,10 @@ templ Market(m types.Market, q0 types.MarketQuote, q1 types.MarketQuote) {
 						</button>
 					</div>
 					<div class="mx-auto my-5" x-show="outcome === 1">
-						@components.MarketForm(m, 1, q1)
+						@components.MarketForm(m, 1, q1, uQ1)
 					</div>
 					<div class="mx-auto my-5" x-show="outcome === 0">
-						@components.MarketForm(m, 0, q0)
+						@components.MarketForm(m, 0, q0, uQ0)
 					</div>
 				</div>
 				

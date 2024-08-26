@@ -7,7 +7,7 @@ import (
     "strconv"
 )
 
-templ MarketForm(m types.Market, outcome int, q types.MarketQuote) {
+templ MarketForm(m types.Market, outcome int, q types.MarketQuote, uQ int) {
     <form
         id={ formId(outcome) }
         autocomplete="off"
@@ -42,6 +42,8 @@ templ MarketForm(m types.Market, outcome int, q types.MarketQuote) {
         <div id="total">{formatPrice(q.TotalPrice)}</div>
         <label for="reward">{ "if you win:" }</label>
         <div id="reward">+{formatPrice(q.Reward)}</div>
+        <label for="uQ">you have:</label>
+        <div id="uQ">{ fmt.Sprint(uQ) }</div>
         <button type="submit" class="col-span-2">submit</button>
     </form>
 }

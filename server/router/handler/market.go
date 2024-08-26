@@ -101,17 +101,26 @@ func HandleMarket(sc context.Context) echo.HandlerFunc {
 		var (
 			db       = sc.Db
 			ctx      = c.Request().Context()
+			u        = types.User{}
 			id       = c.Param("id")
 			quantity = c.QueryParam("q")
 			q        int64
 			m        = types.Market{}
-			u        = types.User{}
+			mU       = types.User{}
 			l        = types.LMSR{}
 			total    float64
 			quote0   = types.MarketQuote{}
 			quote1   = types.MarketQuote{}
+			uQ0      int
+			uQ1      int
 			err      error
 		)
+
+		if c.Get("session") != nil {
+			u = c.Get("session").(types.User)
+		} else {
+			u.Id = -1
+		}
 
 		if quantity == "" {
 			q = 1
@@ -127,18 +136,20 @@ func HandleMarket(sc context.Context) echo.HandlerFunc {
 			"JOIN invoices i ON m.invoice_id = i.id "+
 			"WHERE m.id = $1 AND i.confirmed_at IS NOT NULL", id).Scan(
 			&m.Id, &m.Question, &m.Description, &m.CreatedAt, &m.EndDate, &l.B,
-			&u.Id, &u.Name, &u.CreatedAt, &u.LnPubkey, &u.NostrPubkey, &u.Msats); err != nil {
+			&mU.Id, &mU.Name, &mU.CreatedAt, &mU.LnPubkey, &mU.NostrPubkey, &mU.Msats); err != nil {
 			if err == sql.ErrNoRows {
 				return echo.NewHTTPError(http.StatusNotFound)
 			}
 			return err
 		}
-		m.User = u
+		m.User = mU
 
 		if err = db.QueryRowContext(ctx, ""+
 			"SELECT "+
 			"COALESCE(SUM(o.quantity) FILTER(WHERE o.outcome = 0), 0) AS q1, "+
-			"COALESCE(SUM(o.quantity) FILTER(WHERE o.outcome = 1), 0) AS q2 "+
+			"COALESCE(SUM(o.quantity) FILTER(WHERE o.outcome = 1), 0) AS q2, "+
+			"COALESCE(SUM(o.quantity) FILTER(WHERE o.outcome = 0 AND o.user_id = $2), 0) AS uq1, "+
+			"COALESCE(SUM(o.quantity) FILTER(WHERE o.outcome = 1 AND o.user_id = $2), 0) AS uq2 "+
 			"FROM orders o "+
 			"JOIN markets m ON o.market_id = m.id "+
 			"JOIN invoices i ON o.invoice_id = i.id "+
@@ -153,8 +164,8 @@ func HandleMarket(sc context.Context) echo.HandlerFunc {
 			// but this isn't sybil resistant.
 			//
 			// For now, we will ignore pending orders.
-			"WHERE o.market_id = $1 AND i.confirmed_at IS NOT NULL", id).Scan(
-			&l.Q1, &l.Q2); err != nil {
+			"WHERE o.market_id = $1 AND i.confirmed_at IS NOT NULL", id, u.Id).Scan(
+			&l.Q1, &l.Q2, &uQ0, &uQ1); err != nil {
 			if err == sql.ErrNoRows {
 				return echo.NewHTTPError(http.StatusNotFound)
 			}
@@ -177,7 +188,7 @@ func HandleMarket(sc context.Context) echo.HandlerFunc {
 			Reward:     float64(q) - total,
 		}
 
-		return pages.Market(m, quote0, quote1).Render(context.RenderContext(sc, c), c.Response().Writer)
+		return pages.Market(m, quote0, quote1, uQ0, uQ1).Render(context.RenderContext(sc, c), c.Response().Writer)
 	}
 }
 
