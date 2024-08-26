@@ -137,8 +137,8 @@ func HandleMarket(sc context.Context) echo.HandlerFunc {
 
 		if err = db.QueryRowContext(ctx, ""+
 			"SELECT "+
-			"COUNT(o.quantity) FILTER(WHERE o.outcome = 0) AS q1, "+
-			"COUNT(o.quantity) FILTER(WHERE o.outcome = 1) AS q2 "+
+			"COALESCE(SUM(o.quantity) FILTER(WHERE o.outcome = 0), 0) AS q1, "+
+			"COALESCE(SUM(o.quantity) FILTER(WHERE o.outcome = 1), 0) AS q2 "+
 			"FROM orders o "+
 			"JOIN markets m ON o.market_id = m.id "+
 			"JOIN invoices i ON o.invoice_id = i.id "+
@@ -244,8 +244,8 @@ func HandleOrder(sc context.Context) echo.HandlerFunc {
 
 		if err = db.QueryRowContext(ctx, ""+
 			"SELECT "+
-			"COUNT(o.quantity) FILTER(WHERE o.outcome = 0) AS q1, "+
-			"COUNT(o.quantity) FILTER(WHERE o.outcome = 1) AS q2 "+
+			"COALESCE(SUM(o.quantity) FILTER(WHERE o.outcome = 0), 0) AS q1, "+
+			"COALESCE(SUM(o.quantity) FILTER(WHERE o.outcome = 1), 0) AS q2 "+
 			"FROM orders o "+
 			"JOIN markets m ON o.market_id = m.id "+
 			"JOIN invoices i ON o.invoice_id = i.id "+
