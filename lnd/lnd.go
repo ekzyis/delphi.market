@@ -71,7 +71,7 @@ func (lnd *LNDClient) CheckInvoices(db *db.DB) {
 			}
 
 			if !inv.State.IsFinal() {
-				log.Printf("invoice pending: %s %s", h, time.Until(expiresAt))
+				log.Printf("invoice pending: %s expiry=%s", h, time.Until(expiresAt))
 				continue
 			}
 
