@@ -28,5 +28,9 @@ templ Head() {
 		if ctx.Value(c.EnvContextKey) == "development" {
 			<script defer src="/js/hotreload.js"></script>
 		}
+		<script type="text/javascript">
+			// helper functions
+			var $ = selector => document.querySelector(selector)
+		</script>
 	</head>
 }

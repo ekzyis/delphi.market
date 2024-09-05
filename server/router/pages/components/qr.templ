@@ -26,7 +26,6 @@ templ Qr(value string, href string) {
 templ CopyButton(value string) {
 	<div class="none" id="copy-data" copy-data={ templ.JSONString(value) } hx-preserve></div>
 	<script type="text/javascript" id="copy-js" hx-preserve>
-		var $ = selector => document.querySelector(selector)
 		var value = JSON.parse($("#copy-data").getAttribute("copy-data"))
 		$("#copy").onclick = function () {
 			window.navigator.clipboard.writeText(value)

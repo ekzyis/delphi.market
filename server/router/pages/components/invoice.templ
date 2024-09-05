@@ -13,7 +13,6 @@ templ Invoice(hash string, bolt11 string, msats int, expiresIn int, paid bool, r
 		@InvoiceStatus(hash, expiresIn, paid, redirectUrl)
 		<div class="none" id="bolt11-data" bolt11-data={ templ.JSONString(bolt11) } hx-preserve></div>
 		<script type="text/javascript" id="bolt11-js" hx-preserve>
-            var $ = selector => document.querySelector(selector)
             $("#close").addEventListener("click", function () {
                 // abort in-flight polls and prevent new polls
                 htmx.trigger("#poll", "htmx:abort")
@@ -42,7 +41,6 @@ templ InvoiceStatus(hash string, expiresIn int, paid bool, redirectUrl templ.Saf
 		<!-- invoice is pending -->
 		<div class="font-mono my-1" id="countdown" countdown-data={ templ.JSONString(expiresIn) } hx-preserve></div>
 		<script type="text/javascript" id="countdown-js" hx-preserve>
-            var $ = selector => document.querySelector(selector)
             var expiresIn = JSON.parse($("#countdown").getAttribute("countdown-data"))
 
             function pad(num, places) {
