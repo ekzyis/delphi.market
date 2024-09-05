@@ -1,27 +1,27 @@
 package pages
 
 import (
-    "git.ekzyis.com/ekzyis/delphi.market/server/router/pages/components"
+	"git.ekzyis.com/ekzyis/delphi.market/server/router/pages/components"
 	"git.ekzyis.com/ekzyis/delphi.market/types"
 	"github.com/dustin/go-humanize"
 )
 
 // TODO: Add countdown? Use or at least show somewhere precise timestamps?
-
 templ Market(m types.Market, q0 types.MarketQuote, q1 types.MarketQuote, uQ0 int, uQ1 int) {
-    <html>
+	<html>
 		@components.Head()
 		<body
 			x-data="{ outcome: undefined }"
 			class="container"
-			hx-preserve>
+			hx-preserve
+		>
 			@components.Nav()
 			<div id="content" class="flex flex-col">
 				<small>
 					@components.Figlet("random", "market")
 				</small>
 				<div class="text-center font-bold my-1">{ m.Question }</div>
-				<div class="text-center text-muted my-1">{humanize.Time(m.EndDate)}</div>
+				<div class="text-center text-muted my-1">{ humanize.Time(m.EndDate) }</div>
 				<div class="text-center text-muted my-1"></div>
 				<blockquote class="p-4 mb-4 border-s-4 border-muted">
 					if m.Description != "" {
@@ -29,7 +29,7 @@ templ Market(m types.Market, q0 types.MarketQuote, q1 types.MarketQuote, uQ0 int
 					} else {
 						&lt;empty&gt;
 					}
-					<div class="text-muted text-right pt-4">― {m.User.Name}, { humanize.Time(m.CreatedAt) }</div>
+					<div class="text-muted text-right pt-4">― { m.User.Name }, { humanize.Time(m.CreatedAt) }</div>
 				</blockquote>
 				<div class="flex flex-col justify-center my-1">
 					<div class="flex flex-row justify-center">
@@ -55,11 +55,9 @@ templ Market(m types.Market, q0 types.MarketQuote, q1 types.MarketQuote, uQ0 int
 						@components.MarketForm(m, 0, q0, uQ0)
 					</div>
 				</div>
-				
-            </div>
+			</div>
 			@components.Modal(nil)
 			@components.Footer()
 		</body>
 	</html>
 }
-

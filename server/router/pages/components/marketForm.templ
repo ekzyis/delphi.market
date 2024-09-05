@@ -1,65 +1,64 @@
 package components
 
 import (
-    "git.ekzyis.com/ekzyis/delphi.market/types"
-
-    "fmt"
-    "strconv"
+	"fmt"
+	"git.ekzyis.com/ekzyis/delphi.market/types"
+	"strconv"
 )
 
 templ MarketForm(m types.Market, outcome int, q types.MarketQuote, uQ int) {
-    <form
-        id={ formId(outcome) }
-        autocomplete="off"
-        class="grid grid-cols-2 gap-3"
-        hx-post={ fmt.Sprintf("/market/%d/order", m.Id) }
-        hx-target="#modal"
-        hx-swap="outerHTML"
-        hx-select="#modal"
-    >
-        <input type="hidden" name="o" value={ fmt.Sprint(outcome) } />
-        <div class="none col-span-2 htmx-request" />
-        <label for="p">avg price per share:</label>
-        <div id="p">{formatPrice(q.AvgPrice)}</div>
-        <label for="q">how many?</label>
-        <input
-            id={ inputId(outcome) }
-            name="q"
-            class="text-black px-1"
-            type="number"
-            autofocus
-            hx-get={ fmt.Sprintf("/market/%d", m.Id) }
-            hx-replace-url="true"
-            hx-target={ fmt.Sprintf("#%s", formId(outcome)) }
-            hx-swap="outerHTML"
-            hx-select={ fmt.Sprintf("#%s", formId(outcome)) }
-            hx-trigger="input changed delay:1s"
-            hx-preserve
-            hx-disabled-elt="next button"
-            hx-indicator={ hxIndicator(outcome) }
-        />
-        <label for="total">you pay:</label>
-        <div id="total">{formatPrice(q.TotalPrice)}</div>
-        <label for="reward">{ "if you win:" }</label>
-        <div id="reward">+{formatPrice(q.Reward)}</div>
-        <label for="uQ">you have:</label>
-        <div id="uQ">{ fmt.Sprint(uQ) }</div>
-        <button type="submit" class="col-span-2">submit</button>
-    </form>
+	<form
+		id={ formId(outcome) }
+		autocomplete="off"
+		class="grid grid-cols-2 gap-3"
+		hx-post={ fmt.Sprintf("/market/%d/order", m.Id) }
+		hx-target="#modal"
+		hx-swap="outerHTML"
+		hx-select="#modal"
+	>
+		<input type="hidden" name="o" value={ fmt.Sprint(outcome) }/>
+		<div class="none col-span-2 htmx-request"></div>
+		<label for="p">avg price per share:</label>
+		<div id="p">{ formatPrice(q.AvgPrice) }</div>
+		<label for="q">how many?</label>
+		<input
+			id={ inputId(outcome) }
+			name="q"
+			class="text-black px-1"
+			type="number"
+			autofocus
+			hx-get={ fmt.Sprintf("/market/%d", m.Id) }
+			hx-replace-url="true"
+			hx-target={ fmt.Sprintf("#%s", formId(outcome)) }
+			hx-swap="outerHTML"
+			hx-select={ fmt.Sprintf("#%s", formId(outcome)) }
+			hx-trigger="input changed delay:1s"
+			hx-preserve
+			hx-disabled-elt="next button"
+			hx-indicator={ hxIndicator(outcome) }
+		/>
+		<label for="total">you pay:</label>
+		<div id="total">{ formatPrice(q.TotalPrice) }</div>
+		<label for="reward">{ "if you win:" }</label>
+		<div id="reward">+{ formatPrice(q.Reward) }</div>
+		<label for="uQ">you have:</label>
+		<div id="uQ">{ fmt.Sprint(uQ) }</div>
+		<button type="submit" class="col-span-2">submit</button>
+	</form>
 }
 
-func formId (outcome int) string {
-    return fmt.Sprintf("outcome-%d-form", outcome)   
+func formId(outcome int) string {
+	return fmt.Sprintf("outcome-%d-form", outcome)
 }
 
-func inputId (outcome int) string {
-    return fmt.Sprintf("outcome-%d-q", outcome)
+func inputId(outcome int) string {
+	return fmt.Sprintf("outcome-%d-q", outcome)
 }
 
-func hxIndicator (outcome int) string {
-    return fmt.Sprintf(
-        "#%s>#p, #%s>#total, #%s>#reward",
-        formId(outcome), formId(outcome), formId(outcome))
+func hxIndicator(outcome int) string {
+	return fmt.Sprintf(
+		"#%s>#p, #%s>#total, #%s>#reward",
+		formId(outcome), formId(outcome), formId(outcome))
 }
 
 func formatPrice(p float64) string {

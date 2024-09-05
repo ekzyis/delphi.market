@@ -1,10 +1,10 @@
 package pages
 
 import (
+	"fmt"
 	c "git.ekzyis.com/ekzyis/delphi.market/server/router/context"
 	"git.ekzyis.com/ekzyis/delphi.market/server/router/pages/components"
 	"git.ekzyis.com/ekzyis/delphi.market/types"
-	"fmt"
 	"github.com/dustin/go-humanize"
 )
 
@@ -30,14 +30,14 @@ templ Index(markets []types.Market) {
 					</div>
 					if ctx.Value(c.ReqPathContextKey).(string) == "/" {
 						<div class="grid grid-cols-[auto_fit-content(10%)_fit-content(10%)]">
-						for _, m := range markets {
-							<span class="ps-3 border-b border-muted pb-3 mt-3">
-							<a href={ templ.SafeURL(fmt.Sprintf("/market/%d", m.Id)) }>{ m.Question }</a>
-							<div class="text-small text-muted">{m.User.Name} / {humanize.Time(m.CreatedAt)} / {humanize.Time(m.EndDate)}</div>
-							</span>
-							<span class="px-3 border-b border-muted pb-3 mt-3 flex"><div class="self-center">51%</div></span>
-							<span class="pe-3 border-b border-muted pb-3 mt-3 flex"><div class="self-center">0</div></span>
-						}
+							for _, m := range markets {
+								<span class="ps-3 border-b border-muted pb-3 mt-3">
+									<a href={ templ.SafeURL(fmt.Sprintf("/market/%d", m.Id)) }>{ m.Question }</a>
+									<div class="text-small text-muted">{ m.User.Name } / { humanize.Time(m.CreatedAt) } / { humanize.Time(m.EndDate) }</div>
+								</span>
+								<span class="px-3 border-b border-muted pb-3 mt-3 flex"><div class="self-center">51%</div></span>
+								<span class="pe-3 border-b border-muted pb-3 mt-3 flex"><div class="self-center">0</div></span>
+							}
 						</div>
 					} else {
 						<form
