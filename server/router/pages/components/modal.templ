@@ -13,7 +13,7 @@ templ Modal(component templ.Component) {
 					@component
 				</div>
 				<script type="text/javascript">
-					$("#close").addEventListener("click", function () {
+					htmx.on("#close", "click", function () {
 						$("#modal").removeAttribute("class")
 						$("#modal").setAttribute("class", "hidden")
 						$("#modal").innerHTML = ""

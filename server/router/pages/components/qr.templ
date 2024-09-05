@@ -27,11 +27,11 @@ templ CopyButton(value string) {
 	<div class="none" id="copy-data" copy-data={ templ.JSONString(value) } hx-preserve></div>
 	<script type="text/javascript" id="copy-js" hx-preserve>
 		var value = JSON.parse($("#copy-data").getAttribute("copy-data"))
-		$("#copy").onclick = function () {
+		htmx.on("#copy", "click", function () {
 			window.navigator.clipboard.writeText(value)
 			$("#copy").textContent = "copied"
 			setTimeout(() => $("#copy").textContent = "copy", 1000)
-		}
+		})
 	</script>
 }
 

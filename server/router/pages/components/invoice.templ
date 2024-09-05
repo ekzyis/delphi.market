@@ -13,10 +13,10 @@ templ Invoice(hash string, bolt11 string, msats int, expiresIn int, paid bool, r
 		@InvoiceStatus(hash, expiresIn, paid, redirectUrl)
 		<div class="none" id="bolt11-data" bolt11-data={ templ.JSONString(bolt11) } hx-preserve></div>
 		<script type="text/javascript" id="bolt11-js" hx-preserve>
-            $("#close").addEventListener("click", function () {
+            htmx.on("#close", "click", function () {
                 // abort in-flight polls and prevent new polls
                 htmx.trigger("#poll", "htmx:abort")
-                $("#poll").addEventListener("htmx:beforeRequest", e => e.preventDefault())
+                htmx.on("#poll", "htmx:beforeRequest", function (e) { e.preventDefault() })
             })
         </script>
 	</div>
