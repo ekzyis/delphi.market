@@ -18,14 +18,13 @@ Chart.register(
 
 const element = document.getElementById('chart')
 
-// TODO: get data from server
-const yes = [
-  { x: new Date('2024-01-01'), y: 20 },
-  { x: new Date('2024-02-01'), y: 41 },
-  { x: new Date('2024-03-01'), y: 53 }
-]
 
-const no = yes.map(({ x, y }) => ({ x, y: 100 - y }))
+function transformPoint({ X, Y }) {
+  return { x: new Date(X), y: Y * 100 }
+}
+
+const no = JSON.parse($("#chart-data").getAttribute("chart-data-p0")).map(transformPoint)
+const yes = JSON.parse($("#chart-data").getAttribute("chart-data-p1")).map(transformPoint)
 
 const config = {
   type: 'line',
@@ -35,7 +34,7 @@ const config = {
         data: yes,
         backgroundColor: '#149e613d',
         borderColor: '#149e613d',
-        borderWidth: 5,
+        borderWidth: 3,
         tension: 0, // draw straight lines instead of bezier curves
         pointStyle: false
       },
@@ -43,7 +42,7 @@ const config = {
         data: no,
         backgroundColor: '#f5395e3d',
         borderColor: '#f5395e3d',
-        borderWidth: 5,
+        borderWidth: 3,
         tension: 0,
         pointStyle: false
       }

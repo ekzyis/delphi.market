@@ -50,3 +50,8 @@ type MarketQuote struct {
 	TotalPrice float64
 	Reward     float64
 }
+
+type MarketPoint struct {
+	X time.Time
+	Y float64
+}

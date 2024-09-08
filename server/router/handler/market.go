@@ -113,6 +113,9 @@ func HandleMarket(sc context.Context) echo.HandlerFunc {
 			quote1   = types.MarketQuote{}
 			uQ0      int
 			uQ1      int
+			rows     *sql.Rows
+			p0       []types.MarketPoint
+			p1       []types.MarketPoint
 			err      error
 		)
 
@@ -172,6 +175,38 @@ func HandleMarket(sc context.Context) echo.HandlerFunc {
 			return err
 		}
 
+		if rows, err = db.QueryContext(ctx, ""+
+			"SELECT created_at, quote(b, q0, q1, 1) AS p0, quote(b, q1, q0, 1) AS p1 "+
+			"FROM ( "+
+			"  SELECT "+
+			"  m.lmsr_b AS b, o.created_at, "+
+			"  COALESCE(SUM(quantity) FILTER(WHERE o.outcome = 0) OVER (ORDER BY o.created_at ASC), 0) AS q0, "+
+			"  COALESCE(sum(quantity) filter(where o.outcome = 1) over (order by o.created_at ASC), 0) AS q1 "+
+			"  FROM markets m "+
+			"  JOIN orders o ON o.market_id = m.id "+
+			"  JOIN invoices i ON i.id = o.invoice_id "+
+			"  WHERE m.id = $1 AND i.confirmed_at IS NOT NULL "+
+			") AS o "+
+			"UNION "+
+			"SELECT m.created_at, quote(m.lmsr_b, 0, 0, 1) AS p0, quote(m.lmsr_b, 0, 0, 1) AS p1 "+
+			"FROM markets m "+
+			"ORDER BY created_at", id); err != nil {
+			return err
+		}
+
+		for rows.Next() {
+			var (
+				createdAt time.Time
+				_p0       float64
+				_p1       float64
+			)
+			if err = rows.Scan(&createdAt, &_p0, &_p1); err != nil {
+				return err
+			}
+			p0 = append(p0, types.MarketPoint{X: createdAt, Y: _p0})
+			p1 = append(p1, types.MarketPoint{X: createdAt, Y: _p1})
+		}
+
 		total = lmsr.Quote(l.B, l.Q1, l.Q2, int(q))
 		quote0 = types.MarketQuote{
 			Outcome:    0,
@@ -188,7 +223,11 @@ func HandleMarket(sc context.Context) echo.HandlerFunc {
 			Reward:     float64(q) - total,
 		}
 
-		return pages.Market(m, quote0, quote1, uQ0, uQ1).Render(context.RenderContext(sc, c), c.Response().Writer)
+		return pages.Market(
+			m,
+			p0, p1,
+			quote0, quote1,
+			uQ0, uQ1).Render(context.RenderContext(sc, c), c.Response().Writer)
 	}
 }
 

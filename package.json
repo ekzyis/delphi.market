@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "esbuild public/js/chart.js --bundle --minify --outfile=public/js/bundle.min.js"
+    "build": "esbuild public/js/chart.js --bundle --minify --outfile=public/js/chart.min.js"
   },
   "dependencies": {
     "chart.js": "^4.4.4",
