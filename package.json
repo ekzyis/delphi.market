@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "build": "esbuild public/js/chart.js --bundle --minify --outfile=public/js/bundle.min.js"
+  },
+  "dependencies": {
+    "chart.js": "^4.4.4",
+    "chartjs-adapter-dayjs-4": "^1.0.4",
+    "dayjs": "^1.11.13"
+  }
+}

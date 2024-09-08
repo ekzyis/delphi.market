@@ -17,12 +17,11 @@ templ Market(m types.Market, q0 types.MarketQuote, q1 types.MarketQuote, uQ0 int
 		>
 			@components.Nav()
 			<div id="content" class="flex flex-col">
-				<small>
-					@components.Figlet("random", "market")
-				</small>
-				<div class="text-center font-bold my-1">{ m.Question }</div>
+				<div class="text-center font-bold my-1 mt-3">{ m.Question }</div>
 				<div class="text-center text-muted my-1">{ humanize.Time(m.EndDate) }</div>
 				<div class="text-center text-muted my-1"></div>
+				<div class="flex justify-center w-full max-h-64 my-3"><canvas id="chart"></canvas></div>
+				<script src="/js/bundle.min.js"></script>
 				<blockquote class="p-4 mb-4 border-s-4 border-muted">
 					if m.Description != "" {
 						{ m.Description }

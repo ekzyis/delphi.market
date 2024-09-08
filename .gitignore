@@ -13,3 +13,7 @@ public/hotreload
 
 # tailwindcss
 public/css/tailwind.css
+
+# js
+node_modules
+public/js/*.min.js
