@@ -29,7 +29,9 @@ templ User(user *types.User) {
 					<div class="font-bold">joined</div>
 					<div>{ user.CreatedAt.Format(time.DateOnly) }</div>
 					<div class="font-bold">sats</div>
+					<!-- TODO: implement withdrawal of sats -->
 					<div>{ strconv.Itoa(int(user.Msats) / 1000) }</div>
+					<!-- TODO: add WebLN and NWC for send+recv -->
 					<button hx-post="/logout" class="col-span-2">logout</button>
 				</div>
 			</div>

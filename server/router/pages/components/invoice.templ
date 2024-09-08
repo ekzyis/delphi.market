@@ -25,6 +25,7 @@ templ Invoice(hash string, bolt11 string, msats int, expiresIn int, paid bool, r
 templ InvoiceStatus(hash string, expiresIn int, paid bool, redirectUrl templ.SafeURL) {
 	if paid {
 		<div class="font-mono neon success my-1">PAID</div>
+		<!-- TODO: show timer for redirect -->
 		<div
 			id="poll"
 			hx-get={ string(redirectUrl) }
