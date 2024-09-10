@@ -51,7 +51,7 @@ type MarketQuote struct {
 	Reward     float64
 }
 
-type MarketPoint struct {
+type Point struct {
 	X time.Time
 	Y float64
 }

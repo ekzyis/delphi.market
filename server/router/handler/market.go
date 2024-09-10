@@ -114,8 +114,8 @@ func HandleMarket(sc context.Context) echo.HandlerFunc {
 			uQ0      int
 			uQ1      int
 			rows     *sql.Rows
-			p0       []types.MarketPoint
-			p1       []types.MarketPoint
+			p0       []types.Point
+			p1       []types.Point
 			err      error
 		)
 
@@ -203,8 +203,8 @@ func HandleMarket(sc context.Context) echo.HandlerFunc {
 			if err = rows.Scan(&createdAt, &_p0, &_p1); err != nil {
 				return err
 			}
-			p0 = append(p0, types.MarketPoint{X: createdAt, Y: _p0})
-			p1 = append(p1, types.MarketPoint{X: createdAt, Y: _p1})
+			p0 = append(p0, types.Point{X: createdAt, Y: _p0})
+			p1 = append(p1, types.Point{X: createdAt, Y: _p1})
 		}
 
 		total = lmsr.Quote(l.B, l.Q1, l.Q2, int(q))
