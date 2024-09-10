@@ -36,6 +36,9 @@ type Market struct {
 	Description string
 	CreatedAt   time.Time
 	EndDate     time.Time
+	Pyes        float64
+	// market volume in sats
+	Volume float64
 }
 
 type LMSR struct {

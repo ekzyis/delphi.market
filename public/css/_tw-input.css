@@ -108,6 +108,14 @@
     color: var(--color);
   }
 
+  .text-success {
+    color: var(--fg-success);
+  }
+
+  .text-error {
+    color: var(--fg-error);
+  }
+
   .hitbox {
     padding: 15px;
     margin: -15px;

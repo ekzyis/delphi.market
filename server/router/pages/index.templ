@@ -36,8 +36,8 @@ templ Index(markets []types.Market) {
 									<a href={ templ.SafeURL(fmt.Sprintf("/market/%d", m.Id)) }>{ m.Question }</a>
 									<div class="text-small text-muted">{ m.User.Name } / { humanize.Time(m.CreatedAt) } / { humanize.Time(m.EndDate) }</div>
 								</span>
-								<span class="px-3 border-b border-muted pb-3 mt-3 flex"><div class="self-center">51%</div></span>
-								<span class="pe-3 border-b border-muted pb-3 mt-3 flex"><div class="self-center">0</div></span>
+								<span class={ fmt.Sprintf("%s %s", "px-3 border-b border-muted pb-3 mt-3 flex", colorize(m.Pyes)) }><div class="self-center">{ fmt.Sprintf("%.2f%%", m.Pyes * 100) }</div></span>
+								<span class="pe-3 border-b border-muted pb-3 mt-3 flex"><div class="self-center">{ fmt.Sprintf("%s", humanizeRound(m.Volume)) }</div></span>
 							}
 						</div>
 					} else {
@@ -90,6 +90,25 @@ templ Index(markets []types.Market) {
 
 func minDate() string {
 	return time.Now().Add(24 * time.Hour).Format("2006-01-02")
+}
+
+func humanizeRound(f float64) string {
+	if f > 1_000_000 {
+		return fmt.Sprintf("%.2fm", f/1_000_000)
+	} else if f > 1_000 {
+		return fmt.Sprintf("%.2fk", f/1_000)
+	} else {
+		return fmt.Sprintf("%.2f", f)
+	}
+}
+
+func colorize(f float64) string {
+	if f > 0.5 {
+		return "text-success"
+	} else {
+		return "text-error"
+	}
+
 }
 
 func tabStyle(path string, tab string) string {

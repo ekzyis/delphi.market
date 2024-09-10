@@ -173,6 +173,7 @@ func HandleMarket(sc context.Context) echo.HandlerFunc {
 
 		if err = db.QueryRowContext(ctx, ""+
 			"SELECT "+
+			"COALESCE(SUM(i.msats_received), 0) / 1000 AS volume, "+
 			"COALESCE(SUM(o.quantity) FILTER(WHERE o.outcome = 0), 0) AS q1, "+
 			"COALESCE(SUM(o.quantity) FILTER(WHERE o.outcome = 1), 0) AS q2, "+
 			"COALESCE(SUM(o.quantity) FILTER(WHERE o.outcome = 0 AND o.user_id = $2), 0) AS uq1, "+
@@ -192,12 +193,14 @@ func HandleMarket(sc context.Context) echo.HandlerFunc {
 			//
 			// For now, we will ignore pending orders.
 			"WHERE o.market_id = $1 AND i.confirmed_at IS NOT NULL", id, u.Id).
-			Scan(&l.Q1, &l.Q2, &uQuantityNo, &uQuantityYes); err != nil {
+			Scan(&m.Volume, &l.Q1, &l.Q2, &uQuantityNo, &uQuantityYes); err != nil {
 			if err == sql.ErrNoRows {
 				return echo.NewHTTPError(http.StatusNotFound)
 			}
 			return err
 		}
+
+		m.Pyes = lmsr.Quote(l.B, l.Q2, l.Q1, 1)
 
 		if rows, err = db.QueryContext(ctx, ""+
 			"SELECT created_at, quote(b, q0, q1, 1) AS p0, quote(b, q1, q0, 1) AS p1 "+
