@@ -11,7 +11,7 @@
   --black: #000;
   --white: #fff;
   --bg-success: #149e613d;
-  --fg-success:  #35df8d;
+  --fg-success: #35df8d;
   --bg-error: #f5395e3d;
   --fg-error: #ff7386;
 }
@@ -124,7 +124,8 @@
     color: var(--fg-success);
   }
 
-  .neon.success:hover, .neon.success.active {
+  .neon.success:hover,
+  .neon.success.active {
     background-color: var(--fg-success);
     color: var(--white);
   }
@@ -134,7 +135,8 @@
     color: var(--fg-error);
   }
 
-  .neon.error:hover, .neon.error.active {
+  .neon.error:hover,
+  .neon.error.active {
     background-color: var(--fg-error);
     color: var(--white);
   }
