@@ -99,29 +99,53 @@ func HandleCreate(sc context.Context) echo.HandlerFunc {
 func HandleMarket(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
-			db       = sc.Db
-			ctx      = c.Request().Context()
-			u        = types.User{}
-			id       = c.Param("id")
+			db  = sc.Db
+			ctx = c.Request().Context()
+
+			// session user
+			u = types.User{}
+
+			// market id
+			id = c.Param("id")
+
+			// quantity of shares user entered into form
 			quantity = c.QueryParam("q")
-			q        int64
-			m        = types.Market{}
-			mU       = types.User{}
-			l        = types.LMSR{}
-			total    float64
-			quote0   = types.MarketQuote{}
-			quote1   = types.MarketQuote{}
-			uQ0      int
-			uQ1      int
-			rows     *sql.Rows
-			p0       []types.Point
-			p1       []types.Point
-			err      error
+
+			// quantity as number
+			q int64
+
+			// current market
+			m = types.Market{}
+
+			// market founder
+			mU = types.User{}
+
+			// market LMSR data
+			l = types.LMSR{}
+
+			// total price for current quantity of shares in sats
+			total float64
+
+			// market quotes
+			quoteNo  = types.MarketQuote{}
+			quoteYes = types.MarketQuote{}
+
+			// how many shares the user already holds
+			uQuantityNo  int
+			uQuantityYes int
+			rows         *sql.Rows
+
+			// chart data
+			lineNo  []types.Point
+			lineYes []types.Point
+
+			err error
 		)
 
 		if c.Get("session") != nil {
 			u = c.Get("session").(types.User)
 		} else {
+			// unauthenticated user
 			u.Id = -1
 		}
 
@@ -167,8 +191,8 @@ func HandleMarket(sc context.Context) echo.HandlerFunc {
 			// but this isn't sybil resistant.
 			//
 			// For now, we will ignore pending orders.
-			"WHERE o.market_id = $1 AND i.confirmed_at IS NOT NULL", id, u.Id).Scan(
-			&l.Q1, &l.Q2, &uQ0, &uQ1); err != nil {
+			"WHERE o.market_id = $1 AND i.confirmed_at IS NOT NULL", id, u.Id).
+			Scan(&l.Q1, &l.Q2, &uQuantityNo, &uQuantityYes); err != nil {
 			if err == sql.ErrNoRows {
 				return echo.NewHTTPError(http.StatusNotFound)
 			}
@@ -203,12 +227,12 @@ func HandleMarket(sc context.Context) echo.HandlerFunc {
 			if err = rows.Scan(&createdAt, &_p0, &_p1); err != nil {
 				return err
 			}
-			p0 = append(p0, types.Point{X: createdAt, Y: _p0})
-			p1 = append(p1, types.Point{X: createdAt, Y: _p1})
+			lineNo = append(lineNo, types.Point{X: createdAt, Y: _p0})
+			lineYes = append(lineYes, types.Point{X: createdAt, Y: _p1})
 		}
 
 		total = lmsr.Quote(l.B, l.Q1, l.Q2, int(q))
-		quote0 = types.MarketQuote{
+		quoteNo = types.MarketQuote{
 			Outcome:    0,
 			AvgPrice:   total / float64(q),
 			TotalPrice: total,
@@ -216,7 +240,7 @@ func HandleMarket(sc context.Context) echo.HandlerFunc {
 		}
 
 		total = lmsr.Quote(l.B, l.Q2, l.Q1, int(q))
-		quote1 = types.MarketQuote{
+		quoteYes = types.MarketQuote{
 			Outcome:    1,
 			AvgPrice:   total / float64(q),
 			TotalPrice: total,
@@ -225,39 +249,63 @@ func HandleMarket(sc context.Context) echo.HandlerFunc {
 
 		return pages.Market(
 			m,
-			p0, p1,
-			quote0, quote1,
-			uQ0, uQ1).Render(context.RenderContext(sc, c), c.Response().Writer)
+			lineNo, lineYes,
+			quoteNo, quoteYes,
+			uQuantityNo, uQuantityYes).Render(context.RenderContext(sc, c), c.Response().Writer)
 	}
 }
 
 func HandleOrder(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
-			db             = sc.Db
-			lnd            = sc.Lnd
-			tx             *sql.Tx
-			ctx            = c.Request().Context()
-			u              = c.Get("session").(types.User)
-			id             = c.Param("id")
-			quantity       = c.FormValue("q")
-			outcome        = c.FormValue("o")
-			q              int64
-			o              int64
-			m              = types.Market{}
-			mU             = types.User{}
-			l              = types.LMSR{}
-			totalF         float64
-			total          int
+			db  = sc.Db
+			lnd = sc.Lnd
+			tx  *sql.Tx
+			ctx = c.Request().Context()
+			u   = c.Get("session").(types.User)
+
+			// market id
+			id = c.Param("id")
+
+			// how many shares user wants to buy
+			quantity = c.FormValue("q")
+			// quantity as number
+			q int64
+
+			// on which outcome user wants to bet
+			outcome = c.FormValue("o")
+			// outcome as id
+			o int64
+
+			// selected market
+			m = types.Market{}
+
+			// market founder
+			mU = types.User{}
+
+			// market LMSR data
+			l = types.LMSR{}
+
+			// total price as returned by LMSR for given quantity
+			totalF float64
+			// total rounded to msats
+			total int
+
+			// invoice data
 			hash           lntypes.Hash
 			paymentRequest string
 			expiry         = int64(60)
 			expiresAt      = time.Now().Add(time.Second * time.Duration(expiry))
 			invoiceId      int
 			invDescription string
-			orderId        int
-			qr             templ.Component
-			err            error
+
+			// id of created order
+			orderId int
+
+			// QR component during render
+			qr templ.Component
+
+			err error
 		)
 
 		if quantity == "" {
