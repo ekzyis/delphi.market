@@ -33,12 +33,12 @@ func HandleIndex(sc context.Context) echo.HandlerFunc {
 			"  GROUP BY o.market_id"+
 			")"+
 			"SELECT m.id, m.question, m.description, m.created_at, m.end_date, "+
-			"m.lmsr_b, l.q1, l.q2, l.volume, "+
+			"m.lmsr_b, COALESCE(l.q1, 0), COALESCE(l.q2, 0), COALESCE(l.volume, 0), "+
 			"u.id, u.name, u.created_at, u.ln_pubkey, u.nostr_pubkey, u.msats "+
 			"FROM markets m "+
 			"JOIN users u ON m.user_id = u.id "+
 			"JOIN invoices i ON m.invoice_id = i.id "+
-			"JOIN lmsr l ON m.id = l.market_id "+
+			"LEFT JOIN lmsr l ON m.id = l.market_id "+
 			"WHERE i.confirmed_at IS NOT NULL"); err != nil {
 			return err
 		}
