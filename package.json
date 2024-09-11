@@ -5,6 +5,7 @@
   "dependencies": {
     "chart.js": "^4.4.4",
     "chartjs-adapter-dayjs-4": "^1.0.4",
-    "dayjs": "^1.11.13"
+    "dayjs": "^1.11.13",
+    "esbuild": "^0.23.1"
   }
 }
