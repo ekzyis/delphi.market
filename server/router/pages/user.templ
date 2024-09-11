@@ -1,13 +1,14 @@
 package pages
 
 import (
+	"fmt"
 	"git.ekzyis.com/ekzyis/delphi.market/server/router/pages/components"
 	"git.ekzyis.com/ekzyis/delphi.market/types"
 	"strconv"
 	"time"
 )
 
-templ User(user *types.User) {
+templ User(user *types.User, errors *types.UserEditError) {
 	<html>
 		@components.Head()
 		<body class="container">
@@ -25,27 +26,33 @@ templ User(user *types.User) {
 					<div class="font-bold">id</div>
 					<div>{ strconv.Itoa(user.Id) }</div>
 					<div class="font-bold">name</div>
-					<div class="flex">
-						<span id="name">{ user.Name }</span>
-						<form
-							class="hidden flex mb-0"
-							hx-put="/user"
-							hx-push-url="false"
-							hx-target="#name"
-							hx-select="#name"
-						>
-							<input
-								name="name"
-								type="text"
-								value={ user.Name }
-								required
-								maxlength="16"
-								class="font-mono w-[160px]"
-							/>
-							<button class="ms-1 px-1" type="submit">save</button>
-						</form>
-						<button id="cancel" class="hidden flex text-muted hover:text-reset text-xs items-center ms-1">cancel</button>
-						<button id="edit" class="flex text-muted hover:text-reset text-xs items-center ms-1" hx-preserve>edit</button>
+					<div>
+						<div class="flex">
+							<span id="name" class={ maybeShow("", errors == nil || errors.Name == "") }>{ user.Name }</span>
+							<form
+								class="hidden flex mb-0"
+								hx-put="/user"
+								hx-push-url="false"
+								hx-target="#name"
+								hx-select="#name"
+								hx-select-oob="#error"
+							>
+								<input
+									name="name"
+									type="text"
+									value={ user.Name }
+									class="font-mono w-[160px]"
+								/>
+								<button class="ms-1 px-1" type="submit">save</button>
+							</form>
+							<button id="cancel" class="hidden flex text-muted hover:text-reset text-xs items-center ms-1">cancel</button>
+							<button id="edit" class="flex text-muted hover:text-reset text-xs items-center ms-1">edit</button>
+						</div>
+						if errors != nil && errors.Name != "" {
+							<div id="error" class="text-xs text-error">{ errors.Name }</div>
+						} else {
+							<div id="error" class="hidden"></div>
+						}
 					</div>
 					<div class="font-bold">joined</div>
 					<div>{ user.CreatedAt.Format(time.DateOnly) }</div>
@@ -69,10 +76,19 @@ templ User(user *types.User) {
 
 					htmx.on("#edit", "click", toggleForm)
 					htmx.on("#cancel", "click", toggleForm)
-					htmx.on("form", "htmx:afterRequest", toggleForm)
+					htmx.on("form", "htmx:afterRequest", ({ detail }) => {
+						if (detail.successful) toggleForm()
+					})
 				</script>
 			</div>
 			@components.Footer()
 		</body>
 	</html>
+}
+
+func maybeShow(class string, show bool) string {
+	if show {
+		return class
+	}
+	return fmt.Sprintf("%s %s", class, "hidden")
 }

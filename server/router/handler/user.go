@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 
 	"git.ekzyis.com/ekzyis/delphi.market/server/router/context"
 	"git.ekzyis.com/ekzyis/delphi.market/server/router/pages"
@@ -13,7 +14,7 @@ import (
 func HandleUser(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		u := c.Get("session").(types.User)
-		return pages.User(&u).Render(context.RenderContext(sc, c), c.Response().Writer)
+		return pages.User(&u, nil).Render(context.RenderContext(sc, c), c.Response().Writer)
 	}
 }
 
@@ -26,15 +27,25 @@ func HandleUserEdit(sc context.Context) echo.HandlerFunc {
 			name = c.FormValue("name")
 
 			maxLength = 16
+			errors    types.UserEditError
 			err       error
 		)
 
 		if name == "" {
-			return echo.NewHTTPError(http.StatusBadRequest, "name is required")
+			errors.Name = "required"
 		}
 
 		if len(name) > maxLength {
-			echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("name cannot be longer than %d characters", maxLength))
+			errors.Name = fmt.Sprintf("%d characters too long", len(name)-maxLength)
+		}
+
+		if !regexp.MustCompile(`^[a-zA-Z0-9_-]+$`).MatchString(name) {
+			errors.Name = "only letters, numbers, _ and - allowed"
+		}
+
+		if errors.Name != "" {
+			c.Response().WriteHeader(http.StatusBadRequest)
+			return pages.User(&u, &errors).Render(context.RenderContext(sc, c), c.Response().Writer)
 		}
 
 		if err = db.QueryRowContext(ctx,
@@ -43,6 +54,6 @@ func HandleUserEdit(sc context.Context) echo.HandlerFunc {
 			return err
 		}
 
-		return pages.User(&u).Render(context.RenderContext(sc, c), c.Response().Writer)
+		return pages.User(&u, &errors).Render(context.RenderContext(sc, c), c.Response().Writer)
 	}
 }

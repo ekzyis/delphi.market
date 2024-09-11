@@ -15,6 +15,10 @@ type User struct {
 	Msats       int64
 }
 
+type UserEditError struct {
+	Name string
+}
+
 type Invoice struct {
 	Id            int
 	UserId        int
