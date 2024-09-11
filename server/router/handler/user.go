@@ -33,13 +33,9 @@ func HandleUserEdit(sc context.Context) echo.HandlerFunc {
 
 		if name == "" {
 			errors.Name = "required"
-		}
-
-		if len(name) > maxLength {
+		} else if len(name) > maxLength {
 			errors.Name = fmt.Sprintf("%d characters too long", len(name)-maxLength)
-		}
-
-		if !regexp.MustCompile(`^[a-zA-Z0-9_-]+$`).MatchString(name) {
+		} else if !regexp.MustCompile(`^[a-zA-Z0-9_-]+$`).MatchString(name) {
 			errors.Name = "only letters, numbers, _ and - allowed"
 		}
 
