@@ -103,12 +103,15 @@ func humanizeRound(f float64) string {
 }
 
 func colorize(f float64) string {
-	if f > 0.5 {
+	eps := 1e-5
+
+	if f-0.5 > eps {
 		return "text-success"
-	} else {
+	} else if 0.5-f > eps {
 		return "text-error"
 	}
 
+	return "text-reset"
 }
 
 func tabStyle(path string, tab string) string {
