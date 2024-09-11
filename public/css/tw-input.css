@@ -194,4 +194,10 @@
   #modal {
     backdrop-filter: blur(10px);
   }
+
+  /* fix content flash that will be hidden when AlpineJS runs
+   * see https://alpinejs.dev/directives/cloak */
+  [x-cloak] {
+    display: none !important;
+  }
 }

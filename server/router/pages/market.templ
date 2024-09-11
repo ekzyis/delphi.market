@@ -53,10 +53,10 @@ templ Market(m types.Market, p0 []types.Point, p1 []types.Point, quoteNo types.M
 							BET NO
 						</button>
 					</div>
-					<div class="mx-auto my-5" x-show="outcome === 1">
+					<div class="mx-auto my-5" x-cloak x-show="outcome === 1">
 						@components.MarketForm(m, 1, quoteYes, uQuantityYes)
 					</div>
-					<div class="mx-auto my-5" x-show="outcome === 0">
+					<div class="mx-auto my-5" x-cloak x-show="outcome === 0">
 						@components.MarketForm(m, 0, quoteNo, uQuantityNo)
 					</div>
 				</div>
