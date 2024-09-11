@@ -23,6 +23,10 @@
     transition: background-color 150ms ease-in;
   }
 
+  * {
+    transition: background-color 150ms ease-in, color 150ms ease-in;
+  }
+
   #content {
     min-height: 85svh;
   }
@@ -97,8 +101,10 @@
   }
 
   input {
+    padding: 0 0.2em;
     color: var(--black);
   }
+
 
   .text-muted {
     color: var(--muted);

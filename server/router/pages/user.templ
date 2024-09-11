@@ -15,7 +15,7 @@ templ User(user *types.User) {
 			<div id="content" class="flex flex-col">
 				@components.Figlet("random", "user")
 				<div
-					class="grid grid-cols-2 gap-4 my-3 mx-auto"
+					class="grid grid-cols-[1fr_3fr] gap-4 my-3 mx-auto"
 					hx-target="#content"
 					hx-swap="outerHTML"
 					hx-select="#content"
@@ -25,15 +25,52 @@ templ User(user *types.User) {
 					<div class="font-bold">id</div>
 					<div>{ strconv.Itoa(user.Id) }</div>
 					<div class="font-bold">name</div>
-					<div>{ user.Name }</div>
+					<div class="flex">
+						<span id="name">{ user.Name }</span>
+						<form
+							class="hidden flex mb-0"
+							hx-put="/user"
+							hx-push-url="false"
+							hx-target="#name"
+							hx-select="#name"
+						>
+							<input
+								name="name"
+								type="text"
+								value={ user.Name }
+								required
+								maxlength="16"
+								class="font-mono w-[160px]"
+							/>
+							<button class="ms-1 px-1" type="submit">save</button>
+						</form>
+						<button id="cancel" class="hidden flex text-muted hover:text-reset text-xs items-center ms-1">cancel</button>
+						<button id="edit" class="flex text-muted hover:text-reset text-xs items-center ms-1" hx-preserve>edit</button>
+					</div>
 					<div class="font-bold">joined</div>
 					<div>{ user.CreatedAt.Format(time.DateOnly) }</div>
 					<div class="font-bold">sats</div>
 					<!-- TODO: implement withdrawal of sats -->
-					<div>{ strconv.Itoa(int(user.Msats) / 1000) }</div>
+					<div class="flex">
+						<span>{ strconv.Itoa(int(user.Msats) / 1000) }</span>
+						<button class="flex text-muted hover:text-reset text-xs items-center ms-3">withdraw</button>
+					</div>
 					<!-- TODO: add WebLN and NWC for send+recv -->
 					<button hx-post="/logout" class="col-span-2">logout</button>
 				</div>
+				<script>
+					function toggleForm () {
+						htmx.toggleClass("#name", "hidden")
+						htmx.toggleClass("#name+form", "hidden")
+						htmx.toggleClass("#cancel", "hidden")
+						htmx.toggleClass("#edit", "hidden")
+						$("#name+form>input").focus()
+					}
+
+					htmx.on("#edit", "click", toggleForm)
+					htmx.on("#cancel", "click", toggleForm)
+					htmx.on("form", "htmx:afterRequest", toggleForm)
+				</script>
 			</div>
 			@components.Footer()
 		</body>

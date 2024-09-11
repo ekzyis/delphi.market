@@ -28,6 +28,7 @@ func Init(e *echo.Echo, sc Context) {
 	e.GET("/session", handler.HandleSessionCheck(sc))
 
 	e.GET("/user", handler.HandleUser(sc), middleware.SessionGuard(sc))
+	e.PUT("/user", handler.HandleUserEdit(sc), middleware.SessionGuard(sc))
 	e.POST("/logout", handler.HandleLogout(sc), middleware.SessionGuard(sc))
 
 	e.GET("/invoice/:hash", handler.HandleInvoice(sc), middleware.SessionGuard(sc))
