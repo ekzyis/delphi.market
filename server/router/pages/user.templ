@@ -16,7 +16,7 @@ templ User(user *types.User, errors *types.UserEditError) {
 			<div id="content" class="flex flex-col">
 				@components.Figlet("random", "user")
 				<div
-					class="grid grid-cols-[1fr_3fr] gap-4 my-3 mx-auto"
+					class="grid grid-cols-[1fr_3fr_1fr] gap-4 my-3 mx-auto"
 					hx-target="#content"
 					hx-swap="outerHTML"
 					hx-select="#content"
@@ -25,58 +25,65 @@ templ User(user *types.User, errors *types.UserEditError) {
 				>
 					<div class="font-bold">id</div>
 					<div>{ strconv.Itoa(user.Id) }</div>
-					<div class="font-bold">name</div>
+					<div class="font-bold col-start-1">name</div>
 					<div>
 						<div class="flex">
-							<span id="name" class={ maybeShow("", errors == nil || errors.Name == "") }>{ user.Name }</span>
+							<span id="name" class={ maybeShow("w-40", errors == nil || errors.Name == "") }>{ user.Name }</span>
 							<form
+								id="name-form"
 								class="hidden flex mb-0"
 								hx-put="/user"
 								hx-push-url="false"
 								hx-target="#name"
 								hx-select="#name"
-								hx-select-oob="#error"
+								hx-select-oob="#name-error"
 							>
 								<input
 									name="name"
 									type="text"
 									value={ user.Name }
-									class="font-mono w-[160px]"
+									class="w-40 font-mono"
 								/>
-								<button class="ms-1 px-1" type="submit">save</button>
 							</form>
-							<button id="cancel" class="hidden flex text-muted hover:text-reset text-xs items-center ms-1">cancel</button>
-							<button id="edit" class="flex text-muted hover:text-reset text-xs items-center ms-1">edit</button>
 						</div>
 						if errors != nil && errors.Name != "" {
-							<div id="error" class="text-xs text-error">{ errors.Name }</div>
+							<div id="name-error" class="w-40 text-xs text-error py-1">{ errors.Name }</div>
 						} else {
-							<div id="error" class="hidden"></div>
+							<div id="name-error" class="hidden"></div>
 						}
+					</div>
+					<div id="name-btns" class="grid grid-cols-2 w-[90px] h-min self-center">
+						<button id="name-save" form="name-form" class="h-min hidden px-3 text-xs self-center" type="submit">save</button>
+						<button id="name-cancel" class="h-min hidden text-muted hover:text-reset self-center text-xs ms-2">cancel</button>
+						<button id="name-edit" class="col-span-2 text-muted hover:text-reset text-xs">edit</button>
 					</div>
 					<div class="font-bold">joined</div>
 					<div>{ user.CreatedAt.Format(time.DateOnly) }</div>
-					<div class="font-bold">sats</div>
+					<div class="font-bold col-start-1">sats</div>
 					<!-- TODO: implement withdrawal of sats -->
-					<div class="flex">
-						<span>{ strconv.Itoa(int(user.Msats) / 1000) }</span>
-						<button class="flex text-muted hover:text-reset text-xs items-center ms-3">withdraw</button>
-					</div>
+					<div>{ strconv.Itoa(int(user.Msats) / 1000) }</div>
+					<button class="text-muted hover:text-reset text-xs self-center h-min">withdraw</button>
 					<!-- TODO: add WebLN and NWC for send+recv -->
-					<button hx-post="/logout" class="col-span-2">logout</button>
+					<button hx-post="/logout" class="col-start-2">logout</button>
 				</div>
 				<script>
 					function toggleForm () {
 						htmx.toggleClass("#name", "hidden")
-						htmx.toggleClass("#name+form", "hidden")
-						htmx.toggleClass("#cancel", "hidden")
-						htmx.toggleClass("#edit", "hidden")
-						$("#name+form>input").focus()
+						htmx.toggleClass("#name-form", "hidden")
+						htmx.toggleClass("#name-save", "hidden")
+						htmx.toggleClass("#name-cancel", "hidden")
+						htmx.toggleClass("#name-edit", "hidden")
+						// make sure buttons don't shift on error
+						htmx.toggleClass("#name-btns", "self-center")
+						// reset error message on toggle
+						htmx.addClass("#name-error", "hidden")
+						$("#name-form>input").focus()
 					}
 
-					htmx.on("#edit", "click", toggleForm)
-					htmx.on("#cancel", "click", toggleForm)
-					htmx.on("form", "htmx:afterRequest", ({ detail }) => {
+					htmx.on("#name-edit", "click", toggleForm)
+					htmx.on("#name-cancel", "click", toggleForm)
+					htmx.on("#name-form", "htmx:afterRequest", ({ detail }) => {
+						// only toggle form if request was successful
 						if (detail.successful) toggleForm()
 					})
 				</script>
