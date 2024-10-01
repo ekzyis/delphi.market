@@ -35,7 +35,7 @@ func NewLnAuth(action string) (*LnAuth, error) {
 		err       error
 	)
 
-	if _, err := rand.Read(k1); err != nil {
+	if _, err = rand.Read(k1); err != nil {
 		return nil, fmt.Errorf("rand.Read error: %w", err)
 	}
 

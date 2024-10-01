@@ -2,6 +2,7 @@ package handler
 
 import (
 	"database/sql"
+	"log"
 	"net/http"
 	"time"
 
@@ -152,7 +153,131 @@ func HandleLnAuthCallback(sc context.Context) echo.HandlerFunc {
 }
 
 func NostrAuth(sc context.Context, c echo.Context, action string) error {
-	return echo.NewHTTPError(http.StatusNotImplemented)
+	var (
+		db        = sc.Db
+		ctx       = c.Request().Context()
+		nostrAuth *auth.NostrAuth
+		sessionId string
+		// sessions expire in 30 days. TODO: refresh sessions
+		expires = time.Now().Add(60 * 60 * 24 * 30 * time.Second)
+		err     error
+	)
+
+	if nostrAuth, err = auth.NewNostrAuth(action); err != nil {
+		return err
+	}
+
+	if err = db.QueryRowContext(
+		ctx,
+		"INSERT INTO nostr_auth(k1) VALUES($1) RETURNING session_id",
+		nostrAuth.K1).Scan(&sessionId); err != nil {
+		return err
+	}
+
+	c.SetCookie(&http.Cookie{
+		Name:     "session",
+		HttpOnly: true,
+		Path:     "/",
+		Value:    sessionId,
+		Secure:   true,
+		Expires:  expires,
+	})
+
+	return pages.NostrAuth(nostrAuth.K1, mapAction(action)).Render(context.RenderContext(sc, c), c.Response().Writer)
+}
+
+func HandleNostrAuthCallback(sc context.Context) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		var (
+			db        = sc.Db
+			tx        *sql.Tx
+			ctx       = c.Request().Context()
+			query     auth.NostrAuthCallback
+			sessionId string
+			userId    int
+			ok        bool
+			err       error
+			pqErr     *pq.Error
+		)
+
+		bail := func(code int, reason string) error {
+			if tx != nil {
+				// manual rollback is only required for tests afaik
+				tx.Rollback()
+			}
+			return c.JSON(code, map[string]string{"status": "ERROR", "reason": reason})
+		}
+
+		if err = c.Bind(&query); err != nil {
+			return bail(http.StatusInternalServerError, err.Error())
+		} else if query.K1 == "" || query.Sig == "" {
+			return bail(http.StatusBadRequest, "bad query")
+		}
+
+		if tx, err = db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelReadCommitted}); err != nil {
+			return bail(http.StatusInternalServerError, err.Error())
+		}
+
+		err = tx.QueryRow("SELECT session_id FROM nostr_auth WHERE k1 = $1 LIMIT 1", query.K1).Scan(&sessionId)
+		if err == sql.ErrNoRows {
+			return bail(http.StatusNotFound, "session not found")
+		} else if err != nil {
+			return bail(http.StatusInternalServerError, err.Error())
+		}
+
+		ok, err = auth.VerifyNostrAuth(&query)
+		if err != nil {
+			log.Println("sig error", err)
+			return bail(http.StatusInternalServerError, err.Error())
+		} else if !ok {
+			return bail(http.StatusBadRequest, "bad signature")
+		}
+
+		switch query.Action {
+		case "register":
+		case "signup":
+			{
+				err = tx.QueryRow(""+
+					"INSERT INTO users(nostr_pubkey) VALUES ($1) "+
+					"ON CONFLICT(nostr_pubkey) DO UPDATE SET nostr_pubkey = $1 "+
+					"RETURNING id", query.PubKey).Scan(&userId)
+				if err != nil {
+					pqErr, ok = err.(*pq.Error)
+					if ok && pqErr.Code == "23505" {
+						return bail(http.StatusBadRequest, "user already exists")
+					}
+					return bail(http.StatusInternalServerError, err.Error())
+				}
+			}
+		case "login":
+			{
+				err = tx.QueryRow("SELECT id FROM users WHERE nostr_pubkey = $1", query.PubKey).Scan(&userId)
+				if err == sql.ErrNoRows {
+					return bail(http.StatusNotFound, "user not found")
+				} else if err != nil {
+					return bail(http.StatusInternalServerError, err.Error())
+				}
+			}
+		default:
+			{
+				return bail(http.StatusBadRequest, "bad action")
+			}
+		}
+
+		if _, err = tx.Exec("INSERT INTO sessions(id, user_id) VALUES($1, $2)", sessionId, userId); err != nil {
+			return bail(http.StatusInternalServerError, err.Error())
+		}
+
+		if _, err = tx.Exec("DELETE FROM nostr_auth WHERE k1 = $1", query.K1); err != nil {
+			return bail(http.StatusInternalServerError, err.Error())
+		}
+
+		if err = tx.Commit(); err != nil {
+			return bail(http.StatusInternalServerError, err.Error())
+		}
+
+		return c.JSON(http.StatusOK, map[string]string{"status": "OK"})
+	}
 }
 
 func HandleSessionCheck(sc context.Context) echo.HandlerFunc {

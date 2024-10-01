@@ -25,6 +25,7 @@ func Init(e *echo.Echo, sc Context) {
 	e.GET("/signup", handler.HandleAuth(sc, "register"))
 	e.GET("/signup/:method", handler.HandleAuth(sc, "register"))
 	e.GET("/api/lnauth/callback", handler.HandleLnAuthCallback(sc))
+	e.GET("/api/nostrauth/callback", handler.HandleNostrAuthCallback(sc))
 	e.GET("/session", handler.HandleSessionCheck(sc))
 
 	e.GET("/user", handler.HandleUser(sc), middleware.SessionGuard(sc))

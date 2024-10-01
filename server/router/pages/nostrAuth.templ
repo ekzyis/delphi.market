@@ -1,0 +1,70 @@
+package pages
+
+import "git.ekzyis.com/ekzyis/delphi.market/server/router/pages/components"
+
+templ NostrAuth(k1 string, action string) {
+	<html>
+		@components.Head()
+		<body class="container">
+			@components.Nav()
+			<div
+				id="content"
+				class="flex flex-col text-center items-center"
+				x-data="{ found: typeof window.nostr !== 'undefined', sig: undefined }"
+			>
+				@components.Figlet("random", action)
+				<small><code>with nostr</code></small>
+				<div class="flex flex-col my-3 text-center w-fit">
+					<div :class="{ hidden: found !== undefined }">
+						<i>checking for nostr extension</i>
+						@components.Loading()
+					</div>
+					<div class="hidden neon error my-3" :class="{ hidden: found }" >
+						nostr extension not found
+					</div>
+					<div x-cloak :class="{ hidden: !found }">
+						<div class="neon success my-3">nostr extension found</div>
+						<div :class="{ hidden: !sig }">
+							<i>waiting for signature</i>
+							@components.Loading()
+						</div>
+						<div class="hidden" id="auth"
+							auth-data={ templ.JSONString(k1) }
+							action-data={ templ.JSONString(action) }></div>
+						<script type="text/javascript">
+						var k1 = JSON.parse($("#auth").getAttribute("auth-data"))
+						var action = JSON.parse($("#auth").getAttribute("action-data"))
+						
+						async function sign() {
+							const created_at = Math.floor(Date.now() / 1000)
+							const event = await window.nostr.signEvent({
+								kind: 22242,
+								created_at,
+								tags: [['challenge', k1]],
+								content: 'delphi.market authentication'
+							})
+							
+							Alpine.data('sig', () => true)
+
+							const params = new URLSearchParams({
+								key: event.pubkey,
+								sig: event.sig,
+								k1,
+								action,
+								created_at
+							})
+							const r = await fetch("/api/nostrauth/callback?"  + params)
+
+							// TODO: error handling
+						}
+
+						sign()
+						</script>
+					</div>
+				</div>
+				<div hx-get="/session" hx-trigger="every 1s" hx-swap="none"></div>
+			</div>
+			@components.Footer()
+		</body>
+	</html>
+}

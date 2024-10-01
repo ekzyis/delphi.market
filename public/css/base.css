@@ -200,4 +200,34 @@
   [x-cloak] {
     display: none !important;
   }
+
+  div.loading>span {
+    width: 3px;
+    height: 3px;
+    margin: 0 2px;
+    background-color:  var(--color);
+    border-radius: 50%;
+    display: inline-block;
+    animation-name: jumping;
+    animation-duration: 1.8s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+  }
+
+  div.loading>span:nth-child(2) {
+    animation-delay: 0.4s;
+  }
+
+  div.loading>span:nth-child(3) {
+    animation-delay: 0.8s;
+  }
+
+  @keyframes jumping {
+    40% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
 }
