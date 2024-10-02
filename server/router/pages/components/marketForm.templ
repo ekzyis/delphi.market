@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"git.ekzyis.com/ekzyis/delphi.market/types"
 	"strconv"
+	"math"
 )
 
 templ MarketForm(m types.Market, outcome int, q types.MarketQuote, uQ int) {
@@ -18,14 +19,16 @@ templ MarketForm(m types.Market, outcome int, q types.MarketQuote, uQ int) {
 	>
 		<input type="hidden" name="o" value={ fmt.Sprint(outcome) }/>
 		<div class="none col-span-2 htmx-request"></div>
-		<label for="p">avg price per share:</label>
-		<div id="p">{ formatPrice(q.AvgPrice) }</div>
-		<label for="q">how many?</label>
+		<label for="p">price:</label>
+		<div id="p">{ formatPrice(q.AvgPrice, 3) }</div>
+		<label for="q">shares:</label>
 		<input
 			id={ inputId(outcome) }
 			name="q"
 			class="text-black px-1"
 			type="number"
+			step="100"
+			min="0"
 			autofocus
 			hx-get={ fmt.Sprintf("/market/%d", m.Id) }
 			hx-replace-url="true"
@@ -37,10 +40,10 @@ templ MarketForm(m types.Market, outcome int, q types.MarketQuote, uQ int) {
 			hx-disabled-elt="next button"
 			hx-indicator={ hxIndicator(outcome) }
 		/>
-		<label for="total">you pay:</label>
-		<div id="total">{ formatPrice(q.TotalPrice) }</div>
-		<label for="reward">{ "if you win:" }</label>
-		<div id="reward">+{ formatPrice(q.Reward) }</div>
+		<label for="total">total:</label>
+		<div id="total">{ formatPrice(q.TotalPrice, 3) }</div>
+		<label for="reward">{ "potential earn:" }</label>
+		<span id="reward" class={ colorize(q.Reward) }>+{ formatPrice(q.Reward, 3) }</span>
 		<label for="uQ">you have:</label>
 		<div id="uQ">{ fmt.Sprint(uQ) }</div>
 		<button type="submit" class="col-span-2">submit</button>
@@ -61,6 +64,17 @@ func hxIndicator(outcome int) string {
 		formId(outcome), formId(outcome), formId(outcome))
 }
 
-func formatPrice(p float64) string {
-	return fmt.Sprintf("%v sats", strconv.FormatFloat(p, 'f', 3, 64))
+func formatPrice(p float64, n int) string {
+	if p == 0 || math.IsNaN(p) {
+		return "0 sats"
+	}
+	return fmt.Sprintf("%v sats", strconv.FormatFloat(p, 'f', n, 64))
+}
+
+func colorize(f float64) string {
+	eps := 1e-5
+	if f-eps > 0 {
+		return "text-success"
+	}
+	return "text-reset"
 }
