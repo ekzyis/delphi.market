@@ -19,6 +19,7 @@ templ LnAuth(lnurl string, action string) {
 				>
 					@components.Qr(lnurl, "lightning:"+lnurl)
 				</div>
+				@components.Loading()
 				<div hx-get="/session" hx-trigger="every 1s" hx-swap="none"></div>
 			</div>
 			@components.Footer()
