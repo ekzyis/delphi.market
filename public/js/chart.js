@@ -20,7 +20,7 @@ const element = document.getElementById('chart')
 
 
 function transformPoint({ X, Y }) {
-  return { x: new Date(X), y: Y * 100 }
+  return { x: new Date(X), y: Y }
 }
 
 const no = JSON.parse($("#chart-data").getAttribute("chart-data-p0")).map(transformPoint)
@@ -55,8 +55,10 @@ const config = {
         time: { unit: 'month' }
       },
       y: {
+        display: true,
+        text: 'price',
         min: 0,
-        max: 100
+        max: 1
       }
     }
   }
