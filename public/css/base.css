@@ -79,7 +79,7 @@
   button[hx-get],
   button[hx-post],
   button[type="submit"] {
-    padding: 0.25em 0.75em;
+    padding: 0 0.25em;
   }
 
   button:disabled {
