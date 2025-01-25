@@ -20,7 +20,7 @@ import (
 	"github.com/lightningnetwork/lnd/lnwire"
 )
 
-func HandleCreate(sc context.Context) echo.HandlerFunc {
+func HandleNew(sc context.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
 			db             = sc.Db
