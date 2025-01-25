@@ -3,7 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	_ "github.com/lib/pq"
 )
@@ -42,7 +42,7 @@ func (db *DB) Reset(dbName string) error {
 	if err = db.Clear(dbName); err != nil {
 		return err
 	}
-	if f, err = ioutil.ReadFile(schemaPath); err != nil {
+	if f, err = os.ReadFile(schemaPath); err != nil {
 		return err
 	}
 	if _, err = db.Exec(string(f)); err != nil {
