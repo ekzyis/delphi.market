@@ -25,10 +25,6 @@ templ Index(markets []types.Market) {
 					hx-select="#grid-container"
 					hx-push-url="true"
 				>
-					<div class="border border-muted">
-						<button hx-get="/" class={ tabStyle(ctx.Value(c.ReqPathContextKey).(string), "/") + " !py-1 !px-3" }>markets</button>
-						<button hx-get="/create" class={ tabStyle(ctx.Value(c.ReqPathContextKey).(string), "/create") + " !py-1 !px-3" }>create</button>
-					</div>
 					if ctx.Value(c.ReqPathContextKey).(string) == "/" {
 						<div class="grid grid-cols-[auto_fit-content(10%)_fit-content(10%)]">
 							for _, m := range markets {
