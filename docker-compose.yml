@@ -15,7 +15,7 @@ services:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
       # for some reason this can't be mounted on first run
-      - ./db/postgresql.conf:/var/lib/postgresql/data/postgresql.conf
+      - ./db/postgresql.conf:/etc/postgresql/data/postgresql.conf
 
 volumes:
   delphi:
