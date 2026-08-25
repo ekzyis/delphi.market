@@ -2,6 +2,62 @@
 
 My developer journal for building delphi.market, the first non-custodial Bitcoin prediction market.
 
+## Aug 24, 2026
+
+The important condition that must always hold for unilateral exit isn't
+
+  market duration < VTXO lifetime
+
+but
+
+  market duration + attestation window + claim window + unroll window < VTXO lifetime.
+
+* market duration:     when the market stops trading and traders wait for the oracle attestation
+* attestation window:  how long traders should wait for the oracle
+* claim window:        how long winners have to claim before DLC refund
+* unroll window:       how long it would take traders to exit onchain (unroll the tree)
+
+or in ASCII art:
+
+```
+ t0                                                       VTXO expiry
+  │                                                                 │
+  ▼                                                                 ▼
+  ┌────────────┬──────────────┬────────────┬─────────────┬──────────┐
+  │   market   │ attestation  │   claim    │   unroll    │  slack   │
+  │  duration  │    window    │   window   │   window    │    →     │
+  └────────────┴──────────────┴────────────┴─────────────┴──────────┘
+               ▲              ▲            ▲             ▲
+               1              2            3             4
+
+  │◄──────────────────────── VTXO lifetime ────────────────────────►│
+                                           │◄── refund path open ──►│
+
+  1  market closes; traders wait for the oracle
+  2  oracle attests (or the window lapses → refund)
+  3  DLC refund path opens — winners must have claimed by now
+  4  latest point a unilateral unroll can still finish before expiry
+```
+
+The four windows run back to back and must all fit inside the VTXO lifetime with slack to spare. The
+refund path opens at the DLC timeout (3) and overlaps the unroll window: a loser can still fall back
+to a unilateral onchain exit before the operator can sweep.
+
++++
+
+Second's Ark implementation uses MuSig2 for the Taproot output key. To move DLC contract execution
+into the key path spend requires MuSig2+Schnorr adaptor signatures, which libsecp256k1 does not
+support.[^3]
+
+So I've decided to use Schnorr adaptor signatures for single keys with Tapscript in a new TapLeaf.
+This means the DLC happy path would rely on a script path spend, but requires no changes to the
+underlying crypto system. This can be built with EC primitives.
+
+[^3]: secp256k1-zkp has a PR for Schnorr adaptor signatures:
+    https://github.com/BlockstreamResearch/secp256k1-zkp/pull/299
+
+---
+
 ## Aug 23, 2026
 
 I want to revive delphi.market as the **first non-custodial Bitcoin prediction market**, and I think
@@ -37,8 +93,9 @@ oracle attests a different outcome, the MM claims both stakes instead.
 
 To exit the position, users sign with the MM to receive an unencumbered VTXO at the new market
 price. After entering a position, you can still unilaterally exit the Ark, but not the DLC contract:
-The refund paths only become available after the oracle had time to attest and the winners time to
-claim the DLC-VTXOs for themselves. MM liveness gates pricing and exit, but never custody.
+The refund paths only become available after the oracle has had time to attest and the winners have
+had time to claim the DLC-VTXOs for themselves. MM liveness gates pricing and exit, but never
+custody.
 
 ### Prototype
 
